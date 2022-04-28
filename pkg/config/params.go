@@ -15,6 +15,7 @@ type Server struct {
 }
 
 type Client struct {
+	PushTo      string        `yaml:"pushTo"`
 	SyncConfigs []*SyncConfig `yaml:"syncConfigs"`
 }
 

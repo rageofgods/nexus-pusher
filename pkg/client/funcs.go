@@ -1,7 +1,9 @@
 package client
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/goccy/go-json"
 	"log"
 	"net/http"
 	"nexus-pusher/pkg/comps"
@@ -81,7 +83,8 @@ func doSyncConfigs(sc *config.SyncConfig) {
 		s2, c2, nc2, sc.DstServerConfig.RepoName)
 	// If we got some differences in two repos
 	if len(cmpDiff) != 0 {
-		log.Printf("Differences found between '%s' repo at server %s and '%s' repo at server %s:\n",
+		log.Printf("Found %d differences between '%s' repo at server %s and '%s' repo at server %s:\n",
+			len(cmpDiff),
 			sc.SrcServerConfig.RepoName,
 			sc.SrcServerConfig.Server,
 			sc.DstServerConfig.RepoName,
@@ -103,6 +106,21 @@ func doSyncConfigs(sc *config.SyncConfig) {
 			Username:         sc.DstServerConfig.User,
 			Password:         sc.DstServerConfig.Pass,
 		}
+		// Send diff data to nexus-pusher server
+		srvUrl := fmt.Sprintf("%s%s%s?repository=%s", "http://127.0.0.1:8181",
+			s2.BaseUrl,
+			s2.ApiComponentsUrl,
+			sc.DstServerConfig.RepoName)
+		var buf bytes.Buffer
+		err := json.NewEncoder(&buf).Encode(data)
+		if err != nil {
+			log.Fatal(err)
+		}
+		body, err := s2.SendRequest(srvUrl, "POST", c2, &buf)
+		if err != nil {
+			log.Printf("%v", err)
+		}
+		fmt.Printf("%+v\n", body)
 
 	} else {
 		log.Printf("'%s' repo at server %s is in sync with repo '%s' at server %s, nothing to do.\n",

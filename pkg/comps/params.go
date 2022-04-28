@@ -1,6 +1,8 @@
 package comps
 
-import "time"
+import (
+	"time"
+)
 
 type NexusServer struct {
 	Host             string
@@ -51,6 +53,10 @@ type NexusComponentAsset struct {
 	} `json:"checksum"`
 	ContentType  string    `json:"contentType"`
 	LastModified time.Time `json:"lastModified"`
+}
+
+type UploadResult struct {
+	Err error
 }
 
 type componentType string
