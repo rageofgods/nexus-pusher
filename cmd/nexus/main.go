@@ -24,17 +24,6 @@ func main() {
 		log.Println("Running in client mode.")
 		client.RunNexusPusher(cfg)
 	}
-
-	fmt.Println("test")
-
-	//test, err := client.ReadExport("export.json")
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//if err := s.UploadComponents(client, test); err != nil {
-	//	log.Fatal(err)
-	//}
-
 }
 
 const (

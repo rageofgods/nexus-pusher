@@ -16,7 +16,7 @@ import (
 func (s *NexusServer) GetComponents(c *http.Client,
 	ncs []*NexusComponent,
 	repoName string,
-	contToken ...string) []*NexusComponent {
+	contToken ...string) ([]*NexusComponent, error) {
 
 	var srvUrl string
 	if len(contToken) != 0 {
@@ -34,12 +34,14 @@ func (s *NexusServer) GetComponents(c *http.Client,
 
 	body, err := s.SendRequest(srvUrl, "GET", c, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("%v", err)
+		return nil, err
 	}
 
 	var nc NexusComponents
 	if err := json.Unmarshal(body, &nc); err != nil {
-		log.Fatal(err)
+		log.Printf("%v", err)
+		return nil, err
 	}
 	ncs = append(ncs, nc.Items...)
 
@@ -48,21 +50,24 @@ func (s *NexusServer) GetComponents(c *http.Client,
 		log.Printf("Analyzing repo '%s', please wait... Processed %d assets.\n", repoName, len(ncs))
 	}
 
-	//if len(ncs) > 2000 {
-	//	return ncs
-	//}
+	if len(ncs) > 2000 {
+		return ncs, nil
+	}
 
 	// Iterating over all API pages
 	if nc.ContinuationToken != "" {
-		ncs = s.GetComponents(c, ncs, repoName, nc.ContinuationToken)
+		ncs, err = s.GetComponents(c, ncs, repoName, nc.ContinuationToken)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return ncs
+	return ncs, nil
 }
 
 // UploadComponents is used to upload nexus artifacts following by 'nec' list
 func (s *NexusServer) UploadComponents(c *http.Client, nec *NexusExportComponents, repoName string) []UploadResult {
-	maxParallel := 10
+	maxParallel := 20
 	limitChan := make(chan struct{}, maxParallel)
 	resultsChan := make(chan *UploadResult)
 
@@ -128,14 +133,16 @@ func (s *NexusServer) uploadComponent(format componentType,
 		}
 		// Check server response
 		if resp.StatusCode != http.StatusNoContent {
-			log.Printf("unable to upload component %s to repository '%s' at server %s",
+			log.Printf("error: unable to upload component %s to repository '%s' at server %s. Reason: %s",
 				asset.Path,
 				repoName,
-				s.Host)
-			return fmt.Errorf("unable to upload component %s to repository '%s' at server %s",
+				s.Host,
+				resp.Status)
+			return fmt.Errorf("error: unable to upload component %s to repository '%s' at server %s. Reason: %s",
 				asset.Path,
 				repoName,
-				s.Host)
+				s.Host,
+				resp.Status)
 		} else {
 			log.Printf("Component %s succesfully uploaded to repository '%s' at server %s",
 				asset.Path,

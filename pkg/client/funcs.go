@@ -44,8 +44,26 @@ func doCompareComponents(s1 *comps.NexusServer,
 
 	wg1.Add(1)
 	wg2.Add(1)
-	go func() { src = s1.GetComponents(c1, nc1, r1); showFinalMessageForGetComponents(r1, src, tn); wg1.Done() }()
-	go func() { dst = s2.GetComponents(c2, nc2, r2); showFinalMessageForGetComponents(r2, dst, tn); wg2.Done() }()
+	go func() {
+		var err error
+		src, err = s1.GetComponents(c1, nc1, r1)
+		if err != nil {
+			log.Printf("%v", err)
+		} else {
+			showFinalMessageForGetComponents(r1, src, tn)
+		}
+		wg1.Done()
+	}()
+	go func() {
+		var err error
+		dst, err = s2.GetComponents(c2, nc2, r2)
+		if err != nil {
+			log.Printf("%v", err)
+		} else {
+			showFinalMessageForGetComponents(r2, dst, tn)
+		}
+		wg2.Done()
+	}()
 	wg1.Wait()
 	wg2.Wait()
 
@@ -107,6 +125,8 @@ func doSyncConfigs(sc *config.SyncConfig) {
 			Password:         sc.DstServerConfig.Pass,
 		}
 		// Send diff data to nexus-pusher server
+		log.Println("Sending components diff to nexus-pusher server")
+		// TODO change server hardcode
 		srvUrl := fmt.Sprintf("%s%s%s?repository=%s", "http://127.0.0.1:8181",
 			s2.BaseUrl,
 			s2.ApiComponentsUrl,
@@ -116,11 +136,10 @@ func doSyncConfigs(sc *config.SyncConfig) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		body, err := s2.SendRequest(srvUrl, "POST", c2, &buf)
-		if err != nil {
+		if _, err := s2.SendRequest(srvUrl, "POST", c2, &buf); err != nil {
 			log.Printf("%v", err)
 		}
-		fmt.Printf("%+v\n", body)
+		log.Printf("Sending diff complete.")
 
 	} else {
 		log.Printf("'%s' repo at server %s is in sync with repo '%s' at server %s, nothing to do.\n",

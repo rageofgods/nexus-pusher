@@ -50,7 +50,7 @@ func components(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if errorResults != "" {
-		responseError(w, err, errorResults)
+		responseError(w, fmt.Errorf(errorResults), "error")
 		return
 	}
 	// Generate final response
