@@ -10,8 +10,9 @@ func NewNexusConfig() *NexusConfig {
 }
 
 type Server struct {
-	Enabled bool   `yaml:"enabled"`
-	Port    string `yaml:"port"`
+	Enabled     bool   `yaml:"enabled"`
+	BindAddress string `yaml:"bindAddress"`
+	Port        string `yaml:"port"`
 }
 
 type Client struct {

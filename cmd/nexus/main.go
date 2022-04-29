@@ -12,14 +12,17 @@ import (
 func main() {
 	// Load Nexus-Pusher configuration from file
 	cfg := config.NewNexusConfig()
-
 	if err := cfg.LoadConfig(configName); err != nil {
 		log.Fatalf("unable to load config: %v", err)
 	}
-
+	// Start Server or Client version following configuration
 	if cfg.Server.Enabled {
-		log.Println("Running in server mode.")
-		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", cfg.Server.Port), server.NewRouter()))
+		log.Printf("Running in server mode. Listening on: %s:%s",
+			cfg.Server.BindAddress,
+			cfg.Server.Port)
+		log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s",
+			cfg.Server.BindAddress,
+			cfg.Server.Port), server.NewRouter()))
 	} else {
 		log.Println("Running in client mode.")
 		client.RunNexusPusher(cfg)
