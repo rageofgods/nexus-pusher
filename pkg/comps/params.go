@@ -56,7 +56,8 @@ type NexusComponentAsset struct {
 }
 
 type UploadResult struct {
-	Err error
+	ComponentPath string
+	Err           error
 }
 
 type componentType string

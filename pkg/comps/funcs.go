@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/goccy/go-json"
+	"github.com/hashicorp/go-retryablehttp"
 	"io"
 	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -34,13 +36,11 @@ func (s *NexusServer) GetComponents(c *http.Client,
 
 	body, err := s.SendRequest(srvUrl, "GET", c, nil)
 	if err != nil {
-		log.Printf("%v", err)
 		return nil, err
 	}
 
 	var nc NexusComponents
 	if err := json.Unmarshal(body, &nc); err != nil {
-		log.Printf("%v", err)
 		return nil, err
 	}
 	ncs = append(ncs, nc.Items...)
@@ -50,7 +50,7 @@ func (s *NexusServer) GetComponents(c *http.Client,
 		log.Printf("Analyzing repo '%s', please wait... Processed %d assets.\n", repoName, len(ncs))
 	}
 
-	if len(ncs) > 2000 {
+	if len(ncs) > 10000 {
 		return ncs, nil
 	}
 
@@ -85,7 +85,7 @@ func (s *NexusServer) UploadComponents(c *http.Client, nec *NexusExportComponent
 				result := &UploadResult{}
 				if err := s.uploadComponent(format, c, asset, repoName); err != nil {
 					log.Printf("%v", err)
-					result = &UploadResult{err}
+					result = &UploadResult{Err: err, ComponentPath: asset.Path}
 				}
 				resultsChan <- result
 				<-limitChan
@@ -200,15 +200,23 @@ func componentNameFromPath(cmpPath string) string {
 	return cmpPathSplit[len(cmpPathSplit)-1]
 }
 
-func HttpClient() *http.Client {
-	client := &http.Client{
-		Transport: &http.Transport{
-			MaxIdleConnsPerHost: 100,
-			MaxConnsPerHost:     100,
-			MaxIdleConns:        100,
-		},
-		Timeout: 10 * time.Minute,
+func HttpClient(t ...time.Duration) *http.Client {
+	retryClient := retryablehttp.NewClient()
+	retryClient.HTTPClient.Transport = &http.Transport{
+		MaxIdleConnsPerHost: 100,
+		MaxConnsPerHost:     100,
+		MaxIdleConns:        100,
 	}
+	customLogger := &CustomRetryLogger{log.New(os.Stdout, "", log.Ldate|log.Ltime)}
+	retryClient.Logger = customLogger
+	retryClient.RetryMax = 3
+	if len(t) != 0 {
+		retryClient.HTTPClient.Timeout = t[0]
+	} else {
+		retryClient.HTTPClient.Timeout = 10 * time.Second
+	}
+	client := retryClient.StandardClient()
+
 	return client
 }
 

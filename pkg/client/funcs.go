@@ -36,38 +36,43 @@ func doCompareComponents(s1 *comps.NexusServer,
 	s2 *comps.NexusServer,
 	c2 *http.Client,
 	nc2 []*comps.NexusComponent,
-	r2 string) []*comps.NexusComponent {
+	r2 string) ([]*comps.NexusComponent, error) {
 
 	var src, dst []*comps.NexusComponent
-	wg1, wg2 := &sync.WaitGroup{}, &sync.WaitGroup{}
+	wg := &sync.WaitGroup{}
+	var isError bool
 	tn := time.Now()
 
-	wg1.Add(1)
-	wg2.Add(1)
+	wg.Add(2)
 	go func() {
 		var err error
 		src, err = s1.GetComponents(c1, nc1, r1)
 		if err != nil {
 			log.Printf("%v", err)
+			isError = true
 		} else {
 			showFinalMessageForGetComponents(r1, src, tn)
 		}
-		wg1.Done()
+		wg.Done()
 	}()
 	go func() {
 		var err error
 		dst, err = s2.GetComponents(c2, nc2, r2)
 		if err != nil {
 			log.Printf("%v", err)
+			isError = true
 		} else {
 			showFinalMessageForGetComponents(r2, dst, tn)
 		}
-		wg2.Done()
+		wg.Done()
 	}()
-	wg1.Wait()
-	wg2.Wait()
+	wg.Wait()
+	// Check for errors in requests
+	if isError {
+		return nil, fmt.Errorf("reqest failed")
+	}
 
-	return compareComponents(src, dst)
+	return compareComponents(src, dst), nil
 }
 
 func showFinalMessageForGetComponents(r string, nc []*comps.NexusComponent, t time.Time) {
@@ -97,8 +102,11 @@ func doSyncConfigs(sc *config.SyncConfig) {
 	var nc1 []*comps.NexusComponent
 	var nc2 []*comps.NexusComponent
 	// Get repo diff
-	cmpDiff := doCompareComponents(s1, c1, nc1, sc.SrcServerConfig.RepoName,
+	cmpDiff, err := doCompareComponents(s1, c1, nc1, sc.SrcServerConfig.RepoName,
 		s2, c2, nc2, sc.DstServerConfig.RepoName)
+	if err != nil {
+		return
+	}
 	// If we got some differences in two repos
 	if len(cmpDiff) != 0 {
 		log.Printf("Found %d differences between '%s' repo at server %s and '%s' repo at server %s:\n",
@@ -125,7 +133,7 @@ func doSyncConfigs(sc *config.SyncConfig) {
 			Password:         sc.DstServerConfig.Pass,
 		}
 		// Send diff data to nexus-pusher server
-		log.Println("Sending components diff to nexus-pusher server")
+		log.Println("Sending components diff to nexus-pusher server...")
 		// TODO change server hardcode
 		srvUrl := fmt.Sprintf("%s%s%s?repository=%s", "http://127.0.0.1:8181",
 			s2.BaseUrl,
@@ -139,7 +147,7 @@ func doSyncConfigs(sc *config.SyncConfig) {
 		if _, err := s2.SendRequest(srvUrl, "POST", c2, &buf); err != nil {
 			log.Printf("%v", err)
 		}
-		log.Printf("Sending diff complete.")
+		log.Printf("Sending diff to %s succesfully complete.", s2.Host)
 
 	} else {
 		log.Printf("'%s' repo at server %s is in sync with repo '%s' at server %s, nothing to do.\n",
