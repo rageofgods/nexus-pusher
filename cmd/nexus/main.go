@@ -10,9 +10,15 @@ import (
 )
 
 func main() {
+	// Get Config Path
+	var configPath string
+	if configPath = config.GetConfigPath(); configPath == "" {
+		return
+	}
+
 	// Load Nexus-Pusher configuration from file
 	cfg := config.NewNexusConfig()
-	if err := cfg.LoadConfig(configName); err != nil {
+	if err := cfg.LoadConfig(configPath); err != nil {
 		log.Fatalf("unable to load config: %v", err)
 	}
 	// Start Server or Client version following configuration
@@ -28,7 +34,3 @@ func main() {
 		client.RunNexusPusher(cfg)
 	}
 }
-
-const (
-	configName string = "config.yaml"
-)

@@ -38,3 +38,7 @@ type DstServerConfig struct {
 	Pass     string `yaml:"pass"`
 	RepoName string `yaml:"repoName"`
 }
+
+const (
+	configName string = "config.yaml"
+)
