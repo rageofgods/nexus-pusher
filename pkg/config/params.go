@@ -13,6 +13,7 @@ type Server struct {
 	Enabled     bool   `yaml:"enabled"`
 	BindAddress string `yaml:"bindAddress"`
 	Port        string `yaml:"port"`
+	Concurrency int    `yaml:"concurrency"`
 }
 
 type Client struct {

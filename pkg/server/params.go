@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"nexus-pusher/pkg/config"
 )
 
 type Routes struct {
@@ -13,6 +14,14 @@ type Route struct {
 	Method      string
 	Pattern     string
 	HandlerFunc http.HandlerFunc
+}
+
+type handlerConfig struct {
+	cfg *config.Server
+}
+
+func newRouteConfig(cfg *config.Server) *handlerConfig {
+	return &handlerConfig{cfg: cfg}
 }
 
 const (

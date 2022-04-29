@@ -2,6 +2,7 @@ package comps
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"github.com/goccy/go-json"
 	"github.com/hashicorp/go-retryablehttp"
@@ -10,16 +11,25 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"nexus-pusher/pkg/config"
 	"os"
 	"strings"
 	"time"
 )
 
-func (s *NexusServer) GetComponents(c *http.Client,
+func (s *NexusServer) GetComponents(
+	ctx context.Context,
+	c *http.Client,
 	ncs []*NexusComponent,
 	repoName string,
 	contToken ...string) ([]*NexusComponent, error) {
-
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("error: canceling processing repo '%s' because of upstream error",
+			repoName)
+	default:
+		// Do nothing (continue execution)
+	}
 	var srvUrl string
 	if len(contToken) != 0 {
 		srvUrl = fmt.Sprintf("%s%s%s?repository=%s&continuationToken=%s", s.Host,
@@ -50,13 +60,13 @@ func (s *NexusServer) GetComponents(c *http.Client,
 		log.Printf("Analyzing repo '%s', please wait... Processed %d assets.\n", repoName, len(ncs))
 	}
 
-	if len(ncs) > 10000 {
+	if len(ncs) > 1000 {
 		return ncs, nil
 	}
 
 	// Iterating over all API pages
 	if nc.ContinuationToken != "" {
-		ncs, err = s.GetComponents(c, ncs, repoName, nc.ContinuationToken)
+		ncs, err = s.GetComponents(ctx, c, ncs, repoName, nc.ContinuationToken)
 		if err != nil {
 			return nil, err
 		}
@@ -66,8 +76,11 @@ func (s *NexusServer) GetComponents(c *http.Client,
 }
 
 // UploadComponents is used to upload nexus artifacts following by 'nec' list
-func (s *NexusServer) UploadComponents(c *http.Client, nec *NexusExportComponents, repoName string) []UploadResult {
-	maxParallel := 20
+func (s *NexusServer) UploadComponents(c *http.Client,
+	nec *NexusExportComponents,
+	repoName string,
+	cs *config.Server) []UploadResult {
+	maxParallel := cs.Concurrency
 	limitChan := make(chan struct{}, maxParallel)
 	resultsChan := make(chan *UploadResult)
 
@@ -234,7 +247,10 @@ func (s *NexusServer) SendRequest(srvUrl string, method string, c *http.Client, 
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error processing request: status code %d", resp.StatusCode)
+		return nil, fmt.Errorf("error: sending '%s' request: status code %d %v",
+			resp.Request.Method,
+			resp.StatusCode,
+			resp.Request.URL)
 	}
 	// Read all body data
 	body, err := ioutil.ReadAll(resp.Body)

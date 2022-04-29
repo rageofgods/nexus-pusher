@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"github.com/goccy/go-json"
 	"log"
@@ -42,12 +43,14 @@ func doCompareComponents(s1 *comps.NexusServer,
 	wg := &sync.WaitGroup{}
 	var isError bool
 	tn := time.Now()
+	ctx, cancel := context.WithCancel(context.Background())
 
 	wg.Add(2)
 	go func() {
 		var err error
-		src, err = s1.GetComponents(c1, nc1, r1)
+		src, err = s1.GetComponents(ctx, c1, nc1, r1)
 		if err != nil {
+			cancel()
 			log.Printf("%v", err)
 			isError = true
 		} else {
@@ -57,8 +60,9 @@ func doCompareComponents(s1 *comps.NexusServer,
 	}()
 	go func() {
 		var err error
-		dst, err = s2.GetComponents(c2, nc2, r2)
+		dst, err = s2.GetComponents(ctx, c2, nc2, r2)
 		if err != nil {
+			cancel()
 			log.Printf("%v", err)
 			isError = true
 		} else {
@@ -69,7 +73,7 @@ func doCompareComponents(s1 *comps.NexusServer,
 	wg.Wait()
 	// Check for errors in requests
 	if isError {
-		return nil, fmt.Errorf("reqest failed")
+		return nil, fmt.Errorf("error: unable to compare repositories")
 	}
 
 	return compareComponents(src, dst), nil
@@ -105,6 +109,7 @@ func doSyncConfigs(sc *config.SyncConfig) {
 	cmpDiff, err := doCompareComponents(s1, c1, nc1, sc.SrcServerConfig.RepoName,
 		s2, c2, nc2, sc.DstServerConfig.RepoName)
 	if err != nil {
+		log.Printf("%v", err)
 		return
 	}
 	// If we got some differences in two repos

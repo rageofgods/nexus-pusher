@@ -17,7 +17,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 }
 
 // Upload components to remote nexus
-func components(w http.ResponseWriter, r *http.Request) {
+func (c *handlerConfig) components(w http.ResponseWriter, r *http.Request) {
 	nec := &comps.NexusExportComponents{}
 	// Get repository parameter from URL
 	repo := r.URL.Query().Get("repository")
@@ -49,7 +49,7 @@ func components(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		s := comps.NewNexusServer(nec.NexusServer.Username, nec.NexusServer.Password,
 			nec.NexusServer.Host, nec.NexusServer.BaseUrl, nec.NexusServer.ApiComponentsUrl)
-		results := s.UploadComponents(comps.HttpClient(), nec, repo)
+		results := s.UploadComponents(comps.HttpClient(), nec, repo, c.cfg)
 
 		var errorsCounter int
 		var errorsText []string

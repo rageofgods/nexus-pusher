@@ -28,7 +28,7 @@ func main() {
 			cfg.Server.Port)
 		log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s",
 			cfg.Server.BindAddress,
-			cfg.Server.Port), server.NewRouter()))
+			cfg.Server.Port), server.NewRouter(&cfg.Server)))
 	} else {
 		log.Println("Running in client mode.")
 		client.RunNexusPusher(cfg)
