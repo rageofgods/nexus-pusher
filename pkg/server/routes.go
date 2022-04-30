@@ -1,16 +1,18 @@
 package server
 
 import (
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"net/http"
 	"nexus-pusher/pkg/config"
 )
 
 func NewRouter(cfg *config.Server) *mux.Router {
-	rc := newRouteConfig(cfg)
+	us := newUploadService(cfg, make(map[uuid.UUID]*Message))
 	var r = Routes{Routes: []Route{
-		{"Index", "GET", "/", index},
-		{"Components", "POST", "/service/rest/v1/components", rc.components},
+		{"index", "GET", "/", index},
+		{"post-components", "POST", "/service/rest/v1/components", us.components},
+		{Name: "get-answer", Method: "GET", Pattern: "/service/rest/v1/components", HandlerFunc: us.answerMessage},
 	}}
 
 	router := mux.NewRouter().StrictSlash(true)

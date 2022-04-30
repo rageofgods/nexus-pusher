@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"nexus-pusher/pkg/comps"
 	"nexus-pusher/pkg/config"
+	"nexus-pusher/pkg/server"
 	"sync"
 	"time"
 )
@@ -138,7 +139,7 @@ func doSyncConfigs(sc *config.SyncConfig) {
 			Password:         sc.DstServerConfig.Pass,
 		}
 		// Send diff data to nexus-pusher server
-		log.Println("Sending components diff to nexus-pusher server...")
+		log.Printf("Sending components diff to %s server...", s2.Host)
 		// TODO change server hardcode
 		srvUrl := fmt.Sprintf("%s%s%s?repository=%s", "http://127.0.0.1:8181",
 			s2.BaseUrl,
@@ -147,13 +148,17 @@ func doSyncConfigs(sc *config.SyncConfig) {
 		var buf bytes.Buffer
 		err := json.NewEncoder(&buf).Encode(data)
 		if err != nil {
-			log.Fatal(err)
-		}
-		if _, err := s2.SendRequest(srvUrl, "POST", c2, &buf); err != nil {
 			log.Printf("%v", err)
+			return
 		}
-		log.Printf("Sending diff to %s succesfully complete.", s2.Host)
-
+		body, err := s2.SendRequest(srvUrl, "POST", c2, &buf)
+		if err != nil {
+			log.Printf("%v", err)
+			return
+		}
+		log.Printf("Sending components diff to %s succesfully complete.", s2.Host)
+		// Get results from server
+		getRequestResult(body, s2, c2)
 	} else {
 		log.Printf("'%s' repo at server %s is in sync with repo '%s' at server %s, nothing to do.\n",
 			sc.SrcServerConfig.RepoName,
@@ -161,4 +166,49 @@ func doSyncConfigs(sc *config.SyncConfig) {
 			sc.DstServerConfig.RepoName,
 			sc.DstServerConfig.Server)
 	}
+}
+
+func getRequestResult(body []byte, s *comps.NexusServer, c *http.Client) {
+	// Convert body to Message type
+	msg := &server.Message{}
+	if err := json.Unmarshal(body, msg); err != nil {
+		log.Printf("%v", err)
+		return
+	}
+	log.Printf("Starting server polling for message id %s to get upload results...", msg.ID)
+	// Queue http polling
+	srvUrl := fmt.Sprintf("%s%s%s?uuid=%s", "http://127.0.0.1:8181",
+		s.BaseUrl,
+		s.ApiComponentsUrl,
+		msg.ID)
+
+	// Poll maximum for 1800 seconds (30 min)
+	limitTime := 1800
+	for x := 1; x < limitTime; x++ {
+		body, err := s.SendRequest(srvUrl, "GET", c, nil)
+		if err != nil {
+			log.Printf("%v", err)
+			return
+		}
+		if err := json.Unmarshal(body, msg); err != nil {
+			log.Printf("%v", err)
+			return
+		}
+		if msg.Complete {
+			log.Printf("Server polling for message id %s is complete.\n%v",
+				msg.ID,
+				msg.Response)
+			return
+		}
+		if x%30 == 0 {
+			log.Printf("Server polling for message id %s in progress... %d seconds passed",
+				msg.ID,
+				x)
+		}
+		time.Sleep(1 * time.Second)
+	}
+	// Show error if we don't get results in time
+	log.Printf("error: unable to get results from for message id %s in %d seconds",
+		msg.ID,
+		limitTime)
 }

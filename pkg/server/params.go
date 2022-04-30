@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/google/uuid"
 	"net/http"
 	"nexus-pusher/pkg/config"
 )
@@ -16,12 +17,19 @@ type Route struct {
 	HandlerFunc http.HandlerFunc
 }
 
-type handlerConfig struct {
-	cfg *config.Server
+type Message struct {
+	ID       uuid.UUID `json:"id"`
+	Response string    `json:"response"`
+	Complete bool      `json:"complete"`
 }
 
-func newRouteConfig(cfg *config.Server) *handlerConfig {
-	return &handlerConfig{cfg: cfg}
+type uploadService struct {
+	cfg      *config.Server
+	messages map[uuid.UUID]*Message
+}
+
+func newUploadService(cfg *config.Server, messages map[uuid.UUID]*Message) *uploadService {
+	return &uploadService{cfg: cfg, messages: messages}
 }
 
 const (
