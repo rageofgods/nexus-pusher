@@ -140,8 +140,10 @@ func doSyncConfigs(sc *config.SyncConfig) {
 		}
 		// Send diff data to nexus-pusher server
 		log.Printf("Sending components diff to %s server...", s2.Host)
-		// TODO change server hardcode
-		srvUrl := fmt.Sprintf("%s%s%s?repository=%s", "http://127.0.0.1:8181",
+		if sc.PushTo == "" {
+			sc.PushTo = sc.DstServerConfig.Server
+		}
+		srvUrl := fmt.Sprintf("%s%s%s?repository=%s", sc.PushTo,
 			s2.BaseUrl,
 			s2.ApiComponentsUrl,
 			sc.DstServerConfig.RepoName)
@@ -158,7 +160,7 @@ func doSyncConfigs(sc *config.SyncConfig) {
 		}
 		log.Printf("Sending components diff to %s succesfully complete.", s2.Host)
 		// Get results from server
-		getRequestResult(body, s2, c2)
+		getRequestResult(body, s2, c2, sc.PushTo)
 	} else {
 		log.Printf("'%s' repo at server %s is in sync with repo '%s' at server %s, nothing to do.\n",
 			sc.SrcServerConfig.RepoName,
@@ -168,7 +170,7 @@ func doSyncConfigs(sc *config.SyncConfig) {
 	}
 }
 
-func getRequestResult(body []byte, s *comps.NexusServer, c *http.Client) {
+func getRequestResult(body []byte, s *comps.NexusServer, c *http.Client, pushTo string) {
 	// Convert body to Message type
 	msg := &server.Message{}
 	if err := json.Unmarshal(body, msg); err != nil {
@@ -177,7 +179,7 @@ func getRequestResult(body []byte, s *comps.NexusServer, c *http.Client) {
 	}
 	log.Printf("Starting server polling for message id %s to get upload results...", msg.ID)
 	// Queue http polling
-	srvUrl := fmt.Sprintf("%s%s%s?uuid=%s", "http://127.0.0.1:8181",
+	srvUrl := fmt.Sprintf("%s%s%s?uuid=%s", pushTo,
 		s.BaseUrl,
 		s.ApiComponentsUrl,
 		msg.ID)

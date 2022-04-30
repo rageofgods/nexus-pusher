@@ -17,11 +17,11 @@ type Server struct {
 }
 
 type Client struct {
-	PushTo      string        `yaml:"pushTo"`
 	SyncConfigs []*SyncConfig `yaml:"syncConfigs"`
 }
 
 type SyncConfig struct {
+	PushTo          string          `yaml:"pushTo,omitempty"`
 	SrcServerConfig SrcServerConfig `yaml:"srcServerConfig"`
 	DstServerConfig DstServerConfig `yaml:"dstServerConfig"`
 }
