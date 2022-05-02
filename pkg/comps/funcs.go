@@ -80,8 +80,7 @@ func (s *NexusServer) UploadComponents(c *http.Client,
 	nec *NexusExportComponents,
 	repoName string,
 	cs *config.Server) []UploadResult {
-	maxParallel := cs.Concurrency
-	limitChan := make(chan struct{}, maxParallel)
+	limitChan := make(chan struct{}, cs.Concurrency)
 	resultsChan := make(chan *UploadResult)
 
 	defer func() {

@@ -92,12 +92,12 @@ func RunNexusPusher(c *config.NexusConfig) {
 	for _, v := range c.Client.SyncConfigs {
 		wg.Add(1)
 		value := v
-		go func() { doSyncConfigs(value); wg.Done() }()
+		go func() { doSyncConfigs(&c.Client, value); wg.Done() }()
 	}
 	wg.Wait()
 }
 
-func doSyncConfigs(sc *config.SyncConfig) {
+func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 	s1 := comps.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
 		sc.SrcServerConfig.Server, baseUrl, apiComponentsUrl)
 	s2 := comps.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
@@ -140,10 +140,8 @@ func doSyncConfigs(sc *config.SyncConfig) {
 		}
 		// Send diff data to nexus-pusher server
 		log.Printf("Sending components diff to %s server...", s2.Host)
-		if sc.PushTo == "" {
-			sc.PushTo = sc.DstServerConfig.Server
-		}
-		srvUrl := fmt.Sprintf("%s%s%s?repository=%s", sc.PushTo,
+		srvUrl := fmt.Sprintf("%s%s%s?repository=%s",
+			cc.Server,
 			s2.BaseUrl,
 			s2.ApiComponentsUrl,
 			sc.DstServerConfig.RepoName)
@@ -160,7 +158,7 @@ func doSyncConfigs(sc *config.SyncConfig) {
 		}
 		log.Printf("Sending components diff to %s succesfully complete.", s2.Host)
 		// Get results from server
-		getRequestResult(body, s2, c2, sc.PushTo)
+		getRequestResult(body, s2, c2, cc.Server)
 	} else {
 		log.Printf("'%s' repo at server %s is in sync with repo '%s' at server %s, nothing to do.\n",
 			sc.SrcServerConfig.RepoName,

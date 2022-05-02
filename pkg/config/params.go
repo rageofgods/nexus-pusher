@@ -1,6 +1,7 @@
 package config
 
 type NexusConfig struct {
+	string
 	Server Server `yaml:"server"`
 	Client Client `yaml:"client"`
 }
@@ -18,11 +19,17 @@ type Server struct {
 }
 
 type Client struct {
+	Server      string        `yaml:"server"`
+	ServerAuth  ServerAuth    `yaml:"serverAuth"`
 	SyncConfigs []*SyncConfig `yaml:"syncConfigs"`
 }
 
+type ServerAuth struct {
+	User string `yaml:"user"`
+	Pass string `yaml:"pass"`
+}
+
 type SyncConfig struct {
-	PushTo          string          `yaml:"pushTo,omitempty"`
 	SrcServerConfig SrcServerConfig `yaml:"srcServerConfig"`
 	DstServerConfig DstServerConfig `yaml:"dstServerConfig"`
 }
@@ -42,5 +49,12 @@ type DstServerConfig struct {
 }
 
 const (
+	// Set default client concurrency
+	clientConcurrency int = 30
+	// Set default server port
+	serverPort string = "8181"
+	// Set default server bind address
+	serverBindAddress string = "0.0.0.0"
+	// Set default config file name
 	configName string = "config.yaml"
 )

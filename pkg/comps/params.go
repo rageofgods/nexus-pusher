@@ -63,6 +63,7 @@ type UploadResult struct {
 type componentType string
 
 const (
+	// Set NPM specific variables
 	npm    componentType = "npm"
 	npmSrv string        = "https://registry.npmjs.org/"
 )

@@ -12,7 +12,6 @@ func NewRouter(cfg *config.Server) *mux.Router {
 	var r = Routes{Routes: []Route{
 		{"login", "GET", "/login", stub},
 		{"refresh", "GET", "/refresh", stub},
-		{"auth", "GET", "/auth", stub},
 		{"post-components", "POST", "/service/rest/v1/components", us.components},
 		{Name: "get-answer", Method: "GET", Pattern: "/service/rest/v1/components", HandlerFunc: us.answerMessage},
 	}}

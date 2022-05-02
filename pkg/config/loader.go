@@ -13,5 +13,8 @@ func (c *NexusConfig) LoadConfig(fileName string) error {
 	if err := yaml.Unmarshal(config, c); err != nil {
 		return err
 	}
+	// Set config path
+	c.string = fileName
+
 	return nil
 }

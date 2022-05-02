@@ -21,6 +21,10 @@ func main() {
 	if err := cfg.LoadConfig(configPath); err != nil {
 		log.Fatalf("unable to load config: %v", err)
 	}
+	// Validate config for correct syntax
+	if err := cfg.ValidateConfig(); err != nil {
+		log.Fatalf("%v", err)
+	}
 	// Start Server or Client version following configuration
 	if cfg.Server.Enabled {
 		log.Printf("Running in server mode. Listening on: %s:%s",
