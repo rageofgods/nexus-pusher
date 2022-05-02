@@ -6,18 +6,18 @@ import (
 	"strings"
 )
 
-func (u *uploadService) searchById(id uuid.UUID) (*Message, error) {
+func (u *webService) searchById(id uuid.UUID) (*Message, error) {
 	if msg, ok := u.messages[id]; ok {
 		return msg, nil
 	}
 	return nil, fmt.Errorf("id %v not found", id)
 }
 
-func (u *uploadService) deleteById(id uuid.UUID) {
+func (u *webService) deleteById(id uuid.UUID) {
 	delete(u.messages, id)
 }
 
-func (u *uploadService) genMessageWithId() (*Message, error) {
+func (u *webService) genMessageWithId() (*Message, error) {
 	// Generate new random id
 	id, err := uuid.NewRandom()
 	if err != nil {
@@ -32,7 +32,7 @@ func (u *uploadService) genMessageWithId() (*Message, error) {
 }
 
 // completeById set complete flag to message which returned to client
-func (u *uploadService) completeById(id uuid.UUID, textResult ...string) error {
+func (u *webService) completeById(id uuid.UUID, textResult ...string) error {
 	// Search in map
 	msg, err := u.searchById(id)
 	if err != nil {
@@ -40,7 +40,7 @@ func (u *uploadService) completeById(id uuid.UUID, textResult ...string) error {
 	}
 	// Set complete flag
 	msg.Complete = true
-	msg.Response = fmt.Sprintf("%s", strings.Join(textResult, "\n"))
+	msg.Response = strings.Join(textResult, "\n")
 
 	return nil
 }

@@ -11,14 +11,14 @@ import (
 	"nexus-pusher/pkg/comps"
 )
 
-func index(w http.ResponseWriter, r *http.Request) {
-	if _, err := fmt.Fprintln(w, "Welcome to nexus-pusher version: "); err != nil {
+func stub(w http.ResponseWriter, r *http.Request) {
+	if _, err := fmt.Fprintln(w, "Welcome to nexus-pusher."); err != nil {
 		log.Printf("%v", err)
 	}
 }
 
 // Upload components to remote nexus
-func (u *uploadService) components(w http.ResponseWriter, r *http.Request) {
+func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 	nec := &comps.NexusExportComponents{}
 	// Get repository parameter from URL
 	repo := r.URL.Query().Get("repository")
@@ -88,7 +88,7 @@ func (u *uploadService) components(w http.ResponseWriter, r *http.Request) {
 	}()
 }
 
-func (u *uploadService) answerMessage(w http.ResponseWriter, r *http.Request) {
+func (u *webService) answerMessage(w http.ResponseWriter, r *http.Request) {
 	// Check uuid parameter
 	data := r.URL.Query().Get("uuid")
 	if data == "" {

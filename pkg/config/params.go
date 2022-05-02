@@ -10,10 +10,11 @@ func NewNexusConfig() *NexusConfig {
 }
 
 type Server struct {
-	Enabled     bool   `yaml:"enabled"`
-	BindAddress string `yaml:"bindAddress"`
-	Port        string `yaml:"port"`
-	Concurrency int    `yaml:"concurrency"`
+	Enabled     bool              `yaml:"enabled"`
+	BindAddress string            `yaml:"bindAddress"`
+	Port        string            `yaml:"port"`
+	Concurrency int               `yaml:"concurrency"`
+	Credentials map[string]string `json:"credentials"`
 }
 
 type Client struct {

@@ -6,6 +6,7 @@ import "github.com/spf13/pflag"
 func GetConfigPath() string {
 	var showHelp bool
 	var configPath string
+
 	pflag.StringVarP(&configPath, "config", "c", "",
 		"Config file path")
 	pflag.BoolVarP(&showHelp, "help", "h", false,

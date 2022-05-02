@@ -23,16 +23,23 @@ type Message struct {
 	Complete bool      `json:"complete"`
 }
 
-type uploadService struct {
+type webService struct {
 	cfg      *config.Server
 	messages map[uuid.UUID]*Message
+	jwtKey   []byte
 }
 
-func newUploadService(cfg *config.Server, messages map[uuid.UUID]*Message) *uploadService {
-	return &uploadService{cfg: cfg, messages: messages}
+func newWebService(cfg *config.Server, messages map[uuid.UUID]*Message, jwtKey []byte) *webService {
+	return &webService{cfg: cfg, messages: messages, jwtKey: jwtKey}
 }
 
 const (
 	// Limit uploaded json to 30mb
 	maxBodySize int64 = 31457280
+	// Set JWT token TTL in minutes
+	jwtTokenTTL = 5
+	// Set JWT token Cookie name
+	jwtCookieName = "token"
+	// Set JWT token refresh window in seconds
+	jwtTokenRefreshWindow = 30
 )

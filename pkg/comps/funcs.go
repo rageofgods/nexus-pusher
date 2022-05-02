@@ -60,9 +60,9 @@ func (s *NexusServer) GetComponents(
 		log.Printf("Analyzing repo '%s', please wait... Processed %d assets.\n", repoName, len(ncs))
 	}
 
-	if len(ncs) > 100 {
-		return ncs, nil
-	}
+	//if len(ncs) > 10 {
+	//	return ncs, nil
+	//}
 
 	// Iterating over all API pages
 	if nc.ContinuationToken != "" {

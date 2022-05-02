@@ -197,7 +197,7 @@ func getRequestResult(body []byte, s *comps.NexusServer, c *http.Client, pushTo 
 			return
 		}
 		if msg.Complete {
-			log.Printf("Server polling for message id %s is complete.\n%v",
+			log.Printf("Server polling for message id %s is complete with response from server:\n>>>\n%v<<<\n",
 				msg.ID,
 				msg.Response)
 			return

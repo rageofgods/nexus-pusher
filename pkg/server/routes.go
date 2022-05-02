@@ -8,9 +8,11 @@ import (
 )
 
 func NewRouter(cfg *config.Server) *mux.Router {
-	us := newUploadService(cfg, make(map[uuid.UUID]*Message))
+	us := newWebService(cfg, make(map[uuid.UUID]*Message), genRandomJWTKey(32))
 	var r = Routes{Routes: []Route{
-		{"index", "GET", "/", index},
+		{"login", "GET", "/login", stub},
+		{"refresh", "GET", "/refresh", stub},
+		{"auth", "GET", "/auth", stub},
 		{"post-components", "POST", "/service/rest/v1/components", us.components},
 		{Name: "get-answer", Method: "GET", Pattern: "/service/rest/v1/components", HandlerFunc: us.answerMessage},
 	}}
@@ -18,9 +20,23 @@ func NewRouter(cfg *config.Server) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range r.Routes {
 		var handler http.Handler
-		handler = logger(route.HandlerFunc, route.Name)
+
+		// Apply auth middlewares
+		switch route.Name {
+		case "login":
+			// Setup JWT sign in middleware for index target
+			handler = us.signInMiddle(route.HandlerFunc)
+		case "refresh":
+			// Refresh JWT token if it's still alive for client
+			handler = us.refreshMiddle(route.HandlerFunc)
+		default:
+			// Default to auth the request
+			handler = us.authMiddle(route.HandlerFunc)
+		}
+
+		// Setup logger middleware for all handler functions
+		handler = loggerMiddle(handler, route.Name)
 		router.Methods(route.Method).Path(route.Pattern).Name(route.Name).Handler(handler)
 	}
-
 	return router
 }

@@ -25,15 +25,15 @@ func (c *CustomRetryLogger) Error(msg string, keysAndValues ...interface{}) {
 
 // Info mock
 func (c *CustomRetryLogger) Info(msg string, keysAndValues ...interface{}) {
-	return
+	// Do nothing to disable this type of logs
 }
 
 // Debug mock
 func (c *CustomRetryLogger) Debug(msg string, keysAndValues ...interface{}) {
-	return
+	// Do nothing to disable this type of logs
 }
 
 // Warn Mock
 func (c *CustomRetryLogger) Warn(msg string, keysAndValues ...interface{}) {
-	return
+	// Do nothing to disable this type of logs
 }
