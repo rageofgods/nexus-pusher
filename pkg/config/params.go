@@ -58,3 +58,23 @@ const (
 	// Set default config file name
 	configName string = "config.yaml"
 )
+
+const (
+	// URIBase Set base REST URI
+	URIBase string = "/service/rest"
+	// URILogin Set login REST URI
+	URILogin string = "/login"
+	// URIRefresh Set JWT refresh REST URI
+	URIRefresh string = "/refresh"
+	// URIComponents Set components REST URI
+	URIComponents string = "/v1/components"
+)
+
+const (
+	// JWTTokenTTL Set JWT token TTL in minutes
+	JWTTokenTTL = 5
+	// JWTCookieName Set JWT token Cookie name
+	JWTCookieName = "token"
+	// JWTTokenRefreshWindow Set JWT token refresh window in seconds
+	JWTTokenRefreshWindow = 30
+)

@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"nexus-pusher/pkg/config"
 	"time"
 )
 
@@ -40,7 +41,7 @@ func (u *webService) signInMiddle(next http.Handler) http.Handler {
 		}
 
 		// Declare the expiration time of the token as 5 minutes
-		expirationTime := time.Now().Add(jwtTokenTTL * time.Minute)
+		expirationTime := time.Now().Add(config.JWTTokenTTL * time.Minute)
 		// Create the JWT claims, which includes the username and expiry time
 		claims := &Claims{
 			Username: credentials.Username,
@@ -64,7 +65,7 @@ func (u *webService) signInMiddle(next http.Handler) http.Handler {
 		// Set the client cookie for "token" as the JWT we just generated
 		// also set an expiry time which is the same as the token itself
 		http.SetCookie(w, &http.Cookie{
-			Name:    jwtCookieName,
+			Name:    config.JWTCookieName,
 			Value:   tokenString,
 			Expires: expirationTime,
 		})
@@ -94,14 +95,14 @@ func (u *webService) refreshMiddle(next http.Handler) http.Handler {
 
 		// A new token will only be issued if the old token is within
 		// 30 seconds of expiry. Otherwise, return a bad request status
-		if time.Until(time.Unix(claims.ExpiresAt, 0)) > jwtTokenRefreshWindow*time.Second {
+		if time.Until(time.Unix(claims.ExpiresAt, 0)) > config.JWTTokenRefreshWindow*time.Second {
 			log.Printf("error: token is too new to refresh. still valid for: '%v'",
 				time.Until(time.Unix(claims.ExpiresAt, 0)).Round(time.Second))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		// Create a new token for the current use, with a renewed expiration time
-		expirationTime := time.Now().Add(jwtTokenTTL * time.Minute)
+		expirationTime := time.Now().Add(config.JWTTokenTTL * time.Minute)
 		claims.ExpiresAt = expirationTime.Unix()
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 		tokenString, err := token.SignedString(u.jwtKey)
@@ -114,7 +115,7 @@ func (u *webService) refreshMiddle(next http.Handler) http.Handler {
 
 		// Set the new user Cookie token
 		http.SetCookie(w, &http.Cookie{
-			Name:    jwtCookieName,
+			Name:    config.JWTCookieName,
 			Value:   tokenString,
 			Expires: expirationTime,
 		})
@@ -137,7 +138,7 @@ func genRandomJWTKey(n int) []byte {
 
 func (u *webService) authWithCookie(w http.ResponseWriter, r *http.Request) (*Claims, error) {
 	// Get the session token from the requests cookies
-	c, err := r.Cookie(jwtCookieName)
+	c, err := r.Cookie(config.JWTCookieName)
 	if err != nil {
 		if err == http.ErrNoCookie {
 			// If the cookie is not set, return an unauthorized status

@@ -1,15 +1,13 @@
 package client
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"github.com/goccy/go-json"
 	"log"
 	"net/http"
 	"nexus-pusher/pkg/comps"
 	"nexus-pusher/pkg/config"
-	"nexus-pusher/pkg/server"
+	"strings"
 	"sync"
 	"time"
 )
@@ -99,9 +97,9 @@ func RunNexusPusher(c *config.NexusConfig) {
 
 func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 	s1 := comps.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
-		sc.SrcServerConfig.Server, baseUrl, apiComponentsUrl)
+		sc.SrcServerConfig.Server, config.URIBase, config.URIComponents)
 	s2 := comps.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
-		sc.DstServerConfig.Server, baseUrl, apiComponentsUrl)
+		sc.DstServerConfig.Server, config.URIBase, config.URIComponents)
 	c1 := comps.HttpClient()
 	c2 := comps.HttpClient()
 	var nc1 []*comps.NexusComponent
@@ -133,32 +131,29 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 		data := genNexExpCompFromNexComp(cmpDiff)
 		data.NexusServer = comps.NexusServer{
 			Host:             sc.DstServerConfig.Server,
-			BaseUrl:          baseUrl,
-			ApiComponentsUrl: apiComponentsUrl,
+			BaseUrl:          config.URIBase,
+			ApiComponentsUrl: config.URIComponents,
 			Username:         sc.DstServerConfig.User,
 			Password:         sc.DstServerConfig.Pass,
 		}
+
 		// Send diff data to nexus-pusher server
-		log.Printf("Sending components diff to %s server...", s2.Host)
-		srvUrl := fmt.Sprintf("%s%s%s?repository=%s",
-			cc.Server,
-			s2.BaseUrl,
-			s2.ApiComponentsUrl,
-			sc.DstServerConfig.RepoName)
-		var buf bytes.Buffer
-		err := json.NewEncoder(&buf).Encode(data)
+		pc := newPushClient(cc.Server, cc.ServerAuth.User, cc.ServerAuth.Pass)
+		// Use basic auth to get JWT token
+		if err := pc.authorize(); err != nil {
+			log.Printf("%v", err)
+			return
+		}
+		// Send compare request to nexus-pusher server
+		body, err := pc.sendComparedRequest(data, sc.DstServerConfig.RepoName)
 		if err != nil {
 			log.Printf("%v", err)
 			return
 		}
-		body, err := s2.SendRequest(srvUrl, "POST", c2, &buf)
-		if err != nil {
+		// Start server polling to get request results
+		if err := pc.pollComparedResults(body); err != nil {
 			log.Printf("%v", err)
-			return
 		}
-		log.Printf("Sending components diff to %s succesfully complete.", s2.Host)
-		// Get results from server
-		getRequestResult(body, s2, c2, cc.Server)
 	} else {
 		log.Printf("'%s' repo at server %s is in sync with repo '%s' at server %s, nothing to do.\n",
 			sc.SrcServerConfig.RepoName,
@@ -168,47 +163,7 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 	}
 }
 
-func getRequestResult(body []byte, s *comps.NexusServer, c *http.Client, pushTo string) {
-	// Convert body to Message type
-	msg := &server.Message{}
-	if err := json.Unmarshal(body, msg); err != nil {
-		log.Printf("%v", err)
-		return
-	}
-	log.Printf("Starting server polling for message id %s to get upload results...", msg.ID)
-	// Queue http polling
-	srvUrl := fmt.Sprintf("%s%s%s?uuid=%s", pushTo,
-		s.BaseUrl,
-		s.ApiComponentsUrl,
-		msg.ID)
-
-	// Poll maximum for 1800 seconds (30 min)
-	limitTime := 1800
-	for x := 1; x < limitTime; x++ {
-		body, err := s.SendRequest(srvUrl, "GET", c, nil)
-		if err != nil {
-			log.Printf("%v", err)
-			return
-		}
-		if err := json.Unmarshal(body, msg); err != nil {
-			log.Printf("%v", err)
-			return
-		}
-		if msg.Complete {
-			log.Printf("Server polling for message id %s is complete with response from server:\n>>>\n%v<<<\n",
-				msg.ID,
-				msg.Response)
-			return
-		}
-		if x%30 == 0 {
-			log.Printf("Server polling for message id %s in progress... %d seconds passed",
-				msg.ID,
-				x)
-		}
-		time.Sleep(1 * time.Second)
-	}
-	// Show error if we don't get results in time
-	log.Printf("error: unable to get results from for message id %s in %d seconds",
-		msg.ID,
-		limitTime)
+func componentNameFromPath(cmpPath string) string {
+	cmpPathSplit := strings.Split(cmpPath, "/")
+	return cmpPathSplit[len(cmpPathSplit)-1]
 }

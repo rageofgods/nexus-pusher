@@ -12,6 +12,7 @@ import (
 )
 
 func stub(w http.ResponseWriter, r *http.Request) {
+	_ = r // ignore request here
 	if _, err := fmt.Fprintln(w, "Welcome to nexus-pusher."); err != nil {
 		log.Printf("%v", err)
 	}

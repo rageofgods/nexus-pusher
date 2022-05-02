@@ -60,9 +60,9 @@ func (s *NexusServer) GetComponents(
 		log.Printf("Analyzing repo '%s', please wait... Processed %d assets.\n", repoName, len(ncs))
 	}
 
-	//if len(ncs) > 10 {
-	//	return ncs, nil
-	//}
+	if len(ncs) > 10000 {
+		return ncs, nil
+	}
 
 	// Iterating over all API pages
 	if nc.ContinuationToken != "" {
@@ -212,6 +212,8 @@ func componentNameFromPath(cmpPath string) string {
 	return cmpPathSplit[len(cmpPathSplit)-1]
 }
 
+// HttpClient returns http client with optional timeout parameter
+// Default timeout value is 10 seconds
 func HttpClient(t ...time.Duration) *http.Client {
 	retryClient := retryablehttp.NewClient()
 	retryClient.HTTPClient.Transport = &http.Transport{

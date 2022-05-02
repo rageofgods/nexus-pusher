@@ -36,10 +36,4 @@ func newWebService(cfg *config.Server, messages map[uuid.UUID]*Message, jwtKey [
 const (
 	// Limit uploaded json to 30mb
 	maxBodySize int64 = 31457280
-	// Set JWT token TTL in minutes
-	jwtTokenTTL = 5
-	// Set JWT token Cookie name
-	jwtCookieName = "token"
-	// Set JWT token refresh window in seconds
-	jwtTokenRefreshWindow = 30
 )

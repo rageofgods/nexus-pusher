@@ -10,10 +10,10 @@ import (
 func NewRouter(cfg *config.Server) *mux.Router {
 	us := newWebService(cfg, make(map[uuid.UUID]*Message), genRandomJWTKey(32))
 	var r = Routes{Routes: []Route{
-		{"login", "GET", "/login", stub},
-		{"refresh", "GET", "/refresh", stub},
-		{"post-components", "POST", "/service/rest/v1/components", us.components},
-		{Name: "get-answer", Method: "GET", Pattern: "/service/rest/v1/components", HandlerFunc: us.answerMessage},
+		{"login", "GET", config.URIBase + config.URILogin, stub},
+		{"refresh", "GET", config.URIBase + config.URIRefresh, stub},
+		{"post-components", "POST", config.URIBase + config.URIComponents, us.components},
+		{Name: "get-answer", Method: "GET", Pattern: config.URIBase + config.URIComponents, HandlerFunc: us.answerMessage},
 	}}
 
 	router := mux.NewRouter().StrictSlash(true)
