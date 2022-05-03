@@ -93,7 +93,7 @@ func (s *NexusServer) UploadComponents(c *http.Client,
 	for _, v := range nec.Items {
 		for _, vv := range v.Assets {
 			resultsCounter++
-			go func(format componentType, c *http.Client, asset *NexusExportComponentAsset, repoName string) {
+			go func(format ComponentType, c *http.Client, asset *NexusExportComponentAsset, repoName string) {
 				limitChan <- struct{}{}
 				result := &UploadResult{}
 				if err := s.uploadComponent(format, c, asset, repoName); err != nil {
@@ -102,7 +102,7 @@ func (s *NexusServer) UploadComponents(c *http.Client,
 				}
 				resultsChan <- result
 				<-limitChan
-			}(componentType(v.Format), c, vv, repoName)
+			}(ComponentType(v.Format), c, vv, repoName)
 		}
 	}
 	var results []UploadResult
@@ -118,14 +118,14 @@ func (s *NexusServer) UploadComponents(c *http.Client,
 	return results
 }
 
-func (s *NexusServer) uploadComponent(format componentType,
+func (s *NexusServer) uploadComponent(format ComponentType,
 	c *http.Client,
 	asset *NexusExportComponentAsset,
 	repoName string) error {
 	switch format {
-	case npm:
+	case NPM:
 		// Download NPM component from official repo
-		data, conType, err := downloadComponent(npm, asset.Path)
+		data, conType, err := downloadComponent(NPM, asset.Path)
 		if err != nil {
 			return err
 		}
@@ -172,10 +172,10 @@ func (s *NexusServer) uploadComponent(format componentType,
 	return nil
 }
 
-func downloadComponent(cmpType componentType, cmpPath string) (*bytes.Buffer, string, error) {
+func downloadComponent(cmpType ComponentType, cmpPath string) (*bytes.Buffer, string, error) {
 	var resp *http.Response
 	switch cmpType {
-	case npm:
+	case NPM:
 		npmSrv := npmSrv
 		var err error
 		resp, err = http.Get(fmt.Sprintf("%s%s", npmSrv, cmpPath))

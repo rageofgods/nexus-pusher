@@ -117,23 +117,25 @@ func ScheduleRunNexusPusher(c *config.NexusConfig) error {
 }
 
 func doCheckRepoTypes(sc *config.SyncConfig) error {
+	// Define variables
 	s1 := comps.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
 		sc.SrcServerConfig.Server, config.URIBase, config.URIRepositories)
 	s2 := comps.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
 		sc.DstServerConfig.Server, config.URIBase, config.URIRepositories)
+
 	c1 := comps.HttpClient()
 	c2 := comps.HttpClient()
+
 	var nr1 []*comps.NexusRepository
 	var nr2 []*comps.NexusRepository
 
-	srvUrl1 := fmt.Sprintf("%s%s%s",
-		s1.Host,
-		s1.BaseUrl,
-		s1.ApiComponentsUrl)
-	srvUrl2 := fmt.Sprintf("%s%s%s",
-		s2.Host,
-		s2.BaseUrl,
-		s2.ApiComponentsUrl)
+	srvUrl1 := fmt.Sprintf("%s%s%s", s1.Host, s1.BaseUrl, s1.ApiComponentsUrl)
+	srvUrl2 := fmt.Sprintf("%s%s%s", s2.Host, s2.BaseUrl, s2.ApiComponentsUrl)
+
+	// Check repo for supported types
+	if err := checkSupportedRepoTypes(comps.ComponentType(sc.Format)); err != nil {
+		return err
+	}
 
 	// Creating error group for awaiting result from check repos types
 	group := new(errgroup.Group)
@@ -287,5 +289,14 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 			sc.SrcServerConfig.Server,
 			sc.DstServerConfig.RepoName,
 			sc.DstServerConfig.Server)
+	}
+}
+
+func checkSupportedRepoTypes(repoType comps.ComponentType) error {
+	switch repoType.Lower() {
+	case comps.NPM:
+		return nil
+	default:
+		return fmt.Errorf("error: unsuported component type %s", repoType)
 	}
 }
