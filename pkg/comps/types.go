@@ -13,4 +13,11 @@ const (
 	// NPM Set NPM specific variables
 	NPM    ComponentType = "npm"
 	npmSrv string        = "https://registry.npmjs.org/"
+
+	NUGET  ComponentType = "nuget"
+	PYPI   ComponentType = "pypi"
+	HELM   ComponentType = "helm"
+	DOCKER ComponentType = "docker"
+	RUBY   ComponentType = "rubygems"
+	APT    ComponentType = "apt"
 )
