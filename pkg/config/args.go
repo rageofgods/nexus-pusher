@@ -1,23 +1,30 @@
 package config
 
-import "github.com/spf13/pflag"
+import (
+	"github.com/spf13/pflag"
+)
 
-// GetConfigPath parse cmd args
-func GetConfigPath() string {
+type Args struct {
+	ConfigPath string
+	DaemonMode bool
+}
+
+// GetConfigArgs returns config specific args
+func (a *Args) GetConfigArgs() *Args {
 	var showHelp bool
-	var configPath string
 
-	pflag.StringVarP(&configPath, "config", "c", "",
+	pflag.StringVarP(&a.ConfigPath, "config", "c", configName,
 		"Config file path")
+	pflag.BoolVarP(&a.DaemonMode, "daemon", "d", false,
+		"Enable daemon mode")
 	pflag.BoolVarP(&showHelp, "help", "h", false,
 		"Show help message")
+
 	pflag.Parse()
 	if showHelp {
 		pflag.Usage()
-		return ""
+		return nil
 	}
-	if configPath == "" {
-		configPath = configName
-	}
-	return configPath
+
+	return a
 }

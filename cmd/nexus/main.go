@@ -10,15 +10,15 @@ import (
 )
 
 func main() {
-	// Get Config Path
-	var configPath string
-	if configPath = config.GetConfigPath(); configPath == "" {
+	// Get Config Args
+	args := &config.Args{}
+	if args = args.GetConfigArgs(); args == nil {
 		return
 	}
 
 	// Load Nexus-Pusher configuration from file
 	cfg := config.NewNexusConfig()
-	if err := cfg.LoadConfig(configPath); err != nil {
+	if err := cfg.LoadConfig(args.ConfigPath); err != nil {
 		log.Fatalf("unable to load config: %v", err)
 	}
 	// Validate config for correct syntax

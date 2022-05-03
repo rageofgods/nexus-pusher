@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+// ValidateConfig is used to validate config file for correct parameters
 func (c *NexusConfig) ValidateConfig() error {
 	// Check server required parameters and setup defaults if they are missing
 	if c.Server.Enabled {
