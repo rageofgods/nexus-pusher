@@ -28,6 +28,8 @@ func (c *NexusConfig) ValidateConfig() error {
 		return fmt.Errorf("error: client required 'serverAuth.pass' variable is missing in %s", c.string)
 	} else if c.Client.Server == "" {
 		return fmt.Errorf("error: client required 'server' variable is missing in %s", c.string)
+	} else if c.Client.Daemon.SyncEveryMinutes == 0 {
+		c.Client.Daemon.SyncEveryMinutes = clientDaemonSyncEveryMinutes
 	}
 	return nil
 }

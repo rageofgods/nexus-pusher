@@ -23,6 +23,10 @@ type Server struct {
 
 // Client is defines client-side config part
 type Client struct {
+	Daemon struct {
+		Enabled          bool `yaml:"enabled"`
+		SyncEveryMinutes int  `yaml:"syncEveryMinutes"`
+	} `yaml:"daemon"`
 	Server      string        `yaml:"server"`
 	ServerAuth  ServerAuth    `yaml:"serverAuth"`
 	SyncConfigs []*SyncConfig `yaml:"syncConfigs"`
@@ -65,6 +69,10 @@ const (
 	serverBindAddress string = "0.0.0.0"
 	// Set default config file name
 	configName string = "config.yaml"
+	// TimeZone Set default timezone
+	TimeZone string = "Europe/Moscow"
+	// Set default client sync time in daemon mode
+	clientDaemonSyncEveryMinutes = 30
 )
 
 const (

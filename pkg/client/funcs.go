@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/go-co-op/gocron"
 	"log"
 	"net/http"
 	"nexus-pusher/pkg/comps"
@@ -85,6 +86,7 @@ func showFinalMessageForGetComponents(r string, nc []*comps.NexusComponent, t ti
 		time.Since(t).Round(time.Second))
 }
 
+// RunNexusPusher client entry point
 func RunNexusPusher(c *config.NexusConfig) {
 	wg := &sync.WaitGroup{}
 	for _, v := range c.Client.SyncConfigs {
@@ -93,6 +95,23 @@ func RunNexusPusher(c *config.NexusConfig) {
 		go func() { doSyncConfigs(&c.Client, syncConfig); wg.Done() }()
 	}
 	wg.Wait()
+}
+
+// ScheduleRunNexusPusher wrapper around RunNexusPusher to schedule syncs
+func ScheduleRunNexusPusher(c *config.NexusConfig) error {
+	loc, err := time.LoadLocation(config.TimeZone)
+	if err != nil {
+		return err
+	}
+
+	s := gocron.NewScheduler(loc)
+	j, err := s.Every(c.Client.Daemon.SyncEveryMinutes).Minute().Do(RunNexusPusher, c)
+	if err != nil {
+		return fmt.Errorf("error: can't schedule sync. job: %v: error: %v", j, err)
+	}
+	s.StartBlocking()
+
+	return nil
 }
 
 func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
