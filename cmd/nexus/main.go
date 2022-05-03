@@ -35,12 +35,24 @@ func main() {
 
 	// Start Server or Client version following provided configuration
 	if cfg.Server.Enabled {
-		log.Printf("Running in server mode. Listening on: %s:%s",
-			cfg.Server.BindAddress,
-			cfg.Server.Port)
-		log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s",
-			cfg.Server.BindAddress,
-			cfg.Server.Port), server.NewRouter(cfg.Server)))
+		if cfg.Server.TLS.Enabled {
+			log.Printf("Running in server mode (TLS). Listening on: %s:%s",
+				cfg.Server.BindAddress,
+				cfg.Server.Port)
+			log.Fatal(http.ListenAndServeTLS(fmt.Sprintf("%s:%s",
+				cfg.Server.BindAddress,
+				cfg.Server.Port),
+				cfg.Server.TLS.CertPath,
+				cfg.Server.TLS.KeyPath,
+				server.NewRouter(cfg.Server)))
+		} else {
+			log.Printf("Running in server mode (HTTP). Listening on: %s:%s",
+				cfg.Server.BindAddress,
+				cfg.Server.Port)
+			log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s",
+				cfg.Server.BindAddress,
+				cfg.Server.Port), server.NewRouter(cfg.Server)))
+		}
 	} else {
 		if cfg.Client.Daemon.Enabled {
 			log.Printf("Running client in 'daemon' mode. Scheduling re-sync every %d minutes",

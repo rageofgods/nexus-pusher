@@ -19,6 +19,11 @@ type Server struct {
 	Port        string            `yaml:"port"`
 	Concurrency int               `yaml:"concurrency"`
 	Credentials map[string]string `json:"credentials"`
+	TLS         struct {
+		Enabled  bool   `yaml:"enabled"`
+		KeyPath  string `yaml:"keyPath"`
+		CertPath string `yaml:"certPath"`
+	} `yaml:"tls"`
 }
 
 // Client is defines client-side config part
