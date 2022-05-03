@@ -1,15 +1,18 @@
 package config
 
+// NexusConfig is a root of configuration
 type NexusConfig struct {
 	string
 	Server Server `yaml:"server"`
 	Client Client `yaml:"client"`
 }
 
+// NewNexusConfig returns empty NexusConfig
 func NewNexusConfig() *NexusConfig {
 	return &NexusConfig{}
 }
 
+// Server is defines server-side config part
 type Server struct {
 	Enabled     bool              `yaml:"enabled"`
 	BindAddress string            `yaml:"bindAddress"`
@@ -18,22 +21,26 @@ type Server struct {
 	Credentials map[string]string `json:"credentials"`
 }
 
+// Client is defines client-side config part
 type Client struct {
 	Server      string        `yaml:"server"`
 	ServerAuth  ServerAuth    `yaml:"serverAuth"`
 	SyncConfigs []*SyncConfig `yaml:"syncConfigs"`
 }
 
+// ServerAuth is defines client side server auth
 type ServerAuth struct {
 	User string `yaml:"user"`
 	Pass string `yaml:"pass"`
 }
 
+// SyncConfig is defines set of sync-configs for client
 type SyncConfig struct {
 	SrcServerConfig SrcServerConfig `yaml:"srcServerConfig"`
 	DstServerConfig DstServerConfig `yaml:"dstServerConfig"`
 }
 
+// SrcServerConfig is defines source server which will be compared to destination
 type SrcServerConfig struct {
 	Server   string `yaml:"server"`
 	User     string `yaml:"user"`
@@ -41,6 +48,7 @@ type SrcServerConfig struct {
 	RepoName string `yaml:"repoName"`
 }
 
+// DstServerConfig is defines destination server config (target)
 type DstServerConfig struct {
 	Server   string `yaml:"server"`
 	User     string `yaml:"user"`

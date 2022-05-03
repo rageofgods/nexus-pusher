@@ -89,8 +89,8 @@ func RunNexusPusher(c *config.NexusConfig) {
 	wg := &sync.WaitGroup{}
 	for _, v := range c.Client.SyncConfigs {
 		wg.Add(1)
-		value := v
-		go func() { doSyncConfigs(&c.Client, value); wg.Done() }()
+		syncConfig := v
+		go func() { doSyncConfigs(&c.Client, syncConfig); wg.Done() }()
 	}
 	wg.Wait()
 }

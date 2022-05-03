@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// pushClient is used to push diff to server-side
 type pushClient struct {
 	serverAddress string
 	serverUser    string
@@ -24,6 +25,7 @@ func newPushClient(serverAddress string, serverUser string, serverPass string) *
 	return &pushClient{serverAddress: serverAddress, serverUser: serverUser, serverPass: serverPass}
 }
 
+// authorize the client with server using plain type credentials from configuration file
 func (p *pushClient) authorize() error {
 	requestUrl := fmt.Sprintf("%s%s%s", p.serverAddress, config.URIBase, config.URILogin)
 	client := comps.HttpClient()
@@ -55,6 +57,7 @@ func (p *pushClient) authorize() error {
 	return fmt.Errorf("error: unable to find JWT Cookie in ")
 }
 
+// refreshAuth will refresh JWT token for client through server request
 func (p *pushClient) refreshAuth() error {
 	// If JWT will be expired soon, try to refresh it
 	if time.Until(p.cookie.Expires) < config.JWTTokenRefreshWindow*time.Second {
@@ -96,6 +99,7 @@ func (p *pushClient) refreshAuth() error {
 	return nil
 }
 
+// sendComparedRequest sends diff data to server
 func (p *pushClient) sendComparedRequest(data *comps.NexusExportComponents, repoName string) ([]byte, error) {
 	var buf bytes.Buffer
 	requestUrl := fmt.Sprintf("%s%s%s?repository=%s",
@@ -142,6 +146,7 @@ func (p *pushClient) sendComparedRequest(data *comps.NexusExportComponents, repo
 	return body, nil
 }
 
+// pollComparedResults long-http polling function to get upload results from server
 func (p *pushClient) pollComparedResults(body []byte) error {
 	// Convert body to Message type
 	msg := &server.Message{}
