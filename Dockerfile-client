@@ -1,0 +1,31 @@
+################
+# Build GO app #
+################
+FROM golang:1.17-buster as builder
+
+WORKDIR /app
+
+COPY go.* ./
+RUN go mod download
+
+RUN make docker_build
+
+#########################
+# Get certs and TZ data #
+#########################
+FROM alpine:3.15.0 as certer
+RUN apk update && apk add ca-certificates tzdata
+
+################################################
+# Use scratch image to reduce final image size #
+################################################
+FROM scratch
+
+ENV TZ="Europe/Moscow"
+
+COPY --from=certer /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=certer /usr/share/zoneinfo /usr/share/zoneinfo/
+
+COPY --from=builder /app/nexus-pusher /app/nexus-pusher
+
+CMD ["/app/nexus-pusher"]

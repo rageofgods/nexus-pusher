@@ -28,6 +28,11 @@ func main() {
 		log.Fatalf("%v", err)
 	}
 
+	// Schedule periodic config file re-read
+	if err := cfg.ScheduleLoadConfig(args.ConfigPath, 30); err != nil {
+		log.Printf("error: %v", err)
+	}
+
 	// Start Server or Client version following provided configuration
 	if cfg.Server.Enabled {
 		log.Printf("Running in server mode. Listening on: %s:%s",
@@ -35,18 +40,18 @@ func main() {
 			cfg.Server.Port)
 		log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s",
 			cfg.Server.BindAddress,
-			cfg.Server.Port), server.NewRouter(&cfg.Server)))
+			cfg.Server.Port), server.NewRouter(cfg.Server)))
 	} else {
 		if cfg.Client.Daemon.Enabled {
 			log.Printf("Running client in 'daemon' mode. Scheduling re-sync every %d minutes",
 				cfg.Client.Daemon.SyncEveryMinutes)
-			if err := client.ScheduleRunNexusPusher(cfg); err != nil {
+			if err := client.ScheduleRunNexusPusher(cfg.Client); err != nil {
 				log.Printf("%v", err)
 				os.Exit(1)
 			}
 		} else {
 			log.Println("Running client in 'ad hoc' mode. Will do sync only once.")
-			client.RunNexusPusher(cfg)
+			client.RunNexusPusher(cfg.Client)
 		}
 	}
 }

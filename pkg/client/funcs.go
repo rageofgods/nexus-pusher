@@ -89,25 +89,25 @@ func showFinalMessageForGetComponents(r string, nc []*comps.NexusComponent, t ti
 }
 
 // RunNexusPusher client entry point
-func RunNexusPusher(c *config.NexusConfig) {
+func RunNexusPusher(c *config.Client) {
 	wg := &sync.WaitGroup{}
-	for _, v := range c.Client.SyncConfigs {
+	for _, v := range c.SyncConfigs {
 		wg.Add(1)
 		syncConfig := v
-		go func() { doSyncConfigs(&c.Client, syncConfig); wg.Done() }()
+		go func() { doSyncConfigs(c, syncConfig); wg.Done() }()
 	}
 	wg.Wait()
 }
 
 // ScheduleRunNexusPusher wrapper around RunNexusPusher to schedule syncs
-func ScheduleRunNexusPusher(c *config.NexusConfig) error {
+func ScheduleRunNexusPusher(c *config.Client) error {
 	loc, err := time.LoadLocation(config.TimeZone)
 	if err != nil {
 		return err
 	}
 
 	s := gocron.NewScheduler(loc)
-	j, err := s.Every(c.Client.Daemon.SyncEveryMinutes).Minute().Do(RunNexusPusher, c)
+	j, err := s.Every(c.Daemon.SyncEveryMinutes).Minute().Do(RunNexusPusher, c)
 	if err != nil {
 		return fmt.Errorf("error: can't schedule sync. job: %v: error: %v", j, err)
 	}
