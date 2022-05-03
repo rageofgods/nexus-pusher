@@ -153,9 +153,9 @@ func doCheckRepoTypes(sc *config.SyncConfig) error {
 
 		for _, v := range nr1 {
 			// Check if target repo is available on Nexus server
-			if strings.ToLower(v.Name) == strings.ToLower(sc.SrcServerConfig.RepoName) {
+			if strings.EqualFold(v.Name, sc.SrcServerConfig.RepoName) {
 				// Check for correct repo format
-				if strings.ToLower(v.Format) != strings.ToLower(sc.Format) {
+				if strings.EqualFold(v.Format, sc.Format) {
 					return fmt.Errorf("wrong repository '%s' format type for server %s. want: %s, get: %s",
 						sc.SrcServerConfig.RepoName,
 						sc.SrcServerConfig.Server,
@@ -184,9 +184,9 @@ func doCheckRepoTypes(sc *config.SyncConfig) error {
 
 		for _, v := range nr2 {
 			// Check if target repo is available on Nexus server
-			if strings.ToLower(v.Name) == strings.ToLower(sc.DstServerConfig.RepoName) {
+			if strings.EqualFold(v.Name, sc.DstServerConfig.RepoName) {
 				// Check for correct repo format
-				if strings.ToLower(v.Format) != strings.ToLower(sc.Format) {
+				if strings.EqualFold(v.Format, sc.Format) {
 					return fmt.Errorf("wrong repository '%s' format type for server %s. want: %s, get: %s",
 						sc.DstServerConfig.RepoName,
 						sc.DstServerConfig.Server,
