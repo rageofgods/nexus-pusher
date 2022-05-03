@@ -40,6 +40,7 @@ type ServerAuth struct {
 
 // SyncConfig is defines set of sync-configs for client
 type SyncConfig struct {
+	Format          string          `yaml:"format"`
 	SrcServerConfig SrcServerConfig `yaml:"srcServerConfig"`
 	DstServerConfig DstServerConfig `yaml:"dstServerConfig"`
 }
@@ -84,6 +85,8 @@ const (
 	URIRefresh string = "/refresh"
 	// URIComponents Set components REST URI
 	URIComponents string = "/v1/components"
+	// URIRepositories Set repositories REST URI
+	URIRepositories string = "/v1/repositories"
 )
 
 const (

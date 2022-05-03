@@ -31,5 +31,12 @@ func (c *NexusConfig) ValidateConfig() error {
 	} else if c.Client.Daemon.SyncEveryMinutes == 0 {
 		c.Client.Daemon.SyncEveryMinutes = clientDaemonSyncEveryMinutes
 	}
+	// Check SynConfigs parameters
+	for _, v := range c.Client.SyncConfigs {
+		if v.Format == "" {
+			return fmt.Errorf("error: syncconfig required 'format' variable is missing in %s", v)
+		}
+	}
+
 	return nil
 }

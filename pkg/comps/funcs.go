@@ -30,6 +30,7 @@ func (s *NexusServer) GetComponents(
 	default:
 		// Do nothing (continue execution)
 	}
+
 	var srvUrl string
 	if len(contToken) != 0 {
 		srvUrl = fmt.Sprintf("%s%s%s?repository=%s&continuationToken=%s", s.Host,
