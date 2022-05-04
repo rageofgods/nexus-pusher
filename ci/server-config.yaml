@@ -1,0 +1,10 @@
+server:
+  enabled: true
+  bindAddress: "0.0.0.0"
+  port: "8181"
+  concurrency: 30
+  credentials:
+  tls:
+    enabled: false
+    keyPath: ""
+    certPath: ""
