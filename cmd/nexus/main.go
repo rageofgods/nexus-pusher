@@ -10,6 +10,12 @@ import (
 	"os"
 )
 
+// App version
+var (
+	Version string
+	Build   string
+)
+
 func main() {
 	// Get Config Args
 	args := &config.Args{}
@@ -33,6 +39,7 @@ func main() {
 		log.Printf("error: %v", err)
 	}
 
+	log.Printf("Starting application... Version: %s, Build: %s", Version, Build)
 	// Start Server or Client version following provided configuration
 	if cfg.Server.Enabled {
 		if cfg.Server.TLS.Enabled {

@@ -1,0 +1,20 @@
+client:
+  daemon:
+    enabled: true
+    syncEveryMinutes: 30
+  server: "http://127.0.0.1:8181"
+  serverAuth:
+    user: "user"
+    pass: "12345"
+  syncConfigs:
+    - srcServerConfig:
+        server: "https://nexus.server"
+        user: "user"
+        pass: "pass"
+        repoName: "repo1"
+      dstServerConfig:
+        server: "https://nexus.server"
+        user: "user"
+        pass: "pass"
+        repoName: "repo1"
+      format: "npm"

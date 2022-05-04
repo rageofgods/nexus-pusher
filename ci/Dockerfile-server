@@ -10,7 +10,7 @@ RUN go mod download
 
 COPY . ./
 
-RUN make docker_build_server
+RUN make docker_build
 
 #########################
 # Get certs and TZ data #
@@ -37,8 +37,6 @@ ENV PASSWORD=$password
 RUN yq e -i '.server.concurrency = env(CONCURRENCY)' server-config.yaml && \
     yq e -i '.server.credentials += { env(USERNAME):env(PASSWORD) }' server-config.yaml
 
-RUN cat /app/server-config.yaml
-
 ################################################
 # Use scratch image to reduce final image size #
 ################################################
@@ -49,8 +47,8 @@ ENV TZ="Europe/Moscow"
 COPY --from=certer /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=certer /usr/share/zoneinfo /usr/share/zoneinfo/
 
-COPY --from=builder /app/nexus-pusher-server /app/nexus-pusher-server
+COPY --from=builder /app/nexus-pusher /app/nexus-pusher
 COPY --from=configurer /app/server-config.yaml /app/server-config.yaml
 
 WORKDIR /app
-CMD ["./nexus-pusher-server", "-c", "server-config.yaml"]
+CMD ["./nexus-pusher", "-c", "server-config.yaml"]
