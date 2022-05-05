@@ -11,7 +11,6 @@ import (
 	"nexus-pusher/pkg/config"
 	"nexus-pusher/pkg/server"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -127,15 +126,15 @@ func makeServerFromMux(mux *http.ServeMux) *http.Server {
 	}
 }
 
-func makeHTTPToHTTPSRedirectServer() *http.Server {
-	handleRedirect := func(w http.ResponseWriter, r *http.Request) {
-		newURI := "https://" + strings.Split(r.Host, ":")[0] + ":8443" + r.URL.String()
-		http.Redirect(w, r, newURI, http.StatusFound)
-	}
-	mux := &http.ServeMux{}
-	mux.HandleFunc("/", handleRedirect)
-	return makeServerFromMux(mux)
-}
+//func makeHTTPToHTTPSRedirectServer() *http.Server {
+//	handleRedirect := func(w http.ResponseWriter, r *http.Request) {
+//		newURI := "https://" + strings.Split(r.Host, ":")[0] + ":8443" + r.URL.String()
+//		http.Redirect(w, r, newURI, http.StatusFound)
+//	}
+//	mux := &http.ServeMux{}
+//	mux.HandleFunc("/", handleRedirect)
+//	return makeServerFromMux(mux)
+//}
 
 func makeHTTPServer() *http.Server {
 	mux := &http.ServeMux{}
@@ -145,7 +144,9 @@ func makeHTTPServer() *http.Server {
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, htmlIndex)
+	if _, err := io.WriteString(w, htmlIndex); err != nil {
+		log.Printf("%v", err)
+	}
 }
 
 const (
