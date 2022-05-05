@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
+	"golang.org/x/crypto/acme/autocert"
 	"log"
 	"net/http"
 	"nexus-pusher/pkg/client"
@@ -46,12 +48,13 @@ func main() {
 			log.Printf("Running in server mode (TLS). Listening on: %s:%s",
 				cfg.Server.BindAddress,
 				cfg.Server.Port)
-			log.Fatal(http.ListenAndServeTLS(fmt.Sprintf("%s:%s",
-				cfg.Server.BindAddress,
-				cfg.Server.Port),
-				cfg.Server.TLS.CertPath,
-				cfg.Server.TLS.KeyPath,
-				server.NewRouter(cfg.Server)))
+			//log.Fatal(http.ListenAndServeTLS(fmt.Sprintf("%s:%s",
+			//	cfg.Server.BindAddress,
+			//	cfg.Server.Port),
+			//	cfg.Server.TLS.CertPath,
+			//	cfg.Server.TLS.KeyPath,
+			//	server.NewRouter(cfg.Server)))
+			runLetsEncrypt(cfg.Server)
 		} else {
 			log.Printf("Running in server mode (HTTP). Listening on: %s:%s",
 				cfg.Server.BindAddress,
@@ -72,5 +75,31 @@ func main() {
 			log.Println("Running client in 'ad hoc' mode. Will do sync only once.")
 			client.RunNexusPusher(cfg.Client)
 		}
+	}
+}
+
+func runLetsEncrypt(cfg *config.Server) {
+	c := autocert.DirCache("certs")
+	m := autocert.Manager{
+		Cache:      c,
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: autocert.HostWhitelist("rageofgods.xyz"),
+	}
+
+	s := &http.Server{
+		Addr:      ":8443",
+		TLSConfig: &tls.Config{GetCertificate: m.GetCertificate},
+		Handler:   server.NewRouter(cfg),
+	}
+
+	go log.Fatal(http.ListenAndServe(":8080", secureRedirect()))
+	log.Fatal(s.ListenAndServeTLS("", ""))
+}
+
+func secureRedirect() http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		redirect := "https://" + req.Host + req.RequestURI
+		log.Println("Redirecting to", redirect)
+		http.Redirect(w, req, redirect, http.StatusMovedPermanently)
 	}
 }

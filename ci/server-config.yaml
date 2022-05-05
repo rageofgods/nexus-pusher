@@ -5,6 +5,6 @@ server:
   concurrency: 30
   credentials:
   tls:
-    enabled: false
+    enabled: true
     keyPath: ""
     certPath: ""

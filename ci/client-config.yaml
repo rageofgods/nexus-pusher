@@ -18,3 +18,4 @@ client:
         pass: "pass"
         repoName: "repo1"
       format: "npm"
+
