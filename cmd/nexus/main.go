@@ -100,7 +100,7 @@ func runLetsEncrypt(cfg *config.Server) {
 
 	httpSrv := makeHTTPServer()
 	httpSrv.Handler = m.HTTPHandler(httpSrv.Handler)
-	httpSrv.Addr = ":8080"
+	httpSrv.Addr = ":80"
 	err := httpSrv.ListenAndServe()
 	if err != nil {
 		log.Fatalf("httpSrv.ListenAndServe() failed with %s", err)
