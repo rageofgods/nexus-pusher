@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CONCURRENCY: 30
+    environment: prod
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
