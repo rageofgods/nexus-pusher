@@ -10,6 +10,8 @@ import (
 	"nexus-pusher/pkg/config"
 	"nexus-pusher/pkg/server"
 	"os"
+	"strings"
+	"time"
 )
 
 // App version
@@ -92,14 +94,37 @@ func runLetsEncrypt(cfg *config.Server) {
 		Handler:   server.NewRouter(cfg),
 	}
 
-	go log.Fatal(http.ListenAndServe(":8080", secureRedirect()))
-	log.Fatal(s.ListenAndServeTLS("", ""))
+	go func() {
+		log.Fatal(s.ListenAndServeTLS("", ""))
+	}()
+
+	httpSrv := makeHTTPToHTTPSRedirectServer()
+	httpSrv.Handler = m.HTTPHandler(httpSrv.Handler)
+	httpSrv.Addr = ":8080"
+	fmt.Printf("Starting HTTP server on %s\n", httpSrv.Addr)
+	err := httpSrv.ListenAndServe()
+	if err != nil {
+		log.Fatalf("httpSrv.ListenAndServe() failed with %s", err)
+	}
 }
 
-func secureRedirect() http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		redirect := "https://" + req.Host + req.RequestURI
-		log.Println("Redirecting to", redirect)
-		http.Redirect(w, req, redirect, http.StatusMovedPermanently)
+func makeServerFromMux(mux *http.ServeMux) *http.Server {
+	// set timeouts so that a slow or malicious client doesn't
+	// hold resources forever
+	return &http.Server{
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 5 * time.Second,
+		IdleTimeout:  120 * time.Second,
+		Handler:      mux,
 	}
+}
+
+func makeHTTPToHTTPSRedirectServer() *http.Server {
+	handleRedirect := func(w http.ResponseWriter, r *http.Request) {
+		newURI := "https://" + strings.Split(r.Host, ":")[0] + ":8443" + r.URL.String()
+		http.Redirect(w, r, newURI, http.StatusFound)
+	}
+	mux := &http.ServeMux{}
+	mux.HandleFunc("/", handleRedirect)
+	return makeServerFromMux(mux)
 }
