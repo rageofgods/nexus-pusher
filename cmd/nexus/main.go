@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"golang.org/x/crypto/acme/autocert"
+	"io"
 	"log"
 	"net/http"
 	"nexus-pusher/pkg/client"
@@ -98,14 +99,21 @@ func runLetsEncrypt(cfg *config.Server) {
 		log.Fatal(s.ListenAndServeTLS("", ""))
 	}()
 
-	httpSrv := makeHTTPToHTTPSRedirectServer()
+	httpSrv := makeHTTPServer()
 	httpSrv.Handler = m.HTTPHandler(httpSrv.Handler)
 	httpSrv.Addr = ":8080"
-	fmt.Printf("Starting HTTP server on %s\n", httpSrv.Addr)
 	err := httpSrv.ListenAndServe()
 	if err != nil {
 		log.Fatalf("httpSrv.ListenAndServe() failed with %s", err)
 	}
+	//httpSrv := makeHTTPToHTTPSRedirectServer()
+	//httpSrv.Handler = m.HTTPHandler(httpSrv.Handler)
+	//httpSrv.Addr = ":8080"
+	//fmt.Printf("Starting HTTP server on %s\n", httpSrv.Addr)
+	//err := httpSrv.ListenAndServe()
+	//if err != nil {
+	//	log.Fatalf("httpSrv.ListenAndServe() failed with %s", err)
+	//}
 }
 
 func makeServerFromMux(mux *http.ServeMux) *http.Server {
@@ -128,3 +136,18 @@ func makeHTTPToHTTPSRedirectServer() *http.Server {
 	mux.HandleFunc("/", handleRedirect)
 	return makeServerFromMux(mux)
 }
+
+func makeHTTPServer() *http.Server {
+	mux := &http.ServeMux{}
+	mux.HandleFunc("/", handleIndex)
+	return makeServerFromMux(mux)
+
+}
+
+func handleIndex(w http.ResponseWriter, r *http.Request) {
+	io.WriteString(w, htmlIndex)
+}
+
+const (
+	htmlIndex = `<html><body>Welcome!</body></html>`
+)
