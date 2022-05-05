@@ -1,0 +1,44 @@
+name: Sever Build and Publish Prod
+
+# Controls when the workflow will run
+on:
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - '**.md'
+      - '**.yml'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    env:
+      CONCURRENCY: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v2.5.2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build image and push to GitHub Container Registry
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ci/Dockerfile-server
+          tags: |
+            rageofgods/nexus-pusher-server:latest
+          build-args: |
+            "concurrency=${{env.CONCURRENCY}}"
+            "username=${{ secrets.SRV_USERNAME }}"
+            "password=${{ secrets.SRV_PASSWORD }}"
+          push: true
