@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"golang.org/x/crypto/acme"
 	"golang.org/x/crypto/acme/autocert"
 	"io"
 	"log"
@@ -86,6 +87,9 @@ func runLetsEncrypt(cfg *config.Server) {
 		Cache:      c,
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: autocert.HostWhitelist("rageofgods.xyz"),
+		Client: &acme.Client{
+			DirectoryURL: "https://acme-staging-v02.api.letsencrypt.org/directory",
+		},
 	}
 
 	s := &http.Server{
