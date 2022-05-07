@@ -10,6 +10,10 @@ on:
 
   workflow_dispatch:
     inputs:
+      concurrency:
+        description: Maximum allowed parallel jobs
+        required: true
+        default: "30"
       domainName:
         description: FQDN for server TLS domain
         required: false
@@ -21,15 +25,13 @@ on:
         default: true
       tls-autocert:
         type: boolean
-        description: Enables Let's encrypt auto cert issue
+        description: Enables Let's encrypt auto cert issuing
         required: false
         default: true
 
 jobs:
   docker:
     runs-on: ubuntu-latest
-    env:
-      CONCURRENCY: 30
     environment: prod
     steps:
       - name: Checkout code
@@ -56,7 +58,7 @@ jobs:
           tags: |
             rageofgods/nexus-pusher-server:latest
           build-args: |
-            "concurrency=${{env.CONCURRENCY}}"
+            "concurrency=${{ github.event.inputs.concurrency }}"
             "username=${{ secrets.SRV_USERNAME }}"
             "password=${{ secrets.SRV_PASSWORD }}"
             "tls_enabled=${{ github.event.inputs.tls-enabled }}"
