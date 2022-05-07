@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"golang.org/x/crypto/acme"
 	"golang.org/x/crypto/acme/autocert"
-	"io"
 	"log"
 	"net/http"
 	"nexus-pusher/pkg/client"
 	"nexus-pusher/pkg/config"
 	"nexus-pusher/pkg/server"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -102,18 +102,18 @@ func runLetsEncrypt(cfg *config.Server) {
 		log.Fatal(s.ListenAndServeTLS("", ""))
 	}()
 
-	httpSrv := makeHTTPServer()
-	httpSrv.Handler = m.HTTPHandler(httpSrv.Handler)
-	httpSrv.Addr = ":80"
-	err := httpSrv.ListenAndServe()
-	if err != nil {
-		log.Fatalf("httpSrv.ListenAndServe() failed with %s", err)
-	}
-	//httpSrv := makeHTTPToHTTPSRedirectServer()
+	//httpSrv := makeHTTPServer()
 	//httpSrv.Handler = m.HTTPHandler(httpSrv.Handler)
-	//httpSrv.Addr = ":8080"
-	//fmt.Printf("Starting HTTP server on %s\n", httpSrv.Addr)
+	//httpSrv.Addr = ":80"
 	//err := httpSrv.ListenAndServe()
+	//if err != nil {
+	//	log.Fatalf("httpSrv.ListenAndServe() failed with %s", err)
+	//}
+	httpSrv := makeHTTPToHTTPSRedirectServer()
+	httpSrv.Handler = m.HTTPHandler(httpSrv.Handler)
+	httpSrv.Addr = ":http"
+	fmt.Printf("Starting HTTP server on %s\n", httpSrv.Addr)
+	log.Fatal(httpSrv.ListenAndServe())
 	//if err != nil {
 	//	log.Fatalf("httpSrv.ListenAndServe() failed with %s", err)
 	//}
@@ -130,29 +130,29 @@ func makeServerFromMux(mux *http.ServeMux) *http.Server {
 	}
 }
 
-//func makeHTTPToHTTPSRedirectServer() *http.Server {
-//	handleRedirect := func(w http.ResponseWriter, r *http.Request) {
-//		newURI := "https://" + strings.Split(r.Host, ":")[0] + ":8443" + r.URL.String()
-//		http.Redirect(w, r, newURI, http.StatusFound)
-//	}
+func makeHTTPToHTTPSRedirectServer() *http.Server {
+	handleRedirect := func(w http.ResponseWriter, r *http.Request) {
+		newURI := "https://" + strings.Split(r.Host, ":")[0] + ":8443" + r.URL.String()
+		http.Redirect(w, r, newURI, http.StatusFound)
+	}
+	mux := &http.ServeMux{}
+	mux.HandleFunc("/", handleRedirect)
+	return makeServerFromMux(mux)
+}
+
+//func makeHTTPServer() *http.Server {
 //	mux := &http.ServeMux{}
-//	mux.HandleFunc("/", handleRedirect)
+//	mux.HandleFunc("/", handleIndex)
 //	return makeServerFromMux(mux)
+//
 //}
 
-func makeHTTPServer() *http.Server {
-	mux := &http.ServeMux{}
-	mux.HandleFunc("/", handleIndex)
-	return makeServerFromMux(mux)
-
-}
-
-func handleIndex(w http.ResponseWriter, r *http.Request) {
-	if _, err := io.WriteString(w, htmlIndex); err != nil {
-		log.Printf("%v", err)
-	}
-}
-
-const (
-	htmlIndex = `<html><body>Welcome!</body></html>`
-)
+//func handleIndex(w http.ResponseWriter, r *http.Request) {
+//	if _, err := io.WriteString(w, htmlIndex); err != nil {
+//		log.Printf("%v", err)
+//	}
+//}
+//
+//const (
+//	htmlIndex = `<html><body>Welcome!</body></html>`
+//)
