@@ -9,19 +9,21 @@ on:
 #      - '**.yml'
 
   workflow_dispatch:
-    workflow_dispatch:
-      inputs:
-        domainName:
-          description: FQDN for server TLS domain
-          default: "www.mydomain.com"
-        tls-enabled:
-          type: boolean
-          description: Enables TLS support
-          default: true
-        tls-autocert:
-          type: boolean
-          description: Enables Let's encrypt auto cert issue
-          default: true
+    inputs:
+      domainName:
+        description: FQDN for server TLS domain
+        required: false
+        default: "www.mydomain.com"
+      tls-enabled:
+        type: boolean
+        description: Enables TLS support
+        required: true
+        default: true
+      tls-autocert:
+        type: boolean
+        description: Enables Let's encrypt auto cert issue
+        required: false
+        default: true
 
 jobs:
   docker:
