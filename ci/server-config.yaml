@@ -5,6 +5,8 @@ server:
   concurrency: 30
   credentials:
   tls:
-    enabled: true
-    keyPath: ""
-    certPath: ""
+    enabled:
+    auto:
+    domainName:
+    keyPath:
+    certPath:

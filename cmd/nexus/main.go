@@ -1,18 +1,13 @@
 package main
 
 import (
-	"crypto/tls"
 	"fmt"
-	"golang.org/x/crypto/acme"
-	"golang.org/x/crypto/acme/autocert"
 	"log"
 	"net/http"
 	"nexus-pusher/pkg/client"
 	"nexus-pusher/pkg/config"
 	"nexus-pusher/pkg/server"
 	"os"
-	"strings"
-	"time"
 )
 
 // App version
@@ -45,26 +40,23 @@ func main() {
 	}
 
 	log.Printf("Starting application... Version: %s, Build: %s", Version, Build)
-	// Start Server or Client version following provided configuration
-	if cfg.Server.Enabled {
+	if cfg.Server.Enabled { // Start Server or Client version following provided configuration
 		if cfg.Server.TLS.Enabled {
 			log.Printf("Running in server mode (TLS). Listening on: %s:%s",
 				cfg.Server.BindAddress,
 				cfg.Server.Port)
-			//log.Fatal(http.ListenAndServeTLS(fmt.Sprintf("%s:%s",
-			//	cfg.Server.BindAddress,
-			//	cfg.Server.Port),
-			//	cfg.Server.TLS.CertPath,
-			//	cfg.Server.TLS.KeyPath,
-			//	server.NewRouter(cfg.Server)))
-			runLetsEncrypt(cfg.Server)
-		} else {
+			// Run Server with Let's encrypt autocert
+			if cfg.Server.TLS.Auto {
+				server.RunAutoCertServer(cfg.Server)
+			} else { // Run Server with static cert config
+				server.RunStaticCertServer(cfg.Server)
+			}
+		} else { // Run HTTP server (not secure!)
 			log.Printf("Running in server mode (HTTP). Listening on: %s:%s",
 				cfg.Server.BindAddress,
 				cfg.Server.Port)
-			log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s",
-				cfg.Server.BindAddress,
-				cfg.Server.Port), server.NewRouter(cfg.Server)))
+			log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", cfg.Server.BindAddress, cfg.Server.Port),
+				server.NewRouter(cfg.Server)))
 		}
 	} else {
 		if cfg.Client.Daemon.Enabled {
@@ -80,79 +72,3 @@ func main() {
 		}
 	}
 }
-
-func runLetsEncrypt(cfg *config.Server) {
-	c := autocert.DirCache("certs")
-	m := autocert.Manager{
-		Cache:      c,
-		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist("rageofgods.xyz"),
-		Client: &acme.Client{
-			DirectoryURL: "https://acme-staging-v02.api.letsencrypt.org/directory",
-		},
-	}
-
-	s := &http.Server{
-		Addr:      ":8443",
-		TLSConfig: &tls.Config{GetCertificate: m.GetCertificate},
-		Handler:   server.NewRouter(cfg),
-	}
-
-	go func() {
-		log.Fatal(s.ListenAndServeTLS("", ""))
-	}()
-
-	//httpSrv := makeHTTPServer()
-	//httpSrv.Handler = m.HTTPHandler(httpSrv.Handler)
-	//httpSrv.Addr = ":80"
-	//err := httpSrv.ListenAndServe()
-	//if err != nil {
-	//	log.Fatalf("httpSrv.ListenAndServe() failed with %s", err)
-	//}
-	httpSrv := makeHTTPToHTTPSRedirectServer()
-	httpSrv.Handler = m.HTTPHandler(httpSrv.Handler)
-	httpSrv.Addr = ":http"
-	fmt.Printf("Starting HTTP server on %s\n", httpSrv.Addr)
-	log.Fatal(httpSrv.ListenAndServe())
-	//if err != nil {
-	//	log.Fatalf("httpSrv.ListenAndServe() failed with %s", err)
-	//}
-}
-
-func makeServerFromMux(mux *http.ServeMux) *http.Server {
-	// set timeouts so that a slow or malicious client doesn't
-	// hold resources forever
-	return &http.Server{
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 5 * time.Second,
-		IdleTimeout:  120 * time.Second,
-		Handler:      mux,
-	}
-}
-
-func makeHTTPToHTTPSRedirectServer() *http.Server {
-	handleRedirect := func(w http.ResponseWriter, r *http.Request) {
-		newURI := "https://" + strings.Split(r.Host, ":")[0] + ":8443" + r.URL.String()
-		http.Redirect(w, r, newURI, http.StatusFound)
-	}
-	mux := &http.ServeMux{}
-	mux.HandleFunc("/", handleRedirect)
-	return makeServerFromMux(mux)
-}
-
-//func makeHTTPServer() *http.Server {
-//	mux := &http.ServeMux{}
-//	mux.HandleFunc("/", handleIndex)
-//	return makeServerFromMux(mux)
-//
-//}
-
-//func handleIndex(w http.ResponseWriter, r *http.Request) {
-//	if _, err := io.WriteString(w, htmlIndex); err != nil {
-//		log.Printf("%v", err)
-//	}
-//}
-//
-//const (
-//	htmlIndex = `<html><body>Welcome!</body></html>`
-//)

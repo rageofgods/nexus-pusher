@@ -16,6 +16,16 @@ func (c *NexusConfig) ValidateConfig() error {
 			return fmt.Errorf("error: server required 'credentials' variable is missing in %s", c.string)
 		} else if c.Server.Concurrency == 0 {
 			c.Server.Concurrency = clientConcurrency
+		} else if c.Server.TLS.Enabled { // Check for TLS parameters
+			if c.Server.TLS.Auto {
+				if c.Server.TLS.DomainName == "" {
+					return fmt.Errorf("error: server required 'domainName' variable is missing in %s", c.string)
+				}
+			} else {
+				if c.Server.TLS.KeyPath == "" || c.Server.TLS.CertPath == "" {
+					return fmt.Errorf("error: you must set 'KeyPath' and 'CertPath' variables in %s", c.string)
+				}
+			}
 		}
 		return nil
 	}

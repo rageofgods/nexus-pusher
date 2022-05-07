@@ -30,11 +30,21 @@ COPY ci/server-config.yaml ./
 ARG concurrency
 ARG username
 ARG password
+ARG tls_enabled
+ARG tls_autocert
+ARG domainName
+
 ENV CONCURRENCY=$concurrency
 ENV USERNAME=$username
 ENV PASSWORD=$password
+ENV TLS_ENABLED=$tls_enabled
+ENV TLS_AUTOCERT=$tls_autocert
+ENV DOMAIN_NAME=$domainName
 
 RUN yq e -i '.server.concurrency = env(CONCURRENCY)' server-config.yaml && \
+    yq e -i '.server.tls.enabled = env(TLS_ENABLED)' server-config.yaml && \
+    yq e -i '.server.tls.auto = env(TLS_AUTOCERT)' server-config.yaml && \
+    yq e -i '.server.tls.domainName = env(DOMAIN_NAME)' server-config.yaml && \
     yq e -i '.server.credentials += { env(USERNAME):env(PASSWORD) }' server-config.yaml
 
 ################################################

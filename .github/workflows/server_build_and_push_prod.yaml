@@ -2,13 +2,26 @@ name: Sever Build and Publish Prod
 
 # Controls when the workflow will run
 on:
-  pull_request:
-    branches: [ master ]
-    paths-ignore:
-      - '**.md'
-      - '**.yml'
+#  pull_request:
+#    branches: [ master ]
+#    paths-ignore:
+#      - '**.md'
+#      - '**.yml'
 
   workflow_dispatch:
+    workflow_dispatch:
+      inputs:
+        domainName:
+          description: FQDN for server TLS domain
+          default: "www.mydomain.com"
+        tls-enabled:
+          type: boolean
+          description: Enables TLS support
+          default: true
+        tls-autocert:
+          type: boolean
+          description: Enables Let's encrypt auto cert issue
+          default: true
 
 jobs:
   docker:
@@ -44,4 +57,7 @@ jobs:
             "concurrency=${{env.CONCURRENCY}}"
             "username=${{ secrets.SRV_USERNAME }}"
             "password=${{ secrets.SRV_PASSWORD }}"
+            "tls_enabled=${{ github.event.inputs.tls-enabled }}"
+            "tls_autocert=${{ github.event.inputs.tls-autocert }}"
+            "domainName=${{ github.event.inputs.domainName }}"
           push: true

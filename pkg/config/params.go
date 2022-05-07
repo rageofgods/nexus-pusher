@@ -20,9 +20,11 @@ type Server struct {
 	Concurrency int               `yaml:"concurrency"`
 	Credentials map[string]string `json:"credentials"`
 	TLS         struct {
-		Enabled  bool   `yaml:"enabled"`
-		KeyPath  string `yaml:"keyPath"`
-		CertPath string `yaml:"certPath"`
+		Enabled    bool   `yaml:"enabled"`
+		Auto       bool   `yaml:"auto"`
+		DomainName string `yaml:"domainName"`
+		KeyPath    string `yaml:"keyPath"`
+		CertPath   string `yaml:"certPath"`
 	} `yaml:"tls"`
 }
 
