@@ -1,0 +1,43 @@
+# Default values for nexus-pusher-client.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: rageofgods/nexus-pusher-client
+  # pullPolicy: IfNotPresent
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+# Name and path for nexus-pusher config file
+configFile:
+  name: "client-config.yaml"
+  path: "/app/"
+
+client:
+  sync: 30 # Sync every X minutes
+  server:  # nexus-pusher server address "https://test.xyz"
+  serverAuth:
+    user:  # nexus-pusher username
+    pass:  # nexus-pusher password
+# syncConfigs reads base64 encoded yaml with lists of syncConfigs
+# Example format:
+#  - srcServerConfig:
+#      server: "https://nexus.xyz"
+#      user: "user1"
+#      pass: "123"
+#      repoName: "repo1"
+#    dstServerConfig:
+#      server: "https://nexus2.xyz"
+#      user: "user2"
+#      pass: "321"
+#      repoName: "repo2"
+#    format: "npm"
+  syncConfigs:
