@@ -31,4 +31,4 @@ COPY --from=certer /usr/share/zoneinfo /usr/share/zoneinfo/
 COPY --from=builder /app/nexus-pusher /app/nexus-pusher
 
 WORKDIR /app
-CMD ["./nexus-pusher", "-c", "client-config.yaml"]
+CMD ["./nexus-pusher", "-c", "/app/config/client-config.yaml"]
