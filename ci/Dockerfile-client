@@ -18,15 +18,6 @@ RUN make docker_build
 FROM alpine:latest as certer
 RUN apk update && apk add ca-certificates tzdata
 
-####################
-# Configure server #
-####################
-FROM alpine:latest as configurer
-RUN apk update && apk add yq
-
-WORKDIR /app
-COPY ci/client-config.yaml ./
-
 ################################################
 # Use scratch image to reduce final image size #
 ################################################
@@ -38,7 +29,6 @@ COPY --from=certer /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=certer /usr/share/zoneinfo /usr/share/zoneinfo/
 
 COPY --from=builder /app/nexus-pusher /app/nexus-pusher
-COPY --from=configurer /app/client-config.yaml /app/client-config.yaml
 
 WORKDIR /app
 CMD ["./nexus-pusher", "-c", "client-config.yaml"]
