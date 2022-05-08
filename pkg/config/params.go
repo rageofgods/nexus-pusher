@@ -14,7 +14,6 @@ func NewNexusConfig() *NexusConfig {
 
 // Server is defines server-side config part
 type Server struct {
-	Enabled     bool              `yaml:"enabled"`
 	BindAddress string            `yaml:"bindAddress"`
 	Port        string            `yaml:"port"`
 	Concurrency int               `yaml:"concurrency"`

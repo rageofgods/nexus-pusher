@@ -40,7 +40,8 @@ func main() {
 	}
 
 	log.Printf("Starting application... Version: %s, Build: %s", Version, Build)
-	if cfg.Server.Enabled { // Start Server or Client version following provided configuration
+	// Run in Server mode
+	if cfg.Server != nil {
 		if cfg.Server.TLS.Enabled {
 			log.Printf("Running in server mode (TLS). Listening on: %s:%s",
 				cfg.Server.BindAddress,
@@ -58,7 +59,8 @@ func main() {
 			log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", cfg.Server.BindAddress, cfg.Server.Port),
 				server.NewRouter(cfg.Server)))
 		}
-	} else {
+
+	} else if cfg.Client != nil { // Run in Client mode
 		if cfg.Client.Daemon.Enabled {
 			log.Printf("Running client in 'daemon' mode. Scheduling re-sync every %d minutes",
 				cfg.Client.Daemon.SyncEveryMinutes)
