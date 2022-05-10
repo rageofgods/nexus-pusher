@@ -4,6 +4,7 @@ metadata:
   name: {{ include "nexus-pusher-client.fullname" . }}
   labels:
     {{- include "nexus-pusher-client.labels" . | nindent 4 }}
+  namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
