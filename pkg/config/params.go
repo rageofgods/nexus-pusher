@@ -89,6 +89,8 @@ const (
 	URILogin string = "/login"
 	// URIRefresh Set JWT refresh REST URI
 	URIRefresh string = "/refresh"
+	// URIStatus Set status REST URI
+	URIStatus string = "/status"
 	// URIComponents Set components REST URI
 	URIComponents string = "/v1/components"
 	// URIRepositories Set repositories REST URI

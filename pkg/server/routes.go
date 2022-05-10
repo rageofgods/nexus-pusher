@@ -12,6 +12,7 @@ func NewRouter(cfg *config.Server) *mux.Router {
 	var r = Routes{Routes: []Route{
 		{"login", "GET", config.URIBase + config.URILogin, stub},
 		{"refresh", "GET", config.URIBase + config.URIRefresh, stub},
+		{Name: "status", Method: "GET", Pattern: config.URIBase + config.URIStatus, HandlerFunc: status},
 		{"post-components", "POST", config.URIBase + config.URIComponents, us.components},
 		{Name: "get-answer", Method: "GET", Pattern: config.URIBase + config.URIComponents, HandlerFunc: us.answerMessage},
 	}}
@@ -28,6 +29,9 @@ func NewRouter(cfg *config.Server) *mux.Router {
 		case "refresh":
 			// Refresh JWT token if it's still alive for client
 			handler = us.refreshMiddle(route.HandlerFunc)
+		case "status":
+			// Skip authentication for 'status' requests
+			handler = route.HandlerFunc
 		default:
 			// Default to auth the request
 			handler = us.authMiddle(route.HandlerFunc)

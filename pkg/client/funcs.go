@@ -116,6 +116,29 @@ func ScheduleRunNexusPusher(c *config.Client) error {
 	return nil
 }
 
+func doCheckServerStatus(server string) error {
+	// Create URL for status checking
+	srvUrl := fmt.Sprintf("%s%s%s", server, config.URIBase, config.URIStatus)
+	// Define client
+	c := comps.HttpClient()
+
+	req, err := http.NewRequest("GET", srvUrl, nil)
+	if err != nil {
+		return err
+	}
+	// Send request to server
+	resp, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error: bad server status returned. server responded with: %s", resp.Status)
+	}
+	return nil
+}
+
 func doCheckRepoTypes(sc *config.SyncConfig) error {
 	// Define variables
 	s1 := comps.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
@@ -224,6 +247,12 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 	// Check repos type
 	if err := doCheckRepoTypes(sc); err != nil {
 		log.Printf("error: repository validation check failed: %v", err)
+		return
+	}
+
+	// Check nexus-pusher server status
+	if err := doCheckServerStatus(cc.Server); err != nil {
+		log.Printf("error: server status check failed: %v", err)
 		return
 	}
 

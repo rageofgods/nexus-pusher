@@ -18,6 +18,14 @@ func stub(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func status(w http.ResponseWriter, r *http.Request) {
+	_ = r // ignore request here
+	w.WriteHeader(http.StatusOK)
+	if _, err := fmt.Fprintln(w, "Status OK"); err != nil {
+		log.Printf("%v", err)
+	}
+}
+
 // Upload components to remote nexus
 func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 	nec := &comps.NexusExportComponents{}
