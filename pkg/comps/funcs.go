@@ -218,6 +218,7 @@ func componentNameFromPath(cmpPath string) string {
 func HttpClient(t ...time.Duration) *http.Client {
 	retryClient := retryablehttp.NewClient()
 	retryClient.HTTPClient.Transport = &http.Transport{
+		Proxy:               http.ProxyFromEnvironment,
 		MaxIdleConnsPerHost: 100,
 		MaxConnsPerHost:     100,
 		MaxIdleConns:        100,
