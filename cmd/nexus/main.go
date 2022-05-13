@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"nexus-pusher/internals/client"
-	config2 "nexus-pusher/internals/config"
-	server2 "nexus-pusher/internals/server"
+	"nexus-pusher/internal/client"
+	config2 "nexus-pusher/internal/config"
+	server2 "nexus-pusher/internal/server"
 	"os"
 )
 

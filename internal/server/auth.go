@@ -6,7 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"nexus-pusher/internals/config"
+	"nexus-pusher/internal/config"
 	"time"
 )
 

@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	comps2 "nexus-pusher/internals/comps"
-	"nexus-pusher/internals/config"
-	"nexus-pusher/internals/server"
+	comps2 "nexus-pusher/internal/comps"
+	"nexus-pusher/internal/config"
+	"nexus-pusher/internal/server"
 	"time"
 )
 

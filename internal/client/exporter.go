@@ -1,7 +1,7 @@
 package client
 
 import (
-	comps2 "nexus-pusher/internals/comps"
+	comps2 "nexus-pusher/internal/comps"
 )
 
 //func ExportComponents(c []*comps.NexusComponent) error {

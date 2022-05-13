@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	comps2 "nexus-pusher/internals/comps"
+	comps2 "nexus-pusher/internal/comps"
 )
 
 func stub(w http.ResponseWriter, r *http.Request) {
