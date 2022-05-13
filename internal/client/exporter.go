@@ -1,7 +1,7 @@
 package client
 
 import (
-	comps2 "nexus-pusher/internal/comps"
+	"nexus-pusher/internal/comps"
 )
 
 //func ExportComponents(c []*comps.NexusComponent) error {
@@ -31,15 +31,15 @@ import (
 //
 
 // genNexExpCompFromNexComp is converting original nexus structure data to compact export format
-func genNexExpCompFromNexComp(c []*comps2.NexusComponent) *comps2.NexusExportComponents {
-	var ec []*comps2.NexusExportComponent
+func genNexExpCompFromNexComp(c []*comps.NexusComponent) *comps.NexusExportComponents {
+	var ec []*comps.NexusExportComponent
 	for _, v := range c {
-		var assets []*comps2.NexusExportComponentAsset
+		var assets []*comps.NexusExportComponentAsset
 		for _, vv := range v.Assets {
-			exportAsset := &comps2.NexusExportComponentAsset{Path: vv.Path, ContentType: vv.ContentType}
+			exportAsset := &comps.NexusExportComponentAsset{Path: vv.Path, ContentType: vv.ContentType}
 			assets = append(assets, exportAsset)
 		}
-		exportComponent := &comps2.NexusExportComponent{
+		exportComponent := &comps.NexusExportComponent{
 			Name:       v.Name,
 			Version:    v.Version,
 			Repository: v.Repository,
@@ -47,5 +47,5 @@ func genNexExpCompFromNexComp(c []*comps2.NexusComponent) *comps2.NexusExportCom
 			Assets:     assets}
 		ec = append(ec, exportComponent)
 	}
-	return &comps2.NexusExportComponents{Items: ec}
+	return &comps.NexusExportComponents{Items: ec}
 }

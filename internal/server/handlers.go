@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	comps2 "nexus-pusher/internal/comps"
+	"nexus-pusher/internal/comps"
 )
 
 func stub(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +28,7 @@ func status(w http.ResponseWriter, r *http.Request) {
 
 // Upload components to remote nexus
 func (u *webService) components(w http.ResponseWriter, r *http.Request) {
-	nec := &comps2.NexusExportComponents{}
+	nec := &comps.NexusExportComponents{}
 	// Get repository parameter from URL
 	repo := r.URL.Query().Get("repository")
 	if repo == "" {
@@ -64,9 +64,9 @@ func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 
 	// Upload components
 	go func() {
-		s := comps2.NewNexusServer(nec.NexusServer.Username, nec.NexusServer.Password,
+		s := comps.NewNexusServer(nec.NexusServer.Username, nec.NexusServer.Password,
 			nec.NexusServer.Host, nec.NexusServer.BaseUrl, nec.NexusServer.ApiComponentsUrl)
-		results := s.UploadComponents(comps2.HttpClient(), nec, repo, u.cfg)
+		results := s.UploadComponents(comps.HttpClient(), nec, repo, u.cfg)
 
 		var errorsCounter int
 		var errorsText []string

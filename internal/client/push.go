@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	comps2 "nexus-pusher/internal/comps"
+	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
 	"nexus-pusher/internal/server"
 	"time"
@@ -28,7 +28,7 @@ func newPushClient(serverAddress string, serverUser string, serverPass string) *
 // authorize the client with server using plain type credentials from configuration file
 func (p *pushClient) authorize() error {
 	requestUrl := fmt.Sprintf("%s%s%s", p.serverAddress, config.URIBase, config.URILogin)
-	client := comps2.HttpClient()
+	client := comps.HttpClient()
 	req, err := http.NewRequest("GET", requestUrl, nil)
 	if err != nil {
 		return err
@@ -63,7 +63,7 @@ func (p *pushClient) refreshAuth() error {
 	if time.Until(p.cookie.Expires) < config.JWTTokenRefreshWindow*time.Second {
 		requestUrl := fmt.Sprintf("%s%s%s", p.serverAddress, config.URIBase, config.URIRefresh)
 		// Setup http client
-		client := comps2.HttpClient()
+		client := comps.HttpClient()
 		// Make new request
 		req, err := http.NewRequest("GET", requestUrl, nil)
 		if err != nil {
@@ -100,7 +100,7 @@ func (p *pushClient) refreshAuth() error {
 }
 
 // sendComparedRequest sends diff data to server
-func (p *pushClient) sendComparedRequest(data *comps2.NexusExportComponents, repoName string) ([]byte, error) {
+func (p *pushClient) sendComparedRequest(data *comps.NexusExportComponents, repoName string) ([]byte, error) {
 	var buf bytes.Buffer
 	requestUrl := fmt.Sprintf("%s%s%s?repository=%s",
 		p.serverAddress,
@@ -108,7 +108,7 @@ func (p *pushClient) sendComparedRequest(data *comps2.NexusExportComponents, rep
 		config.URIComponents,
 		repoName)
 	// Setup http client
-	client := comps2.HttpClient()
+	client := comps.HttpClient()
 	// Encode data to buffer
 	err := json.NewEncoder(&buf).Encode(data)
 	if err != nil {
@@ -163,7 +163,7 @@ func (p *pushClient) pollComparedResults(body []byte) error {
 		msg.ID)
 
 	// Setup http client
-	client := comps2.HttpClient()
+	client := comps.HttpClient()
 
 	// Poll maximum for 1800 seconds (30 min)
 	limitTime := 1800
