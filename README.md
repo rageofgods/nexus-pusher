@@ -53,7 +53,7 @@ server:
 ```
 * **concurrency** - how many parallel workers will be spawn
 * **credentials** - list of 'user/password' to server auth
-* tls.**auto** - enable Let's Encrypt cert generation (following domainName)
+* **tls.auto** - enable Let's Encrypt cert generation (following domainName)
 * **tls.domainName** - domain name for Let's Encrypt cert generation
 * **enabled** - enables TLS server listening
 * **keyPath** - absolute location of private key file
