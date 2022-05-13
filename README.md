@@ -25,8 +25,7 @@ to save bandwidth.
 
 ### Installing
 
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+* 
 
 ### Executing program
 
@@ -40,17 +39,26 @@ code blocks for commands
 #### Server:
 ```yaml
 server:
-  enabled: true
   bindAddress: "0.0.0.0"
   port: "8181"
   concurrency: 1
   credentials:
     test: "test"
   tls:
-    enabled: true
+    auto: false
+    domainName: "somedomain.org"
+    enabled: false
     keyPath: "key"
     certPath: "cert"
 ```
+* **concurrency** - how many parallel workers will be spawn
+* **credentials** - list of 'user/password' to server auth
+* tls.**auto** - enable Let's Encrypt cert generation (following domainName)
+* **tls.domainName** - domain name for Let's Encrypt cert generation
+* **enabled** - enables TLS server listening
+* **keyPath** - absolute location of private key file
+* **certPath** - absolute location of certificate file
+
 #### Client:
 ```yaml
 client:
@@ -91,12 +99,9 @@ ex. [@rageofgods](https://github.com/rageofgods)
 
 ## Version History
 
-* 0.2
-    * Various bug fixes and optimizations
-    * See [commit change]() or See [release history]()
 * 0.1
     * Initial Release
 
 ## License
 
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
+This project is licensed under the GNU License - see the LICENSE.md file for details

@@ -1,6 +1,8 @@
 package client
 
-import "nexus-pusher/pkg/comps"
+import (
+	comps2 "nexus-pusher/internals/comps"
+)
 
 //func ExportComponents(c []*comps.NexusComponent) error {
 //	if err := writeExport(genNexExpCompFromNexComp(c), "export.json"); err != nil {
@@ -29,15 +31,15 @@ import "nexus-pusher/pkg/comps"
 //
 
 // genNexExpCompFromNexComp is converting original nexus structure data to compact export format
-func genNexExpCompFromNexComp(c []*comps.NexusComponent) *comps.NexusExportComponents {
-	var ec []*comps.NexusExportComponent
+func genNexExpCompFromNexComp(c []*comps2.NexusComponent) *comps2.NexusExportComponents {
+	var ec []*comps2.NexusExportComponent
 	for _, v := range c {
-		var assets []*comps.NexusExportComponentAsset
+		var assets []*comps2.NexusExportComponentAsset
 		for _, vv := range v.Assets {
-			exportAsset := &comps.NexusExportComponentAsset{Path: vv.Path, ContentType: vv.ContentType}
+			exportAsset := &comps2.NexusExportComponentAsset{Path: vv.Path, ContentType: vv.ContentType}
 			assets = append(assets, exportAsset)
 		}
-		exportComponent := &comps.NexusExportComponent{
+		exportComponent := &comps2.NexusExportComponent{
 			Name:       v.Name,
 			Version:    v.Version,
 			Repository: v.Repository,
@@ -45,5 +47,5 @@ func genNexExpCompFromNexComp(c []*comps.NexusComponent) *comps.NexusExportCompo
 			Assets:     assets}
 		ec = append(ec, exportComponent)
 	}
-	return &comps.NexusExportComponents{Items: ec}
+	return &comps2.NexusExportComponents{Items: ec}
 }

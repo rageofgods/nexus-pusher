@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"nexus-pusher/pkg/client"
-	"nexus-pusher/pkg/config"
-	"nexus-pusher/pkg/server"
+	"nexus-pusher/internals/client"
+	config2 "nexus-pusher/internals/config"
+	server2 "nexus-pusher/internals/server"
 	"os"
 )
 
@@ -18,13 +18,13 @@ var (
 
 func main() {
 	// Get Config Args
-	args := &config.Args{}
+	args := &config2.Args{}
 	if args = args.GetConfigArgs(); args == nil {
 		return
 	}
 
 	// Load Nexus-Pusher configuration from file
-	cfg := config.NewNexusConfig()
+	cfg := config2.NewNexusConfig()
 	if err := cfg.LoadConfig(args.ConfigPath); err != nil {
 		log.Fatalf("unable to load config: %v", err)
 	}
@@ -48,16 +48,16 @@ func main() {
 				cfg.Server.Port)
 			// Run Server with Let's encrypt autocert
 			if cfg.Server.TLS.Auto {
-				server.RunAutoCertServer(cfg.Server)
+				server2.RunAutoCertServer(cfg.Server)
 			} else { // Run Server with static cert config
-				server.RunStaticCertServer(cfg.Server)
+				server2.RunStaticCertServer(cfg.Server)
 			}
 		} else { // Run HTTP server (not secure!)
 			log.Printf("Running in server mode (HTTP). Listening on: %s:%s",
 				cfg.Server.BindAddress,
 				cfg.Server.Port)
 			log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", cfg.Server.BindAddress, cfg.Server.Port),
-				server.NewRouter(cfg.Server)))
+				server2.NewRouter(cfg.Server)))
 		}
 
 	} else if cfg.Client != nil { // Run in Client mode

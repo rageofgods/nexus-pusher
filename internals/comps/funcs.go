@@ -11,7 +11,7 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
-	"nexus-pusher/pkg/config"
+	"nexus-pusher/internals/config"
 	"os"
 	"strings"
 	"time"

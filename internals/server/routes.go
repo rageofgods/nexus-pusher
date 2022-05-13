@@ -4,7 +4,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"net/http"
-	"nexus-pusher/pkg/config"
+	"nexus-pusher/internals/config"
 )
 
 func NewRouter(cfg *config.Server) *mux.Router {

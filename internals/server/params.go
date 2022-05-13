@@ -3,7 +3,7 @@ package server
 import (
 	"github.com/google/uuid"
 	"net/http"
-	"nexus-pusher/pkg/config"
+	"nexus-pusher/internals/config"
 )
 
 type Routes struct {

@@ -6,7 +6,7 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 	"log"
 	"net/http"
-	"nexus-pusher/pkg/config"
+	"nexus-pusher/internals/config"
 	"strings"
 	"time"
 )

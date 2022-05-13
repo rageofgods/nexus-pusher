@@ -8,22 +8,22 @@ import (
 	"golang.org/x/sync/errgroup"
 	"log"
 	"net/http"
-	"nexus-pusher/pkg/comps"
-	"nexus-pusher/pkg/config"
+	comps2 "nexus-pusher/internals/comps"
+	"nexus-pusher/internals/config"
 	"strings"
 	"sync"
 	"time"
 )
 
 // compareComponents will compare src to dst and return diff
-func compareComponents(src []*comps.NexusComponent, dst []*comps.NexusComponent) []*comps.NexusComponent {
+func compareComponents(src []*comps2.NexusComponent, dst []*comps2.NexusComponent) []*comps2.NexusComponent {
 	// Make dst hash-map
-	s := make(map[string]*comps.NexusComponent)
+	s := make(map[string]*comps2.NexusComponent)
 	for i, v := range dst {
 		s[fmt.Sprintf("%s-%s", v.Name, v.Version)] = dst[i]
 	}
 	// Search in dst
-	var nc []*comps.NexusComponent
+	var nc []*comps2.NexusComponent
 	for i, v := range src {
 		if _, ok := s[fmt.Sprintf("%s-%s", v.Name, v.Version)]; !ok {
 			nc = append(nc, src[i])
@@ -32,16 +32,16 @@ func compareComponents(src []*comps.NexusComponent, dst []*comps.NexusComponent)
 	return nc
 }
 
-func doCompareComponents(s1 *comps.NexusServer,
+func doCompareComponents(s1 *comps2.NexusServer,
 	c1 *http.Client,
-	nc1 []*comps.NexusComponent,
+	nc1 []*comps2.NexusComponent,
 	r1 string,
-	s2 *comps.NexusServer,
+	s2 *comps2.NexusServer,
 	c2 *http.Client,
-	nc2 []*comps.NexusComponent,
-	r2 string) ([]*comps.NexusComponent, error) {
+	nc2 []*comps2.NexusComponent,
+	r2 string) ([]*comps2.NexusComponent, error) {
 
-	var src, dst []*comps.NexusComponent
+	var src, dst []*comps2.NexusComponent
 	wg := &sync.WaitGroup{}
 	var isError bool
 	tn := time.Now()
@@ -81,7 +81,7 @@ func doCompareComponents(s1 *comps.NexusServer,
 	return compareComponents(src, dst), nil
 }
 
-func showFinalMessageForGetComponents(r string, nc []*comps.NexusComponent, t time.Time) {
+func showFinalMessageForGetComponents(r string, nc []*comps2.NexusComponent, t time.Time) {
 	log.Printf("Analyzing repo '%s' is done. Completed %d assets in %v.\n",
 		r,
 		len(nc),
@@ -120,7 +120,7 @@ func doCheckServerStatus(server string) error {
 	// Create URL for status checking
 	srvUrl := fmt.Sprintf("%s%s%s", server, config.URIBase, config.URIStatus)
 	// Define client
-	c := comps.HttpClient()
+	c := comps2.HttpClient()
 
 	req, err := http.NewRequest("GET", srvUrl, nil)
 	if err != nil {
@@ -141,22 +141,22 @@ func doCheckServerStatus(server string) error {
 
 func doCheckRepoTypes(sc *config.SyncConfig) error {
 	// Define variables
-	s1 := comps.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
+	s1 := comps2.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
 		sc.SrcServerConfig.Server, config.URIBase, config.URIRepositories)
-	s2 := comps.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
+	s2 := comps2.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
 		sc.DstServerConfig.Server, config.URIBase, config.URIRepositories)
 
-	c1 := comps.HttpClient()
-	c2 := comps.HttpClient()
+	c1 := comps2.HttpClient()
+	c2 := comps2.HttpClient()
 
-	var nr1 []*comps.NexusRepository
-	var nr2 []*comps.NexusRepository
+	var nr1 []*comps2.NexusRepository
+	var nr2 []*comps2.NexusRepository
 
 	srvUrl1 := fmt.Sprintf("%s%s%s", s1.Host, s1.BaseUrl, s1.ApiComponentsUrl)
 	srvUrl2 := fmt.Sprintf("%s%s%s", s2.Host, s2.BaseUrl, s2.ApiComponentsUrl)
 
 	// Check repo for supported types
-	if err := checkSupportedRepoTypes(comps.ComponentType(sc.Format)); err != nil {
+	if err := checkSupportedRepoTypes(comps2.ComponentType(sc.Format)); err != nil {
 		return err
 	}
 
@@ -235,14 +235,14 @@ func doCheckRepoTypes(sc *config.SyncConfig) error {
 
 func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 	// Define two groups of resources to compare remote repos
-	s1 := comps.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
+	s1 := comps2.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
 		sc.SrcServerConfig.Server, config.URIBase, config.URIComponents)
-	s2 := comps.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
+	s2 := comps2.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
 		sc.DstServerConfig.Server, config.URIBase, config.URIComponents)
-	c1 := comps.HttpClient()
-	c2 := comps.HttpClient()
-	var nc1 []*comps.NexusComponent
-	var nc2 []*comps.NexusComponent
+	c1 := comps2.HttpClient()
+	c2 := comps2.HttpClient()
+	var nc1 []*comps2.NexusComponent
+	var nc2 []*comps2.NexusComponent
 
 	// Check repos type
 	if err := doCheckRepoTypes(sc); err != nil {
@@ -284,7 +284,7 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 
 		// Convert original nexus json to export type
 		data := genNexExpCompFromNexComp(cmpDiff)
-		data.NexusServer = comps.NexusServer{
+		data.NexusServer = comps2.NexusServer{
 			Host:             sc.DstServerConfig.Server,
 			BaseUrl:          config.URIBase,
 			ApiComponentsUrl: config.URIComponents,
@@ -321,9 +321,9 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 	}
 }
 
-func checkSupportedRepoTypes(repoType comps.ComponentType) error {
+func checkSupportedRepoTypes(repoType comps2.ComponentType) error {
 	switch repoType.Lower() {
-	case comps.NPM:
+	case comps2.NPM:
 		return nil
 	default:
 		return fmt.Errorf("error: unsuported component type %s", repoType)
