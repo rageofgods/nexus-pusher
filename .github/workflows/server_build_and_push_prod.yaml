@@ -50,23 +50,30 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Set variables
+        env:
+          default_concurrency: 30
+          default_tls-enabled: false
+          default_tls-autocert: false
+          default_domainName: ""
+        run: |
+          echo "CONCURRENCY=${{ github.event.inputs.concurrency || env.default_concurrency }}" >> $GITHUB_ENV
+          echo "TLS-ENABLED=${{ github.event.inputs.tls-enabled || env.default_tls-enabled }}" >> $GITHUB_ENV
+          echo "TLS-AUTOCERT=${{ github.event.inputs.tls-autocert || env.default_tls-autocert }}" >> $GITHUB_ENV
+          echo "DOMAIN-NAME=${{ github.event.inputs.domainName || env.default_domainName }}" >> $GITHUB_ENV
+
       - name: Build image and push to GitHub Container Registry
         uses: docker/build-push-action@v2
-        env:
-          concurrency: 30
-          tls-enabled: false
-          tls-autocert: false
-          domainName: ""
         with:
           context: .
           file: ci/Dockerfile-server
           tags: |
             rageofgods/nexus-pusher-server:latest
           build-args: |
-            "concurrency=${{ github.event.inputs.concurrency || env.concurrency }}"
+            "concurrency=${{ env.CONCURRENCY }}"
             "username=${{ secrets.SRV_USERNAME }}"
             "password=${{ secrets.SRV_PASSWORD }}"
-            "tls_enabled=${{ github.event.inputs.tls-enabled || env.tls-enabled }}"
-            "tls_autocert=${{ github.event.inputs.tls-autocert || env.tls-autocert }}"
-            "domainName=${{ github.event.inputs.domainName || env.domainName }}"
+            "tls_enabled=${{ env.TLS-ENABLED }}"
+            "tls_autocert=${{ env.TLS-AUTOCERT }}"
+            "domainName=${{ env.DOMAIN-NAME }}"
           push: true
