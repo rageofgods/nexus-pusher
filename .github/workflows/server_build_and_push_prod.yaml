@@ -55,7 +55,7 @@ jobs:
           default_concurrency: 30
           default_tls-enabled: false
           default_tls-autocert: false
-          default_domainName: ""
+          default_domainName: "domain.org"
         run: |
           echo "CONCURRENCY=${{ github.event.inputs.concurrency || env.default_concurrency }}" >> $GITHUB_ENV
           echo "TLS-ENABLED=${{ github.event.inputs.tls-enabled || env.default_tls-enabled }}" >> $GITHUB_ENV
