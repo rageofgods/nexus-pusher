@@ -2,11 +2,11 @@ name: Sever Build and Publish Prod
 
 # Controls when the workflow will run
 on:
-#  pull_request:
-#    branches: [ master ]
-#    paths-ignore:
-#      - '**.md'
-#      - '**.yml'
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - '**.md'
+      - '**.yml'
 
   workflow_dispatch:
     inputs:
@@ -22,12 +22,12 @@ on:
         type: boolean
         description: Enables TLS support
         required: true
-        default: true
+        default: false
       tls-autocert:
         type: boolean
         description: Enables Let's encrypt auto cert issuing
         required: false
-        default: true
+        default: false
 
 jobs:
   docker:
