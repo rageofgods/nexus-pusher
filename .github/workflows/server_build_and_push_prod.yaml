@@ -52,16 +52,21 @@ jobs:
 
       - name: Build image and push to GitHub Container Registry
         uses: docker/build-push-action@v2
+        env:
+          concurrency: 30
+          tls-enabled: false
+          tls-autocert: false
+          domainName: ""
         with:
           context: .
           file: ci/Dockerfile-server
           tags: |
             rageofgods/nexus-pusher-server:latest
           build-args: |
-            "concurrency=${{ github.event.inputs.concurrency }}"
+            "concurrency=${{ github.event.inputs.concurrency || env.concurrency }}"
             "username=${{ secrets.SRV_USERNAME }}"
             "password=${{ secrets.SRV_PASSWORD }}"
-            "tls_enabled=${{ github.event.inputs.tls-enabled }}"
-            "tls_autocert=${{ github.event.inputs.tls-autocert }}"
-            "domainName=${{ github.event.inputs.domainName }}"
+            "tls_enabled=${{ github.event.inputs.tls-enabled || env.tls-enabled }}"
+            "tls_autocert=${{ github.event.inputs.tls-autocert || env.tls-autocert }}"
+            "domainName=${{ github.event.inputs.domainName || env.domainName }}"
           push: true
