@@ -56,8 +56,8 @@ func (s *NexusServer) GetComponents(
 	}
 	ncs = append(ncs, nc.Items...)
 
-	// Send log message every 100 new components
-	if len(ncs) <= 10 || len(ncs)%100 == 0 {
+	// Send log message every 500 new components
+	if len(ncs) <= 10 || len(ncs)%500 == 0 {
 		log.Printf("Analyzing repo '%s', please wait... Processed %d assets.\n", repoName, len(ncs))
 	}
 
