@@ -19,9 +19,14 @@ func (s *NexusServer) uploadComponent(format ComponentType, c *http.Client, asse
 			return err
 		}
 
-		// Upload NPM component to Nexus repo
-		if err := s.uploadNpmComponent(npmData.(*types.Npm), repoName, c, asset); err != nil {
-			return err
+		// Check returned interface type
+		if nd, ok := npmData.(*types.Npm); ok {
+			// Upload NPM component to Nexus repo
+			if err := s.uploadNpmComponent(nd, repoName, c, asset); err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("error: wrong data interface type provided. want: 'npm', get: %T", npmData)
 		}
 	}
 	return nil
