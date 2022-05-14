@@ -1,6 +1,8 @@
 package comps
 
-import "strings"
+import (
+	"strings"
+)
 
 // ComponentType Custom component type
 type ComponentType string
@@ -21,3 +23,8 @@ const (
 	RUBY   ComponentType = "rubygems"
 	APT    ComponentType = "apt"
 )
+
+type Typer interface {
+	DownloadComponent() ([]byte, error)
+	PrepareDataToUpload([]byte) (interface{}, error)
+}

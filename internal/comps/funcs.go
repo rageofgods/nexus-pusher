@@ -1,7 +1,6 @@
 package comps
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/goccy/go-json"
@@ -9,11 +8,9 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"mime/multipart"
 	"net/http"
 	"nexus-pusher/internal/config"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -61,7 +58,7 @@ func (s *NexusServer) GetComponents(
 		log.Printf("Analyzing repo '%s', please wait... Processed %d assets.\n", repoName, len(ncs))
 	}
 
-	//if len(ncs) > 1000 {
+	//if len(ncs) > 100 {
 	//	return ncs, nil
 	//}
 
@@ -81,6 +78,7 @@ func (s *NexusServer) UploadComponents(c *http.Client,
 	nec *NexusExportComponents,
 	repoName string,
 	cs *config.Server) []UploadResult {
+
 	limitChan := make(chan struct{}, cs.Concurrency)
 	resultsChan := make(chan *UploadResult)
 
@@ -116,101 +114,6 @@ func (s *NexusServer) UploadComponents(c *http.Client,
 		}
 	}
 	return results
-}
-
-func (s *NexusServer) uploadComponent(format ComponentType,
-	c *http.Client,
-	asset *NexusExportComponentAsset,
-	repoName string) error {
-	switch format {
-	case NPM:
-		// Download NPM component from official repo
-		data, conType, err := downloadComponent(NPM, asset.Path)
-		if err != nil {
-			return err
-		}
-		// Upload component to nexus repo
-		srvUrl := fmt.Sprintf("%s%s%s?repository=%s", s.Host,
-			s.BaseUrl,
-			s.ApiComponentsUrl,
-			repoName)
-		req, err := http.NewRequest("POST", srvUrl, data)
-		if err != nil {
-			return err
-		}
-		req.Header.Set("Content-Type", conType)
-		req.SetBasicAuth(s.Username, s.Password)
-		resp, err := c.Do(req)
-		if err != nil {
-			return fmt.Errorf("%v", err)
-		}
-		// Check server response
-		if resp.StatusCode != http.StatusNoContent {
-			log.Printf("error: unable to upload component %s to repository '%s' at server %s. Reason: %s",
-				asset.Path,
-				repoName,
-				s.Host,
-				resp.Status)
-			return fmt.Errorf("error: unable to upload component %s to repository '%s' at server %s. Reason: %s",
-				asset.Path,
-				repoName,
-				s.Host,
-				resp.Status)
-		} else {
-			log.Printf("Component %s succesfully uploaded to repository '%s' at server %s",
-				asset.Path,
-				repoName,
-				s.Host)
-		}
-		if _, err := io.Copy(ioutil.Discard, resp.Body); err != nil {
-			return fmt.Errorf("%v", err)
-		}
-		if err := resp.Body.Close(); err != nil {
-			return fmt.Errorf("%v", err)
-		}
-	}
-	return nil
-}
-
-func downloadComponent(cmpType ComponentType, cmpPath string) (*bytes.Buffer, string, error) {
-	var resp *http.Response
-	switch cmpType {
-	case NPM:
-		npmSrv := npmSrv
-		var err error
-		resp, err = http.Get(fmt.Sprintf("%s%s", npmSrv, cmpPath))
-		defer resp.Body.Close()
-		if err != nil {
-			return nil, "", err
-		}
-		// Check server response
-		if resp.StatusCode != http.StatusOK {
-			return nil, "", fmt.Errorf("bad status: %s", resp.Status)
-		}
-	}
-	body := &bytes.Buffer{}
-	conType, err := createFormMultipart(body, componentNameFromPath(cmpPath), &resp.Body)
-	if err != nil {
-		return nil, "", err
-	}
-	return body, conType, nil
-}
-
-func createFormMultipart(v *bytes.Buffer, cmpName string, body *io.ReadCloser) (string, error) {
-	writer := multipart.NewWriter(v)
-	part, _ := writer.CreateFormFile("r.asset", fmt.Sprintf("@%s", cmpName))
-	if _, err := io.Copy(part, *body); err != nil {
-		return "", err
-	}
-	if err := writer.Close(); err != nil {
-		return "", err
-	}
-	return writer.FormDataContentType(), nil
-}
-
-func componentNameFromPath(cmpPath string) string {
-	cmpPathSplit := strings.Split(cmpPath, "/")
-	return cmpPathSplit[len(cmpPathSplit)-1]
 }
 
 // HttpClient returns http client with optional timeout parameter
