@@ -56,7 +56,7 @@ func doCompareComponents(s1 *comps.NexusServer,
 			log.Printf("%v", err)
 			isError = true
 		} else {
-			showFinalMessageForGetComponents(r1, src, tn)
+			showFinalMessageForGetComponents(r1, s1.Host, src, tn)
 		}
 		wg.Done()
 	}()
@@ -68,7 +68,7 @@ func doCompareComponents(s1 *comps.NexusServer,
 			log.Printf("%v", err)
 			isError = true
 		} else {
-			showFinalMessageForGetComponents(r2, dst, tn)
+			showFinalMessageForGetComponents(r2, s1.Host, dst, tn)
 		}
 		wg.Done()
 	}()
@@ -81,9 +81,10 @@ func doCompareComponents(s1 *comps.NexusServer,
 	return compareComponents(src, dst), nil
 }
 
-func showFinalMessageForGetComponents(r string, nc []*comps.NexusComponent, t time.Time) {
-	log.Printf("Analyzing repo '%s' is done. Completed %d assets in %v.\n",
+func showFinalMessageForGetComponents(r string, s string, nc []*comps.NexusComponent, t time.Time) {
+	log.Printf("Analyzing repo '%s' for server '%s' is done. Completed %d assets in %v.\n",
 		r,
+		s,
 		len(nc),
 		time.Since(t).Round(time.Second))
 }
