@@ -52,7 +52,7 @@ jobs:
 
       - name: Set variables
         env:
-          default_concurrency: 10
+          default_concurrency: 5
           default_tls-enabled: false
           default_tls-autocert: false
           default_domainName: "some-domain.org"
