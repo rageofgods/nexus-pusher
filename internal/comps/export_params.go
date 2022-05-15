@@ -14,6 +14,9 @@ type NexusExportComponent struct {
 }
 
 type NexusExportComponentAsset struct {
+	Name        string `json:"name"`
+	FileName    string `json:"fileName"`
+	Version     string `json:"version"`
 	Path        string `json:"path"`
 	ContentType string `json:"contentType"`
 }

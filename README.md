@@ -22,6 +22,7 @@ to save bandwidth.
 
 ### Supported repository types:
 * NPM
+* PYPI
 
 ### Installing
 
@@ -74,13 +75,24 @@ client:
             server: "https://nexus.some"
             user: "user"
             pass: "pass"
-            repoName: "repo1"
+            repoName: "npm-repo1"
           dstServerConfig:
             server: "https://nexus.some"
             user: "user"
             pass: "pass"
-            repoName: "repo2"
+            repoName: "npm-repo2"
           format: "npm"
+        - srcServerConfig:
+            server: "https://nexus.some"
+            user: "user"
+            pass: "pass"
+            repoName: "pypi-repo1"
+          dstServerConfig:
+              server: "https://nexus.some"
+              user: "user"
+              pass: "pass"
+              repoName: "pypi-repo2"
+          format: "pypi"
 ```
 
 ## Help

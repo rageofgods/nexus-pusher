@@ -1,4 +1,4 @@
-package types
+package comps
 
 import (
 	"bytes"
@@ -7,13 +7,13 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
-	"strings"
 )
 
 type Npm struct {
-	Server  string
-	Path    string
-	Content *NpmData
+	Server   string
+	Path     string
+	FileName string
+	Content  *NpmData
 }
 
 type NpmData struct {
@@ -21,21 +21,34 @@ type NpmData struct {
 	Data *bytes.Buffer
 }
 
-func NewNpm(server string, path string) *Npm {
-	return &Npm{Server: server, Path: path, Content: &NpmData{Data: &bytes.Buffer{}}}
+func NewNpm(server string, path string, fileName string) *Npm {
+	return &Npm{
+		Server:   server,
+		Path:     path,
+		FileName: fileName,
+		Content:  &NpmData{Data: &bytes.Buffer{}}}
 }
 
 func (n Npm) DownloadComponent() ([]byte, error) {
 	// Get NPM component
-	componentPath := fmt.Sprintf("%s%s", n.Server, n.Path)
-	resp, err := http.Get(componentPath)
+	req, err := http.NewRequest("GET", n.assetDownloadURL(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/octet-stream")
+
+	// Send request
+	resp, err := HttpClient().Do(req)
 	if err != nil {
 		return nil, err
 	}
 
-	// Check server response
+	// Check response for error
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("npm download bad status: %s", resp.Status)
+		return nil, fmt.Errorf("error: unable to download npm asset. sending '%s' request: status code %d %v",
+			resp.Request.Method,
+			resp.StatusCode,
+			resp.Request.URL)
 	}
 
 	// Read response body
@@ -54,7 +67,7 @@ func (n Npm) DownloadComponent() ([]byte, error) {
 
 func (n *Npm) PrepareDataToUpload(body []byte) (interface{}, error) {
 	writer := multipart.NewWriter(n.Content.Data)
-	part, err := writer.CreateFormFile("npm.asset", fmt.Sprintf("@%s", n.componentNameFromPath()))
+	part, err := writer.CreateFormFile("npm.asset", fmt.Sprintf("@%s", n.FileName))
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +85,6 @@ func (n *Npm) PrepareDataToUpload(body []byte) (interface{}, error) {
 	return n, nil
 }
 
-func (n Npm) componentNameFromPath() string {
-	cmpPathSplit := strings.Split(n.Path, "/")
-	return cmpPathSplit[len(cmpPathSplit)-1]
+func (n Npm) assetDownloadURL() string {
+	return fmt.Sprintf("%s%s", n.Server, n.Path)
 }

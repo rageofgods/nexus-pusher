@@ -316,6 +316,8 @@ func checkSupportedRepoTypes(repoType comps.ComponentType) error {
 	switch repoType.Lower() {
 	case comps.NPM:
 		return nil
+	case comps.PYPI:
+		return nil
 	default:
 		return fmt.Errorf("error: unsuported component type %s", repoType)
 	}
