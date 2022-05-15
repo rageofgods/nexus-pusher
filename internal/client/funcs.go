@@ -15,18 +15,34 @@ import (
 	"time"
 )
 
+func fileNameFromPath(path string) string { // Get last part of url chunk with filename information
+	cmpPathSplit := strings.Split(path, "/")
+	return strings.Trim(cmpPathSplit[len(cmpPathSplit)-1], "@")
+}
+
 // compareComponents will compare src to dst and return diff
 func compareComponents(src []*comps.NexusComponent, dst []*comps.NexusComponent) []*comps.NexusComponent {
 	// Make dst hash-map
-	s := make(map[string]*comps.NexusComponent)
-	for i, v := range dst {
-		s[fmt.Sprintf("%s-%s", v.Name, v.Version)] = dst[i]
+	dstNca := make(map[string]struct{})
+	for _, v := range dst {
+		for _, vv := range v.Assets {
+			dstNca[fileNameFromPath(vv.Path)] = struct{}{}
+		}
 	}
+
 	// Search in dst
 	var nc []*comps.NexusComponent
 	for i, v := range src {
-		if _, ok := s[fmt.Sprintf("%s-%s", v.Name, v.Version)]; !ok {
-			nc = append(nc, src[i])
+		var nca []*comps.NexusComponentAsset
+		for ii, vv := range v.Assets {
+			if _, ok := dstNca[fileNameFromPath(vv.Path)]; !ok {
+				nca = append(nca, v.Assets[ii])
+			}
+		}
+		if len(nca) != 0 {
+			tmpSrc := src[i]
+			tmpSrc.Assets = nca
+			nc = append(nc, tmpSrc)
 		}
 	}
 	return nc

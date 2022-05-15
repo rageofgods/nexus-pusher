@@ -38,7 +38,7 @@ func (n Npm) DownloadComponent() ([]byte, error) {
 	req.Header.Set("Accept", "application/octet-stream")
 
 	// Send request
-	resp, err := HttpClient().Do(req)
+	resp, err := HttpClient(30).Do(req)
 	if err != nil {
 		return nil, err
 	}

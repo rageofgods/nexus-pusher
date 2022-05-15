@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"strings"
 )
 
 type Pypi struct {
@@ -48,7 +49,7 @@ func (p Pypi) DownloadComponent() ([]byte, error) {
 	req.Header.Set("Accept", "application/octet-stream")
 
 	// Send request
-	resp, err := HttpClient().Do(req)
+	resp, err := HttpClient(120).Do(req) // Set 120 sec timeout to handle large files
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +144,7 @@ func (p Pypi) assetDownloadURL() (string, error) {
 		for _, v := range urls {
 			if value, ok := v.(map[string]interface{}); ok { // Check type assertion
 				if filename, ok := value["filename"].(string); ok { // Get filename string
-					if filename == p.FileName { // If we found wanted file
+					if filename == strings.Trim(p.FileName, "@") { // If we found wanted file
 						if url, ok := value["url"].(string); ok { // Get URL string
 							return url, nil // Return found URL
 						} else {

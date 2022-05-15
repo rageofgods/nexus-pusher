@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"nexus-pusher/internal/config"
 	"os"
+	"runtime/debug"
 	"time"
 )
 
@@ -61,7 +62,7 @@ func (s *NexusServer) GetComponents(
 			len(ncs))
 	}
 
-	//if len(ncs) > 100 {
+	//if len(ncs) > 1000 {
 	//	return ncs, nil
 	//}
 
@@ -103,6 +104,7 @@ func (s *NexusServer) UploadComponents(c *http.Client,
 				}
 				resultsChan <- result
 				<-limitChan
+				debug.FreeOSMemory()
 			}(ComponentType(v.Format), c, vv, repoName)
 		}
 	}
@@ -121,7 +123,7 @@ func (s *NexusServer) UploadComponents(c *http.Client,
 
 // HttpClient returns http client with optional timeout parameter
 // Default timeout value is 10 seconds
-func HttpClient(t ...time.Duration) *http.Client {
+func HttpClient(seconds ...time.Duration) *http.Client {
 	retryClient := retryablehttp.NewClient()
 	retryClient.HTTPClient.Transport = &http.Transport{
 		Proxy:               http.ProxyFromEnvironment,
@@ -132,8 +134,8 @@ func HttpClient(t ...time.Duration) *http.Client {
 	customLogger := &CustomRetryLogger{log.New(os.Stdout, "", log.Ldate|log.Ltime)}
 	retryClient.Logger = customLogger
 	retryClient.RetryMax = 3
-	if len(t) != 0 {
-		retryClient.HTTPClient.Timeout = t[0]
+	if len(seconds) != 0 {
+		retryClient.HTTPClient.Timeout = seconds[0] * time.Second
 	} else {
 		retryClient.HTTPClient.Timeout = 10 * time.Second
 	}

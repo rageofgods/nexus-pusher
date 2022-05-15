@@ -17,7 +17,7 @@ on:
       domainName:
         description: FQDN for server TLS domain
         required: false
-        default: "www.mydomain.com"
+        default: "some-domain.org"
       tls-enabled:
         type: boolean
         description: Enables TLS support
@@ -52,10 +52,10 @@ jobs:
 
       - name: Set variables
         env:
-          default_concurrency: 30
+          default_concurrency: 10
           default_tls-enabled: false
           default_tls-autocert: false
-          default_domainName: "domain.org"
+          default_domainName: "some-domain.org"
         run: |
           echo "CONCURRENCY=${{ github.event.inputs.concurrency || env.default_concurrency }}" >> $GITHUB_ENV
           echo "TLS-ENABLED=${{ github.event.inputs.tls-enabled || env.default_tls-enabled }}" >> $GITHUB_ENV
