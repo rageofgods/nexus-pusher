@@ -9,7 +9,8 @@ import (
 	"net/http"
 )
 
-func (s *NexusServer) uploadComponent(format ComponentType, c *http.Client, asset *NexusExportComponentAsset, repoName string) error {
+func (s *NexusServer) uploadComponent(format ComponentType, c *http.Client, asset *NexusExportComponentAsset,
+	repoName string) error {
 	switch format {
 	case NPM:
 		// Download NPM component from official repo and return structured data
@@ -63,7 +64,8 @@ func prepareToUpload(t Typer) (interface{}, error) {
 	return data, nil
 }
 
-func (s *NexusServer) uploadComponentWithType(data interface{}, repoName string, c *http.Client, asset *NexusExportComponentAsset) error {
+func (s *NexusServer) uploadComponentWithType(data interface{}, repoName string, c *http.Client,
+	asset *NexusExportComponentAsset) error {
 	var contentData *bytes.Buffer
 	var contentType string
 	switch t := data.(type) {
