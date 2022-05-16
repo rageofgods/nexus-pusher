@@ -16,4 +16,4 @@ run: build
 test:
 	go test ./... -v
 lint:
-	golangci-lint run
+	golangci-lint run --enable gosec,bodyclose,dupl,unparam,wastedassign,unconvert,tagliatelle,rowserrcheck,predeclared,prealloc,nosprintfhostport,nonamedreturns,nilnil,nilerr,nakedret,misspell,makezero,lll,ireturn,ifshort,goprintffuncname,godox,gocyclo,gocritic,goconst,gochecknoinits,forcetypeassert,forbidigo,exportloopref,exhaustive,errorlint,errchkjson,durationcheck,dogsled,decorder,bidichk,asciicheck

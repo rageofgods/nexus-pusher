@@ -20,11 +20,11 @@ const (
 	PYPI    ComponentType = "pypi"
 	pypiSrv string        = "https://pypi.org/"
 
-	NUGET  ComponentType = "nuget"
-	HELM   ComponentType = "helm"
-	DOCKER ComponentType = "docker"
-	RUBY   ComponentType = "rubygems"
-	APT    ComponentType = "apt"
+	//NUGET  ComponentType = "nuget"
+	//HELM   ComponentType = "helm"
+	//DOCKER ComponentType = "docker"
+	//RUBY   ComponentType = "rubygems"
+	//APT    ComponentType = "apt"
 )
 
 type Typer interface {
