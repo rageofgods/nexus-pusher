@@ -7,7 +7,7 @@ import (
 
 // genNexExpCompFromNexComp is converting original nexus structure data to compact export format
 func genNexExpCompFromNexComp(c []*comps.NexusComponent) *comps.NexusExportComponents {
-	var ec []*comps.NexusExportComponent
+	ec := make([]*comps.NexusExportComponent, 0, len(c))
 	for _, v := range c {
 		var assets []*comps.NexusExportComponentAsset
 		for _, vv := range v.Assets {
