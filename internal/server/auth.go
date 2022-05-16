@@ -1,10 +1,11 @@
 package server
 
 import (
+	"crypto/rand"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"log"
-	"math/rand"
+	"math/big"
 	"net/http"
 	"nexus-pusher/internal/config"
 	"time"
@@ -124,14 +125,16 @@ func (u *webService) refreshMiddle(next http.Handler) http.Handler {
 	})
 }
 
-// Generate random []byte with variable length
 func genRandomJWTKey(n int) []byte {
 	var letter = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-	rand.Seed(time.Now().UnixNano())
 
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letter[rand.Intn(len(letter))]
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(letter))))
+		if err != nil {
+			log.Fatalf("error: can't generate jwt key - %v", err)
+		}
+		b[i] = letter[n.Uint64()]
 	}
 	return []byte(string(b))
 }
