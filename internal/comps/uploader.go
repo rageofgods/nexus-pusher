@@ -1,6 +1,7 @@
 package comps
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -21,7 +22,7 @@ func (s *NexusServer) uploadComponent(format ComponentType, c *http.Client, asse
 		// Check returned interface type
 		if nd, ok := npmData.(*Npm); ok {
 			// Upload NPM component to Nexus repo
-			if err := s.uploadNpmComponent(nd, repoName, c, asset); err != nil {
+			if err := s.uploadComponentWithType(nd, repoName, c, asset); err != nil {
 				return err
 			}
 		} else {
@@ -38,7 +39,7 @@ func (s *NexusServer) uploadComponent(format ComponentType, c *http.Client, asse
 		// Check returned interface type
 		if nd, ok := pypiData.(*Pypi); ok {
 			// Upload PYPI component to Nexus repo
-			if err := s.uploadPypiComponent(nd, repoName, c, asset); err != nil {
+			if err := s.uploadComponentWithType(nd, repoName, c, asset); err != nil {
 				return err
 			}
 		} else {
@@ -62,65 +63,37 @@ func prepareToUpload(t Typer) (interface{}, error) {
 	return data, nil
 }
 
-func (s *NexusServer) uploadNpmComponent(npmData *Npm, repoName string, c *http.Client, asset *NexusExportComponentAsset) error {
-	// Upload component to nexus repo
-	srvUrl := fmt.Sprintf("%s%s%s?repository=%s", s.Host,
-		s.BaseUrl,
-		s.ApiComponentsUrl,
-		repoName)
-	req, err := http.NewRequest("POST", srvUrl, npmData.Content.Data)
-	if err != nil {
-		return err
+func (s *NexusServer) uploadComponentWithType(data interface{}, repoName string, c *http.Client, asset *NexusExportComponentAsset) error {
+	var contentData *bytes.Buffer
+	var contentType string
+	switch t := data.(type) {
+	case *Npm:
+		contentData = t.Content.Data
+		contentType = t.Content.Type
+	case *Pypi:
+		contentData = t.Content.Data
+		contentType = t.Content.Type
+	default:
+		return fmt.Errorf("error: unknown component type provided %T", data)
 	}
-	req.Header.Set("Content-Type", npmData.Content.Type)
-	req.SetBasicAuth(s.Username, s.Password)
-	resp, err := c.Do(req)
-	if err != nil {
-		return fmt.Errorf("%v", err)
-	}
-	// Check server response
-	if resp.StatusCode != http.StatusNoContent {
-		log.Printf("error: unable to upload component %s to repository '%s' at server %s. Reason: %s",
-			asset.Path,
-			repoName,
-			s.Host,
-			resp.Status)
-		return fmt.Errorf("error: unable to upload component %s to repository '%s' at server %s. Reason: %s",
-			asset.Path,
-			repoName,
-			s.Host,
-			resp.Status)
-	} else {
-		log.Printf("Component %s succesfully uploaded to repository '%s' at server %s",
-			asset.Path,
-			repoName,
-			s.Host)
-	}
-	if _, err := io.Copy(ioutil.Discard, resp.Body); err != nil {
-		return fmt.Errorf("%v", err)
-	}
-	if err := resp.Body.Close(); err != nil {
-		return fmt.Errorf("%v", err)
-	}
-	return nil
-}
 
-func (s *NexusServer) uploadPypiComponent(pypiData *Pypi, repoName string, c *http.Client, asset *NexusExportComponentAsset) error {
 	// Upload component to nexus repo
 	srvUrl := fmt.Sprintf("%s%s%s?repository=%s", s.Host,
 		s.BaseUrl,
 		s.ApiComponentsUrl,
 		repoName)
-	req, err := http.NewRequest("POST", srvUrl, pypiData.Content.Data)
+	req, err := http.NewRequest("POST", srvUrl, contentData)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", pypiData.Content.Type)
+	req.Header.Set("Content-Type", contentType)
 	req.SetBasicAuth(s.Username, s.Password)
+
 	resp, err := c.Do(req)
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
+
 	// Check server response
 	if resp.StatusCode != http.StatusNoContent {
 		log.Printf("error: unable to upload component %s to repository '%s' at server %s. Reason: %s",
@@ -139,6 +112,7 @@ func (s *NexusServer) uploadPypiComponent(pypiData *Pypi, repoName string, c *ht
 			repoName,
 			s.Host)
 	}
+
 	if _, err := io.Copy(ioutil.Discard, resp.Body); err != nil {
 		return fmt.Errorf("%v", err)
 	}
