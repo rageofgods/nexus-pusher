@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"golang.org/x/crypto/acme/autocert"
 	"log"
+	"net"
 	"net/http"
 	"nexus-pusher/internal/config"
-	"strings"
 	"time"
 )
 
@@ -68,7 +68,12 @@ func makeServerFromMux(mux *http.ServeMux) *http.Server {
 
 func makeHTTPToHTTPSRedirectServer(port string) *http.Server {
 	handleRedirect := func(w http.ResponseWriter, r *http.Request) {
-		newURI := fmt.Sprintf("https://%s:%s%s", strings.Split(r.Host, ":")[0], port, r.URL.String())
+		// Split host and port in the http request to use host later
+		host, _, err := net.SplitHostPort(r.Host)
+		if err != nil {
+			log.Fatalf("error: unable to split http request for host %s. %v", r.Host, err)
+		}
+		newURI := fmt.Sprintf("https://%s%s", net.JoinHostPort(host, port), r.URL.String())
 		http.Redirect(w, r, newURI, http.StatusFound)
 	}
 	mux := &http.ServeMux{}
