@@ -123,7 +123,7 @@ func (s *NexusServer) UploadComponents(c *http.Client,
 
 // HttpClient returns http client with optional timeout parameter
 // Default timeout value is 10 seconds
-func HttpClient(seconds ...time.Duration) *http.Client {
+func HttpClient(seconds ...int) *http.Client {
 	retryClient := retryablehttp.NewClient()
 	retryClient.HTTPClient.Transport = &http.Transport{
 		Proxy:               http.ProxyFromEnvironment,
@@ -135,7 +135,7 @@ func HttpClient(seconds ...time.Duration) *http.Client {
 	retryClient.Logger = customLogger
 	retryClient.RetryMax = 3
 	if len(seconds) != 0 {
-		retryClient.HTTPClient.Timeout = seconds[0] * time.Second
+		retryClient.HTTPClient.Timeout = time.Duration(seconds[0]) * time.Second
 	} else {
 		retryClient.HTTPClient.Timeout = 10 * time.Second
 	}

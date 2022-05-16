@@ -36,7 +36,7 @@ func (u *webService) completeById(id uuid.UUID, textResult ...string) error {
 	// Search in map
 	msg, err := u.searchById(id)
 	if err != nil {
-		return fmt.Errorf("%v", err)
+		return fmt.Errorf("%w", err)
 	}
 	// Set complete flag
 	msg.Complete = true

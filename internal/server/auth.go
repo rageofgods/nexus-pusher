@@ -2,6 +2,7 @@ package server
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"log"
@@ -143,7 +144,7 @@ func (u *webService) authWithCookie(w http.ResponseWriter, r *http.Request) (*Cl
 	// Get the session token from the requests cookies
 	c, err := r.Cookie(config.JWTCookieName)
 	if err != nil {
-		if err == http.ErrNoCookie {
+		if errors.Is(err, http.ErrNoCookie) {
 			// If the cookie is not set, return an unauthorized status
 			log.Printf("error: cookie with jwt token is not set for this request")
 			w.WriteHeader(http.StatusUnauthorized)
@@ -167,7 +168,7 @@ func (u *webService) authWithCookie(w http.ResponseWriter, r *http.Request) (*Cl
 			return u.jwtKey, nil
 		})
 	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
+		if errors.Is(err, jwt.ErrSignatureInvalid) {
 			log.Printf("error: can't parse JWT string. %v", err)
 			w.WriteHeader(http.StatusUnauthorized)
 			return nil, err

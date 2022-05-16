@@ -126,7 +126,7 @@ func ScheduleRunNexusPusher(c *config.Client) error {
 	s := gocron.NewScheduler(loc)
 	j, err := s.Every(c.Daemon.SyncEveryMinutes).Minute().Do(RunNexusPusher, c)
 	if err != nil {
-		return fmt.Errorf("error: can't schedule sync. job: %v: error: %v", j, err)
+		return fmt.Errorf("error: can't schedule sync. job: %v: error: %w", j, err)
 	}
 	s.StartBlocking()
 

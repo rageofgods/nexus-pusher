@@ -32,7 +32,7 @@ func (c *NexusConfig) ScheduleLoadConfig(fileName string, seconds int) error {
 	s := gocron.NewScheduler(loc)
 	j, err := s.Every(seconds).Second().Do(c.LoadConfig, fileName)
 	if err != nil {
-		return fmt.Errorf("error: can't schedule config read. job: %v: error: %v", j, err)
+		return fmt.Errorf("error: can't schedule config read. job: %v: error: %w", j, err)
 	}
 	s.StartAsync()
 

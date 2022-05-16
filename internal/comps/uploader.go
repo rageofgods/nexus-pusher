@@ -93,7 +93,7 @@ func (s *NexusServer) uploadComponentWithType(data interface{}, repoName string,
 
 	resp, err := c.Do(req)
 	if err != nil {
-		return fmt.Errorf("%v", err)
+		return fmt.Errorf("%w", err)
 	}
 
 	// Check server response
@@ -116,10 +116,10 @@ func (s *NexusServer) uploadComponentWithType(data interface{}, repoName string,
 	}
 
 	if _, err := io.Copy(ioutil.Discard, resp.Body); err != nil {
-		return fmt.Errorf("%v", err)
+		return fmt.Errorf("%w", err)
 	}
 	if err := resp.Body.Close(); err != nil {
-		return fmt.Errorf("%v", err)
+		return fmt.Errorf("%w", err)
 	}
 	return nil
 }

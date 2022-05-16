@@ -112,7 +112,7 @@ func (p *pushClient) sendComparedRequest(data *comps.NexusExportComponents, repo
 	// Encode data to buffer
 	err := json.NewEncoder(&buf).Encode(data)
 	if err != nil {
-		return nil, fmt.Errorf("%v", err)
+		return nil, fmt.Errorf("%w", err)
 	}
 	req, err := http.NewRequest("POST", requestUrl, &buf)
 	if err != nil {
