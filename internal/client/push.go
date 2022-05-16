@@ -91,7 +91,7 @@ func (p *pushClient) refreshAuth() error {
 			if v.Name == config.JWTCookieName {
 				// If Cookie was found when set pointer to it
 				p.cookie = v
-				log.Printf("Succesfully refreshed JWT auth token. Continue polling...")
+				log.Printf("Successfully refreshed JWT auth token. Continue polling...")
 				return nil
 			}
 		}
@@ -135,7 +135,7 @@ func (p *pushClient) sendComparedRequest(data *comps.NexusExportComponents, repo
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("error: %s responded with status: %s", p.serverAddress, resp.Status)
 	}
-	log.Printf("Sending components diff to %s succesfully complete.", p.serverAddress)
+	log.Printf("Sending components diff to %s successfully complete.", p.serverAddress)
 
 	// Read all body data
 	body, err := ioutil.ReadAll(resp.Body)

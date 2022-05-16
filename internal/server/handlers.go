@@ -87,7 +87,7 @@ func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 				log.Printf("%v", err)
 			}
 		} else {
-			log.Printf("Upload request succesfully complete.")
+			log.Printf("Upload request successfully complete.")
 			// Set complete flag to current client request
 			if err := u.completeById(msg.ID, fmt.Sprintf("All assets successfully uploaded for repository '%s'",
 				repo)); err != nil {

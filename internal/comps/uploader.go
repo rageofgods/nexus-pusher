@@ -107,7 +107,7 @@ func (s *NexusServer) uploadComponentWithType(data interface{}, repoName string,
 			s.Host,
 			resp.Status)
 	} else {
-		log.Printf("Component %s succesfully uploaded to repository '%s' at server %s",
+		log.Printf("Component %s successfully uploaded to repository '%s' at server %s",
 			asset.Path,
 			repoName,
 			s.Host)
