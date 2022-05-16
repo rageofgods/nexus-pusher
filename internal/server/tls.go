@@ -28,7 +28,7 @@ func RunAutoCertServer(cfg *config.Server) {
 
 	s := &http.Server{
 		Addr:      fmt.Sprintf("%s:%s", cfg.BindAddress, cfg.Port),
-		TLSConfig: &tls.Config{GetCertificate: m.GetCertificate},
+		TLSConfig: &tls.Config{GetCertificate: m.GetCertificate, MinVersion: tls.VersionTLS12},
 		Handler:   NewRouter(cfg),
 	}
 
