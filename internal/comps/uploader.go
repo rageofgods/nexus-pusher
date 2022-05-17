@@ -1,96 +1,109 @@
 package comps
 
 import (
-	"bytes"
+	"context"
 	"fmt"
+	"golang.org/x/sync/errgroup"
 	"io"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
 )
 
 func (s *NexusServer) uploadComponent(format ComponentType, c *http.Client, asset *NexusExportComponentAsset,
 	repoName string) error {
+	// Create outer pipe to interconnect with inner pipe, to be able
+	// to stream data directly from source component repo to target nexus repo.
+	outerPipeReader, outerPipeWriter := io.Pipe()
+
+	// Create multipart writer to connect it to the pipe and modify incoming
+	// binary data from remote external repository (i.e PYPY, NPM, etc) on the fly
+	multipartWriter := multipart.NewWriter(outerPipeWriter)
+
+	// Creating error group for awaiting result from check repos types
+	// errCtx will cancel http request if any errors was found
+	errGroup, errCtx := errgroup.WithContext(context.Background())
+
 	switch format {
 	case NPM:
 		// Download NPM component from official repo and return structured data
 		npm := NewNpm(npmSrv, asset.Path, asset.FileName)
-		npmData, err := prepareToUpload(npm)
-		if err != nil {
-			return err
-		}
 
-		// Check returned interface type
-		if nd, ok := npmData.(*Npm); ok {
-			// Upload NPM component to Nexus repo
-			if err := s.uploadComponentWithType(nd, repoName, c, asset); err != nil {
+		// Start to download data and convert it to multipart stream
+		prepareToUpload(errCtx, npm, multipartWriter, outerPipeWriter, errGroup)
+
+		// Upload component to target nexus server
+		errGroup.Go(func() error {
+			if err := s.uploadComponentWithType(errCtx, repoName, c, asset, outerPipeReader, multipartWriter); err != nil {
 				return err
 			}
-		} else {
-			return fmt.Errorf("error: wrong data interface type provided. want: 'npm', get: %T", npmData)
-		}
+			return nil
+		})
+
 	case PYPI:
 		// Download PYPI component from official repo and return structured data
 		pypi := NewPypi(pypiSrv, asset.Path, asset.FileName, asset.Name, asset.Version)
-		pypiData, err := prepareToUpload(pypi)
-		if err != nil {
-			return err
-		}
 
-		// Check returned interface type
-		if nd, ok := pypiData.(*Pypi); ok {
-			// Upload PYPI component to Nexus repo
-			if err := s.uploadComponentWithType(nd, repoName, c, asset); err != nil {
+		// Start to download data and convert it to multipart stream
+		prepareToUpload(errCtx, pypi, multipartWriter, outerPipeWriter, errGroup)
+
+		// Upload component to target nexus server
+		errGroup.Go(func() error {
+			if err := s.uploadComponentWithType(errCtx, repoName, c, asset, outerPipeReader, multipartWriter); err != nil {
 				return err
 			}
-		} else {
-			return fmt.Errorf("error: wrong data interface type provided. want: 'pypi', get: %T", pypiData)
-		}
+			return nil
+		})
+
 	}
+	// If we found error, return it
+	if err := errGroup.Wait(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // Download component following provided interface type
-func prepareToUpload(t Typer) (interface{}, error) {
-	b, err := t.DownloadComponent()
-	if err != nil {
-		return nil, err
-	}
+func prepareToUpload(ctx context.Context, t Typer, multipartWriter *multipart.Writer,
+	outerPipeWriter *io.PipeWriter, errGroup *errgroup.Group) {
+	// Create error errGroup to handle any errors
+	innerPipeReader, innerPipeWriter := io.Pipe()
 
-	data, err := t.PrepareDataToUpload(b)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
+	// Start downloading component from remote repo
+	errGroup.Go(func() error {
+		if err := t.DownloadComponent(ctx, innerPipeWriter); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	// Convert downloaded component to multipart asset on the fly
+	errGroup.Go(func() error {
+		if err := t.PrepareDataToUpload(innerPipeReader, outerPipeWriter, multipartWriter); err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
-func (s *NexusServer) uploadComponentWithType(data interface{}, repoName string, c *http.Client,
-	asset *NexusExportComponentAsset) error {
-	var contentData *bytes.Buffer
-	var contentType string
-	switch t := data.(type) {
-	case *Npm:
-		contentData = t.Content.Data
-		contentType = t.Content.Type
-	case *Pypi:
-		contentData = t.Content.Data
-		contentType = t.Content.Type
-	default:
-		return fmt.Errorf("error: unknown component type provided %T", data)
-	}
-
+func (s *NexusServer) uploadComponentWithType(ctx context.Context, repoName string, c *http.Client,
+	asset *NexusExportComponentAsset, r *io.PipeReader, mw *multipart.Writer) error {
 	// Upload component to nexus repo
 	srvUrl := fmt.Sprintf("%s%s%s?repository=%s", s.Host,
 		s.BaseUrl,
 		s.ApiComponentsUrl,
 		repoName)
-	req, err := http.NewRequest("POST", srvUrl, contentData)
+	req, err := http.NewRequest("POST", srvUrl, r)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", contentType)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.SetBasicAuth(s.Username, s.Password)
+	req = req.WithContext(ctx)
 
+	// Start uploading component to remote nexus
 	resp, err := c.Do(req)
 	if err != nil {
 		return fmt.Errorf("%w", err)

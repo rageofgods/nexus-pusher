@@ -21,9 +21,9 @@ func RunAutoCertServer(cfg *config.Server) {
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: autocert.HostWhitelist(cfg.TLS.DomainName),
 		// Let's encrypt staging environment
-		//Client: &acme.Client{
+		// Client: &acme.Client{
 		//	DirectoryURL: "https://acme-staging-v02.api.letsencrypt.org/directory",
-		//},
+		// },
 	}
 
 	s := &http.Server{

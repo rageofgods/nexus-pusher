@@ -1,6 +1,9 @@
 package comps
 
 import (
+	"context"
+	"io"
+	"mime/multipart"
 	"strings"
 )
 
@@ -20,14 +23,14 @@ const (
 	PYPI    ComponentType = "pypi"
 	pypiSrv string        = "https://pypi.org/"
 
-	//NUGET  ComponentType = "nuget"
-	//HELM   ComponentType = "helm"
-	//DOCKER ComponentType = "docker"
-	//RUBY   ComponentType = "rubygems"
-	//APT    ComponentType = "apt"
+	// NUGET  ComponentType = "nuget"
+	// HELM   ComponentType = "helm"
+	// DOCKER ComponentType = "docker"
+	// RUBY   ComponentType = "rubygems"
+	// APT    ComponentType = "apt"
 )
 
 type Typer interface {
-	DownloadComponent() ([]byte, error)
-	PrepareDataToUpload([]byte) (interface{}, error)
+	DownloadComponent(ctx context.Context, w *io.PipeWriter) error
+	PrepareDataToUpload(*io.PipeReader, *io.PipeWriter, *multipart.Writer) error
 }

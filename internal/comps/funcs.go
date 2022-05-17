@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"nexus-pusher/internal/config"
 	"os"
-	"runtime/debug"
 	"time"
 )
 
@@ -104,7 +103,7 @@ func (s *NexusServer) UploadComponents(c *http.Client,
 				}
 				resultsChan <- result
 				<-limitChan
-				debug.FreeOSMemory()
+				//debug.FreeOSMemory()
 			}(ComponentType(v.Format), c, vv, repoName)
 		}
 	}
@@ -130,6 +129,7 @@ func HttpClient(seconds ...int) *http.Client {
 		MaxIdleConnsPerHost: 100,
 		MaxConnsPerHost:     100,
 		MaxIdleConns:        100,
+		DisableKeepAlives:   true,
 	}
 	customLogger := &CustomRetryLogger{log.New(os.Stdout, "", log.Ldate|log.Ltime)}
 	retryClient.Logger = customLogger
