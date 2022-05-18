@@ -35,5 +35,5 @@ func newWebService(cfg *config.Server, messages map[uuid.UUID]*Message, jwtKey [
 
 const (
 	// Limit uploaded json to 30mb
-	maxBodySize int64 = 31457280
+	maxBodySize int64 = 30 << 20
 )
