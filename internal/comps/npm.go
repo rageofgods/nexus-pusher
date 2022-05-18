@@ -31,18 +31,18 @@ func (n Npm) DownloadComponent() (*http.Response, error) {
 	req.Header.Set("Accept", "application/octet-stream")
 
 	// Send request
-	return HttpClient(120).Do(req)
+	return HttpRetryClient(180).Do(req) // Set 3 min timeout to handle files
 
 }
 
 func (n *Npm) PrepareDataToUpload(fileReader io.Reader) (string, io.Reader) {
 	// Create multipart asset
-	boundary := "MyMultiPartBoundary12345"
+	boundary := genRandomBoundary(32)
 	fileName := n.FileName
 	fileHeader := "Content-type: application/octet-stream"
-	fileFormat := "--%s\r\nContent-Disposition: form-data; name=\"npm.asset\"; filename=\"@%s\"\r\n%s\r\n\r\n"
-	filePart := fmt.Sprintf(fileFormat, boundary, fileName, fileHeader)
-	bodyTop := fmt.Sprintf("%s", filePart)
+	fileType := "npm.asset"
+	fileFormat := "--%s\r\nContent-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n%s\r\n\r\n"
+	bodyTop := fmt.Sprintf(fileFormat, boundary, fileType, fileName, fileHeader)
 	bodyBottom := fmt.Sprintf("\r\n--%s--\r\n", boundary)
 
 	body := io.MultiReader(strings.NewReader(bodyTop), fileReader, strings.NewReader(bodyBottom))

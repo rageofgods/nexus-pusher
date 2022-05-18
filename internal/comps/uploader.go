@@ -8,12 +8,7 @@ import (
 	"net/http"
 )
 
-func (s *NexusServer) uploadComponent(format ComponentType, c *http.Client, asset *NexusExportComponentAsset,
-	repoName string) error {
-	// Create multipart writer to connect it to the pipe and modify incoming
-	// binary data from remote external repository (i.e PYPY, NPM, etc) on the fly
-	//multipartWriter := multipart.NewWriter(outerPipeWriter)
-
+func (s *NexusServer) uploadComponent(format ComponentType, asset *NexusExportComponentAsset, repoName string) error {
 	switch format {
 	case NPM:
 		// Download NPM component from official repo and return structured data
@@ -27,7 +22,7 @@ func (s *NexusServer) uploadComponent(format ComponentType, c *http.Client, asse
 		defer resp.Body.Close()
 
 		// Upload component to target nexus server
-		if err := s.uploadComponentWithType(repoName, c, asset, contentType, uploadBody); err != nil {
+		if err := s.uploadComponentWithType(repoName, asset, contentType, uploadBody); err != nil {
 			return err
 		}
 
@@ -43,7 +38,7 @@ func (s *NexusServer) uploadComponent(format ComponentType, c *http.Client, asse
 		defer resp.Body.Close()
 
 		// Upload component to target nexus server
-		if err := s.uploadComponentWithType(repoName, c, asset, contentType, uploadBody); err != nil {
+		if err := s.uploadComponentWithType(repoName, asset, contentType, uploadBody); err != nil {
 			return err
 		}
 	}
@@ -67,12 +62,14 @@ func prepareToUpload(t Typer) (string, io.Reader, *http.Response, error) {
 			resp.Request.URL)
 	}
 
+	// Convert to multipart component specific type on the fly
+	// and return converted body with correct content type
 	contentType, uploadBody := t.PrepareDataToUpload(resp.Body)
 	return contentType, uploadBody, resp, nil
 }
 
-func (s *NexusServer) uploadComponentWithType(repoName string, c *http.Client,
-	asset *NexusExportComponentAsset, contentType string, body io.Reader) error {
+func (s *NexusServer) uploadComponentWithType(repoName string, asset *NexusExportComponentAsset,
+	contentType string, body io.Reader) error {
 	// Upload component to nexus repo
 	srvUrl := fmt.Sprintf("%s%s%s?repository=%s", s.Host,
 		s.BaseUrl,
@@ -86,9 +83,11 @@ func (s *NexusServer) uploadComponentWithType(repoName string, c *http.Client,
 	req.SetBasicAuth(s.Username, s.Password)
 
 	// Start uploading component to remote nexus
-	resp, err := c.Do(req)
+	// Set 15 min timeout to handle large files
+	// We can't use retryable client here
+	resp, err := HttpClient(900).Do(req)
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return err
 	}
 
 	// Check server response

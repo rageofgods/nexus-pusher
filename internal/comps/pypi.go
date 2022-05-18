@@ -42,17 +42,17 @@ func (p Pypi) DownloadComponent() (*http.Response, error) {
 	req.Header.Set("Accept", "application/octet-stream")
 
 	// Send request
-	return HttpClient(300).Do(req) // Set 120 sec timeout to handle large files
+	return HttpRetryClient(900).Do(req) // Set 15 min timeout to handle large files
 }
 
 func (p *Pypi) PrepareDataToUpload(fileReader io.Reader) (string, io.Reader) {
 	// Create multipart asset
-	boundary := "MyMultiPartBoundary12345"
+	boundary := genRandomBoundary(32)
 	fileName := p.FileName
 	fileHeader := "Content-type: application/octet-stream"
-	fileFormat := "--%s\r\nContent-Disposition: form-data; name=\"pypi.asset\"; filename=\"@%s\"\r\n%s\r\n\r\n"
-	filePart := fmt.Sprintf(fileFormat, boundary, fileName, fileHeader)
-	bodyTop := fmt.Sprintf("%s", filePart)
+	fileType := "pypi.asset"
+	fileFormat := "--%s\r\nContent-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n%s\r\n\r\n"
+	bodyTop := fmt.Sprintf(fileFormat, boundary, fileType, fileName, fileHeader)
 	bodyBottom := fmt.Sprintf("\r\n--%s--\r\n", boundary)
 
 	body := io.MultiReader(strings.NewReader(bodyTop), fileReader, strings.NewReader(bodyBottom))
@@ -72,7 +72,7 @@ func (p Pypi) assetDownloadURL() (string, error) {
 	req.Header.Set("Accept", "application/json")
 
 	// Send request
-	resp, err := HttpClient().Do(req)
+	resp, err := HttpRetryClient().Do(req)
 	if err != nil {
 		return "", err
 	}

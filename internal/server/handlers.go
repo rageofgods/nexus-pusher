@@ -66,7 +66,7 @@ func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		s := comps.NewNexusServer(nec.NexusServer.Username, nec.NexusServer.Password,
 			nec.NexusServer.Host, nec.NexusServer.BaseUrl, nec.NexusServer.ApiComponentsUrl)
-		results := s.UploadComponents(comps.HttpClient(300), nec, repo, u.cfg)
+		results := s.UploadComponents(nec, repo, u.cfg)
 
 		var errorsCounter int
 		var errorsText []string

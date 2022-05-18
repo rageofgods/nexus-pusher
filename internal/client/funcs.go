@@ -137,7 +137,7 @@ func doCheckServerStatus(server string) error {
 	// Create URL for status checking
 	srvUrl := fmt.Sprintf("%s%s%s", server, config.URIBase, config.URIStatus)
 	// Define client
-	c := comps.HttpClient()
+	c := comps.HttpRetryClient()
 
 	req, err := http.NewRequest("GET", srvUrl, nil)
 	if err != nil {
@@ -163,8 +163,8 @@ func doCheckRepoTypes(sc *config.SyncConfig) error {
 	s2 := comps.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
 		sc.DstServerConfig.Server, config.URIBase, config.URIRepositories)
 
-	c1 := comps.HttpClient()
-	c2 := comps.HttpClient()
+	c1 := comps.HttpRetryClient()
+	c2 := comps.HttpRetryClient()
 
 	var nr1 []*comps.NexusRepository
 	var nr2 []*comps.NexusRepository
@@ -256,8 +256,8 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 		sc.SrcServerConfig.Server, config.URIBase, config.URIComponents)
 	s2 := comps.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
 		sc.DstServerConfig.Server, config.URIBase, config.URIComponents)
-	c1 := comps.HttpClient()
-	c2 := comps.HttpClient()
+	c1 := comps.HttpRetryClient()
+	c2 := comps.HttpRetryClient()
 	var nc1 []*comps.NexusComponent
 	var nc2 []*comps.NexusComponent
 

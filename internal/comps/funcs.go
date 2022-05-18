@@ -2,12 +2,14 @@ package comps
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"github.com/goccy/go-json"
 	"github.com/hashicorp/go-retryablehttp"
 	"io"
 	"io/ioutil"
 	"log"
+	"math/big"
 	"net/http"
 	"nexus-pusher/internal/config"
 	"os"
@@ -61,9 +63,9 @@ func (s *NexusServer) GetComponents(
 			len(ncs))
 	}
 
-	//if len(ncs) > 1000 {
+	// if len(ncs) > 1000 {
 	//	return ncs, nil
-	//}
+	// }
 
 	// Iterating over all API pages
 	if nc.ContinuationToken != "" {
@@ -77,10 +79,7 @@ func (s *NexusServer) GetComponents(
 }
 
 // UploadComponents is used to upload nexus artifacts following by 'nec' list
-func (s *NexusServer) UploadComponents(c *http.Client,
-	nec *NexusExportComponents,
-	repoName string,
-	cs *config.Server) []UploadResult {
+func (s *NexusServer) UploadComponents(nec *NexusExportComponents, repoName string, cs *config.Server) []UploadResult {
 
 	limitChan := make(chan struct{}, cs.Concurrency)
 	resultsChan := make(chan *UploadResult)
@@ -94,17 +93,16 @@ func (s *NexusServer) UploadComponents(c *http.Client,
 	for _, v := range nec.Items {
 		for _, vv := range v.Assets {
 			resultsCounter++
-			go func(format ComponentType, c *http.Client, asset *NexusExportComponentAsset, repoName string) {
+			go func(format ComponentType, asset *NexusExportComponentAsset, repoName string) {
 				limitChan <- struct{}{}
 				result := &UploadResult{}
-				if err := s.uploadComponent(format, c, asset, repoName); err != nil {
+				if err := s.uploadComponent(format, asset, repoName); err != nil {
 					log.Printf("%v", err)
 					result = &UploadResult{Err: err, ComponentPath: asset.Path}
 				}
 				resultsChan <- result
 				<-limitChan
-				//debug.FreeOSMemory()
-			}(ComponentType(v.Format), c, vv, repoName)
+			}(ComponentType(v.Format), vv, repoName)
 		}
 	}
 	var results []UploadResult
@@ -120,9 +118,9 @@ func (s *NexusServer) UploadComponents(c *http.Client,
 	return results
 }
 
-// HttpClient returns http client with optional timeout parameter
+// HttpRetryClient returns http client with optional timeout parameter
 // Default timeout value is 10 seconds
-func HttpClient(seconds ...int) *http.Client {
+func HttpRetryClient(seconds ...int) *http.Client {
 	retryClient := retryablehttp.NewClient()
 	retryClient.HTTPClient.Transport = &http.Transport{
 		Proxy:               http.ProxyFromEnvironment,
@@ -142,6 +140,27 @@ func HttpClient(seconds ...int) *http.Client {
 	client := retryClient.StandardClient()
 
 	return client
+}
+
+// HttpClient returns http client with optional timeout parameter
+// Default timeout value is 10 seconds
+func HttpClient(seconds ...int) *http.Client {
+	c := &http.Client{}
+	c.Transport = &http.Transport{
+		Proxy:               http.ProxyFromEnvironment,
+		MaxIdleConnsPerHost: 100,
+		MaxConnsPerHost:     100,
+		MaxIdleConns:        100,
+		DisableKeepAlives:   true,
+	}
+
+	if len(seconds) != 0 {
+		c.Timeout = time.Duration(seconds[0]) * time.Second
+	} else {
+		c.Timeout = 10 * time.Second
+	}
+
+	return c
 }
 
 func (s *NexusServer) SendRequest(srvUrl string, method string, c *http.Client, b io.Reader) ([]byte, error) {
@@ -172,4 +191,18 @@ func (s *NexusServer) SendRequest(srvUrl string, method string, c *http.Client, 
 		return nil, err
 	}
 	return body, nil
+}
+
+func genRandomBoundary(n int) string {
+	var letter = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+	b := make([]rune, n)
+	for i := range b {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(letter))))
+		if err != nil {
+			log.Fatalf("error: can't generate boundary - %v", err)
+		}
+		b[i] = letter[n.Uint64()]
+	}
+	return string(b)
 }
