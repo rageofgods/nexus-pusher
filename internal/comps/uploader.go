@@ -1,29 +1,18 @@
 package comps
 
 import (
-	"context"
 	"fmt"
-	"golang.org/x/sync/errgroup"
 	"io"
 	"io/ioutil"
 	"log"
-	"mime/multipart"
 	"net/http"
 )
 
 func (s *NexusServer) uploadComponent(format ComponentType, c *http.Client, asset *NexusExportComponentAsset,
 	repoName string) error {
-	// Create outer pipe to interconnect with inner pipe, to be able
-	// to stream data directly from source component repo to target nexus repo.
-	outerPipeReader, outerPipeWriter := io.Pipe()
-
 	// Create multipart writer to connect it to the pipe and modify incoming
 	// binary data from remote external repository (i.e PYPY, NPM, etc) on the fly
-	multipartWriter := multipart.NewWriter(outerPipeWriter)
-
-	// Creating error group for awaiting result from check repos types
-	// errCtx will cancel http request if any errors was found
-	errGroup, errCtx := errgroup.WithContext(context.Background())
+	//multipartWriter := multipart.NewWriter(outerPipeWriter)
 
 	switch format {
 	case NPM:
@@ -31,77 +20,70 @@ func (s *NexusServer) uploadComponent(format ComponentType, c *http.Client, asse
 		npm := NewNpm(npmSrv, asset.Path, asset.FileName)
 
 		// Start to download data and convert it to multipart stream
-		prepareToUpload(errCtx, npm, multipartWriter, outerPipeWriter, errGroup)
+		contentType, uploadBody, resp, err := prepareToUpload(npm)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
 
 		// Upload component to target nexus server
-		errGroup.Go(func() error {
-			if err := s.uploadComponentWithType(errCtx, repoName, c, asset, outerPipeReader, multipartWriter); err != nil {
-				return err
-			}
-			return nil
-		})
+		if err := s.uploadComponentWithType(repoName, c, asset, contentType, uploadBody); err != nil {
+			return err
+		}
 
 	case PYPI:
 		// Download PYPI component from official repo and return structured data
 		pypi := NewPypi(pypiSrv, asset.Path, asset.FileName, asset.Name, asset.Version)
 
 		// Start to download data and convert it to multipart stream
-		prepareToUpload(errCtx, pypi, multipartWriter, outerPipeWriter, errGroup)
+		contentType, uploadBody, resp, err := prepareToUpload(pypi)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
 
 		// Upload component to target nexus server
-		errGroup.Go(func() error {
-			if err := s.uploadComponentWithType(errCtx, repoName, c, asset, outerPipeReader, multipartWriter); err != nil {
-				return err
-			}
-			return nil
-		})
-
-	}
-	// If we found error, return it
-	if err := errGroup.Wait(); err != nil {
-		return err
+		if err := s.uploadComponentWithType(repoName, c, asset, contentType, uploadBody); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 // Download component following provided interface type
-func prepareToUpload(ctx context.Context, t Typer, multipartWriter *multipart.Writer,
-	outerPipeWriter *io.PipeWriter, errGroup *errgroup.Group) {
-	// Create error errGroup to handle any errors
-	innerPipeReader, innerPipeWriter := io.Pipe()
-
+func prepareToUpload(t Typer) (string, io.Reader, *http.Response, error) {
 	// Start downloading component from remote repo
-	errGroup.Go(func() error {
-		if err := t.DownloadComponent(ctx, innerPipeWriter); err != nil {
-			return err
-		}
-		return nil
-	})
+	resp, err := t.DownloadComponent()
+	if err != nil {
+		return "", nil, nil, err
+	}
 
-	// Convert downloaded component to multipart asset on the fly
-	errGroup.Go(func() error {
-		if err := t.PrepareDataToUpload(innerPipeReader, outerPipeWriter, multipartWriter); err != nil {
-			return err
-		}
-		return nil
-	})
+	// Check http response ok status
+	if resp.StatusCode != http.StatusOK {
+		return "", nil, nil, fmt.Errorf("error: unable to download npm asset. sending '%s' request: status code %d %v",
+			resp.Request.Method,
+			resp.StatusCode,
+			resp.Request.URL)
+	}
+
+	contentType, uploadBody := t.PrepareDataToUpload(resp.Body)
+	return contentType, uploadBody, resp, nil
 }
 
-func (s *NexusServer) uploadComponentWithType(ctx context.Context, repoName string, c *http.Client,
-	asset *NexusExportComponentAsset, r *io.PipeReader, mw *multipart.Writer) error {
+func (s *NexusServer) uploadComponentWithType(repoName string, c *http.Client,
+	asset *NexusExportComponentAsset, contentType string, body io.Reader) error {
 	// Upload component to nexus repo
 	srvUrl := fmt.Sprintf("%s%s%s?repository=%s", s.Host,
 		s.BaseUrl,
 		s.ApiComponentsUrl,
 		repoName)
-	req, err := http.NewRequest("POST", srvUrl, r)
+	req, err := http.NewRequest("POST", srvUrl, body)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.Header.Set("Content-Type", contentType)
 	req.SetBasicAuth(s.Username, s.Password)
-	req = req.WithContext(ctx)
 
 	// Start uploading component to remote nexus
 	resp, err := c.Do(req)

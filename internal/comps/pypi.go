@@ -1,12 +1,10 @@
 package comps
 
 import (
-	"context"
 	"fmt"
 	"github.com/goccy/go-json"
 	"io"
 	"io/ioutil"
-	"mime/multipart"
 	"net/http"
 	"strings"
 )
@@ -29,66 +27,40 @@ func NewPypi(server string, path string, fileName string, name string, version s
 	}
 }
 
-func (p Pypi) DownloadComponent(ctx context.Context, innerPipeWriter *io.PipeWriter) error {
+func (p Pypi) DownloadComponent() (*http.Response, error) {
 	// Get PYPI component
-	assetURL, err := p.assetDownloadURL(ctx)
+	assetURL, err := p.assetDownloadURL()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	req, err := http.NewRequest("GET", assetURL, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	req = req.WithContext(ctx)
+
 	req.Header.Set("Accept", "application/octet-stream")
 
 	// Send request
-	resp, err := HttpClient(120).Do(req) // Set 120 sec timeout to handle large files
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	// Check response for error
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error: unable to download pypi asset. sending '%s' request: status code %d %v",
-			resp.Request.Method,
-			resp.StatusCode,
-			resp.Request.URL)
-	}
-
-	// Read response body
-	_, err = io.Copy(innerPipeWriter, resp.Body)
-	if err != nil {
-		return err
-	}
-	defer innerPipeWriter.Close()
-
-	return nil
+	return HttpClient(300).Do(req) // Set 120 sec timeout to handle large files
 }
 
-func (p *Pypi) PrepareDataToUpload(innerPipeReader *io.PipeReader,
-	outerPipeWriter *io.PipeWriter, multipartWriter *multipart.Writer) error {
-	// Close writers at the end of call
-	defer outerPipeWriter.Close()
-	defer multipartWriter.Close()
-
+func (p *Pypi) PrepareDataToUpload(fileReader io.Reader) (string, io.Reader) {
 	// Create multipart asset
-	part, err := multipartWriter.CreateFormFile("pypi.asset", fmt.Sprintf("@%s", p.FileName))
-	if err != nil {
-		return err
-	}
+	boundary := "MyMultiPartBoundary12345"
+	fileName := p.FileName
+	fileHeader := "Content-type: application/octet-stream"
+	fileFormat := "--%s\r\nContent-Disposition: form-data; name=\"pypi.asset\"; filename=\"@%s\"\r\n%s\r\n\r\n"
+	filePart := fmt.Sprintf(fileFormat, boundary, fileName, fileHeader)
+	bodyTop := fmt.Sprintf("%s", filePart)
+	bodyBottom := fmt.Sprintf("\r\n--%s--\r\n", boundary)
 
-	// Convert downloaded data to multipart
-	if _, err := io.Copy(part, innerPipeReader); err != nil {
-		return err
-	}
-
-	return nil
+	body := io.MultiReader(strings.NewReader(bodyTop), fileReader, strings.NewReader(bodyBottom))
+	contentType := fmt.Sprintf("multipart/form-data; boundary=%s", boundary)
+	return contentType, body
 }
 
-func (p Pypi) assetDownloadURL(ctx context.Context) (string, error) {
+func (p Pypi) assetDownloadURL() (string, error) {
 	// Assemble initial request url to get asset version json
 	requestURL := fmt.Sprintf("%spypi/%s/%s/json", pypiSrv, p.Name, p.Version)
 
@@ -98,7 +70,6 @@ func (p Pypi) assetDownloadURL(ctx context.Context) (string, error) {
 	}
 
 	req.Header.Set("Accept", "application/json")
-	req = req.WithContext(ctx)
 
 	// Send request
 	resp, err := HttpClient().Do(req)

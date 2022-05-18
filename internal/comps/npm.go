@@ -1,11 +1,10 @@
 package comps
 
 import (
-	"context"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
+	"strings"
 )
 
 type Npm struct {
@@ -22,58 +21,33 @@ func NewNpm(server string, path string, fileName string) *Npm {
 	}
 }
 
-func (n Npm) DownloadComponent(ctx context.Context, innerPipeWriter *io.PipeWriter) error {
+func (n Npm) DownloadComponent() (*http.Response, error) {
 	// Get NPM component
 	req, err := http.NewRequest("GET", n.assetDownloadURL(), nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	req = req.WithContext(ctx)
+
 	req.Header.Set("Accept", "application/octet-stream")
 
 	// Send request
-	resp, err := HttpClient(120).Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+	return HttpClient(120).Do(req)
 
-	// Check response for error
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error: unable to download npm asset. sending '%s' request: status code %d %v",
-			resp.Request.Method,
-			resp.StatusCode,
-			resp.Request.URL)
-	}
-
-	// Read response body
-	_, err = io.Copy(innerPipeWriter, resp.Body)
-	if err != nil {
-		return err
-	}
-	defer innerPipeWriter.Close()
-
-	return nil
 }
 
-func (n *Npm) PrepareDataToUpload(innerPipeReader *io.PipeReader,
-	outerPipeWriter *io.PipeWriter, multipartWriter *multipart.Writer) error {
-	// Close writers at the end of call
-	defer outerPipeWriter.Close()
-	defer multipartWriter.Close()
-
+func (n *Npm) PrepareDataToUpload(fileReader io.Reader) (string, io.Reader) {
 	// Create multipart asset
-	part, err := multipartWriter.CreateFormFile("npm.asset", fmt.Sprintf("@%s", n.FileName))
-	if err != nil {
-		return err
-	}
+	boundary := "MyMultiPartBoundary12345"
+	fileName := n.FileName
+	fileHeader := "Content-type: application/octet-stream"
+	fileFormat := "--%s\r\nContent-Disposition: form-data; name=\"npm.asset\"; filename=\"@%s\"\r\n%s\r\n\r\n"
+	filePart := fmt.Sprintf(fileFormat, boundary, fileName, fileHeader)
+	bodyTop := fmt.Sprintf("%s", filePart)
+	bodyBottom := fmt.Sprintf("\r\n--%s--\r\n", boundary)
 
-	// Convert downloaded data to multipart
-	if _, err := io.Copy(part, innerPipeReader); err != nil {
-		return err
-	}
-
-	return nil
+	body := io.MultiReader(strings.NewReader(bodyTop), fileReader, strings.NewReader(bodyBottom))
+	contentType := fmt.Sprintf("multipart/form-data; boundary=%s", boundary)
+	return contentType, body
 }
 
 func (n Npm) assetDownloadURL() string {

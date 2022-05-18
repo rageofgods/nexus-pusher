@@ -1,9 +1,8 @@
 package comps
 
 import (
-	"context"
 	"io"
-	"mime/multipart"
+	"net/http"
 	"strings"
 )
 
@@ -31,6 +30,6 @@ const (
 )
 
 type Typer interface {
-	DownloadComponent(ctx context.Context, w *io.PipeWriter) error
-	PrepareDataToUpload(*io.PipeReader, *io.PipeWriter, *multipart.Writer) error
+	DownloadComponent() (*http.Response, error)
+	PrepareDataToUpload(io.Reader) (string, io.Reader)
 }
