@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"log"
 	"math/big"
 	"net/http"
