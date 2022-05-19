@@ -2,18 +2,13 @@ package comps
 
 import (
 	"context"
-	"crypto/rand"
 	"fmt"
 	"github.com/goccy/go-json"
-	"github.com/hashicorp/go-retryablehttp"
 	"io"
 	"io/ioutil"
 	"log"
-	"math/big"
 	"net/http"
 	"nexus-pusher/internal/config"
-	"os"
-	"time"
 )
 
 func (s *NexusServer) GetComponents(
@@ -118,51 +113,6 @@ func (s *NexusServer) UploadComponents(nec *NexusExportComponents, repoName stri
 	return results
 }
 
-// HttpRetryClient returns http client with optional timeout parameter
-// Default timeout value is 10 seconds
-func HttpRetryClient(seconds ...int) *http.Client {
-	retryClient := retryablehttp.NewClient()
-	retryClient.HTTPClient.Transport = &http.Transport{
-		Proxy:               http.ProxyFromEnvironment,
-		MaxIdleConnsPerHost: 100,
-		MaxConnsPerHost:     100,
-		MaxIdleConns:        100,
-		DisableKeepAlives:   true,
-	}
-	customLogger := &CustomRetryLogger{log.New(os.Stdout, "", log.Ldate|log.Ltime)}
-	retryClient.Logger = customLogger
-	retryClient.RetryMax = 3
-	if len(seconds) != 0 {
-		retryClient.HTTPClient.Timeout = time.Duration(seconds[0]) * time.Second
-	} else {
-		retryClient.HTTPClient.Timeout = 10 * time.Second
-	}
-	client := retryClient.StandardClient()
-
-	return client
-}
-
-// HttpClient returns http client with optional timeout parameter
-// Default timeout value is 10 seconds
-func HttpClient(seconds ...int) *http.Client {
-	c := &http.Client{}
-	c.Transport = &http.Transport{
-		Proxy:               http.ProxyFromEnvironment,
-		MaxIdleConnsPerHost: 100,
-		MaxConnsPerHost:     100,
-		MaxIdleConns:        100,
-		DisableKeepAlives:   true,
-	}
-
-	if len(seconds) != 0 {
-		c.Timeout = time.Duration(seconds[0]) * time.Second
-	} else {
-		c.Timeout = 10 * time.Second
-	}
-
-	return c
-}
-
 func (s *NexusServer) SendRequest(srvUrl string, method string, c *http.Client, b io.Reader) ([]byte, error) {
 	req, err := http.NewRequest(method, srvUrl, b)
 	if err != nil {
@@ -191,18 +141,4 @@ func (s *NexusServer) SendRequest(srvUrl string, method string, c *http.Client, 
 		return nil, err
 	}
 	return body, nil
-}
-
-func genRandomBoundary(n int) string {
-	var letter = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-	b := make([]rune, n)
-	for i := range b {
-		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(letter))))
-		if err != nil {
-			log.Fatalf("error: can't generate boundary - %v", err)
-		}
-		b[i] = letter[n.Uint64()]
-	}
-	return string(b)
 }
