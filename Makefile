@@ -2,7 +2,8 @@
 .SILENT:
 
 #VERSION=`git describe --tags`
-VERSION=`git rev-parse --short HEAD`
+#VERSION=`git rev-parse --short HEAD`
+VERSION=`cat version`
 BUILD=`date +%FT%T%z`
 
 build:
