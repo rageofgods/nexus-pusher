@@ -6,6 +6,7 @@ import (
 	"github.com/go-co-op/gocron"
 	"github.com/goccy/go-json"
 	"golang.org/x/sync/errgroup"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"nexus-pusher/internal/comps"
@@ -106,25 +107,25 @@ func showFinalMessageForGetComponents(r string, s string, nc []*comps.NexusCompo
 }
 
 // RunNexusPusher client entry point
-func RunNexusPusher(c *config.Client) {
+func RunNexusPusher(c *config.Client, version *comps.Version) {
 	wg := &sync.WaitGroup{}
 	for _, v := range c.SyncConfigs {
 		wg.Add(1)
 		syncConfig := v
-		go func() { doSyncConfigs(c, syncConfig); wg.Done() }()
+		go func() { doSyncConfigs(c, syncConfig, version); wg.Done() }()
 	}
 	wg.Wait()
 }
 
 // ScheduleRunNexusPusher wrapper around RunNexusPusher to schedule syncs
-func ScheduleRunNexusPusher(c *config.Client) error {
+func ScheduleRunNexusPusher(c *config.Client, version *comps.Version) error {
 	loc, err := time.LoadLocation(config.TimeZone)
 	if err != nil {
 		return err
 	}
 
 	s := gocron.NewScheduler(loc)
-	j, err := s.Every(c.Daemon.SyncEveryMinutes).Minute().Do(RunNexusPusher, c)
+	j, err := s.Every(c.Daemon.SyncEveryMinutes).Minute().Do(RunNexusPusher, c, version)
 	if err != nil {
 		return fmt.Errorf("error: can't schedule sync. job: %v: error: %w", j, err)
 	}
@@ -153,6 +154,48 @@ func doCheckServerStatus(server string) error {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("error: bad server status returned. server responded with: %s", resp.Status)
 	}
+	return nil
+}
+
+func doCheckServerVersion(server string, clientVersion *comps.Version) error {
+	// Create URL for status checking
+	srvUrl := fmt.Sprintf("%s%s%s", server, config.URIBase, config.URIVersion)
+	// Define client
+	client := comps.HttpRetryClient()
+	// Create request
+	req, err := http.NewRequest("GET", srvUrl, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Accept", "application/json")
+
+	// Send request to server
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	// Read request body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error: bad server status returned. server responded with: %s", resp.Status)
+	}
+
+	// Try to decode body to NexusExportComponents struct
+	serverVersion := &comps.Version{}
+	if err := json.Unmarshal(body, serverVersion); err != nil {
+		return fmt.Errorf("error: unable to validate server version: %w", err)
+	}
+
+	if clientVersion.Version != serverVersion.Version {
+		return fmt.Errorf("error: client version: '%s' is differ from server version: '%s'. please update",
+			clientVersion.Version, serverVersion.Version)
+	}
+
 	return nil
 }
 
@@ -250,7 +293,7 @@ func doCheckRepoTypes(sc *config.SyncConfig) error {
 	return nil
 }
 
-func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
+func doSyncConfigs(cc *config.Client, sc *config.SyncConfig, version *comps.Version) {
 	// Define two groups of resources to compare remote repos
 	s1 := comps.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
 		sc.SrcServerConfig.Server, config.URIBase, config.URIComponents)
@@ -260,6 +303,12 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 	c2 := comps.HttpRetryClient()
 	var nc1 []*comps.NexusComponent
 	var nc2 []*comps.NexusComponent
+
+	// Check server version
+	if err := doCheckServerVersion(cc.Server, version); err != nil {
+		log.Printf("%v", err)
+		return
+	}
 
 	// Check repos type
 	if err := doCheckRepoTypes(sc); err != nil {

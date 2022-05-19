@@ -26,6 +26,15 @@ func status(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (u *webService) version(w http.ResponseWriter, r *http.Request) {
+	_ = r // ignore request here
+	if err := json.NewEncoder(w).Encode(u.ver); err != nil {
+		responseError(w, err, "error message encode")
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+}
+
 // Upload components to remote nexus
 func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 	nec := &comps.NexusExportComponents{}

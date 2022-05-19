@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/google/uuid"
 	"net/http"
+	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
 )
 
@@ -27,10 +28,11 @@ type webService struct {
 	cfg      *config.Server
 	messages map[uuid.UUID]*Message
 	jwtKey   []byte
+	ver      *comps.Version
 }
 
-func newWebService(cfg *config.Server, messages map[uuid.UUID]*Message, jwtKey []byte) *webService {
-	return &webService{cfg: cfg, messages: messages, jwtKey: jwtKey}
+func newWebService(cfg *config.Server, messages map[uuid.UUID]*Message, jwtKey []byte, v *comps.Version) *webService {
+	return &webService{cfg: cfg, messages: messages, jwtKey: jwtKey, ver: v}
 }
 
 const (

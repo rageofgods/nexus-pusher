@@ -7,12 +7,13 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
 	"time"
 )
 
 // RunAutoCertServer run TLS server with Let's Encrypt auto cert manager
-func RunAutoCertServer(cfg *config.Server) {
+func RunAutoCertServer(cfg *config.Server, v *comps.Version) {
 	// Setup cache directory to store certificate
 	c := autocert.DirCache("certs")
 	// Generating autocert manager to handle let's encrypt api calls
@@ -29,7 +30,7 @@ func RunAutoCertServer(cfg *config.Server) {
 	s := &http.Server{
 		Addr:      fmt.Sprintf("%s:%s", cfg.BindAddress, cfg.Port),
 		TLSConfig: &tls.Config{GetCertificate: m.GetCertificate, MinVersion: tls.VersionTLS12},
-		Handler:   NewRouter(cfg),
+		Handler:   NewRouter(cfg, v),
 	}
 
 	// Run TLS server is dedicated goroutine to allow running both http/https
@@ -46,13 +47,13 @@ func RunAutoCertServer(cfg *config.Server) {
 }
 
 // RunStaticCertServer run TLS server with static key/cert provided as a files
-func RunStaticCertServer(cfg *config.Server) {
+func RunStaticCertServer(cfg *config.Server, v *comps.Version) {
 	log.Fatal(http.ListenAndServeTLS(fmt.Sprintf("%s:%s",
 		cfg.BindAddress,
 		cfg.Port),
 		cfg.TLS.CertPath,
 		cfg.TLS.KeyPath,
-		NewRouter(cfg)))
+		NewRouter(cfg, v)))
 }
 
 func makeServerFromMux(mux *http.ServeMux) *http.Server {

@@ -11,7 +11,6 @@ import (
 func (s *NexusServer) uploadComponent(format ComponentType, asset *NexusExportComponentAsset, repoName string) error {
 	switch format {
 	case NPM:
-		// Download NPM component from official repo and return structured data
 		npm := NewNpm(npmSrv, asset.Path, asset.FileName)
 
 		// Start to download data and convert it to multipart stream
@@ -27,7 +26,6 @@ func (s *NexusServer) uploadComponent(format ComponentType, asset *NexusExportCo
 		}
 
 	case PYPI:
-		// Download PYPI component from official repo and return structured data
 		pypi := NewPypi(pypiSrv, asset.Path, asset.FileName, asset.Name, asset.Version)
 
 		// Start to download data and convert it to multipart stream
@@ -84,7 +82,8 @@ func (s *NexusServer) uploadComponentWithType(repoName string, asset *NexusExpor
 
 	// Start uploading component to remote nexus
 	// Set 15 min timeout to handle large files
-	// We can't use retryable client here
+	// We can't use retryable client here because
+	// of direct stream data incompatibility
 	resp, err := HttpClient(900).Do(req)
 	if err != nil {
 		return err

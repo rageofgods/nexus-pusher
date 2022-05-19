@@ -91,6 +91,8 @@ const (
 	URIRefresh string = "/refresh"
 	// URIStatus Set status REST URI
 	URIStatus string = "/status"
+	// URIVersion Set status REST URI
+	URIVersion string = "/version"
 	// URIComponents Set components REST URI
 	URIComponents string = "/v1/components"
 	// URIRepositories Set repositories REST URI
