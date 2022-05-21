@@ -103,7 +103,7 @@ client:
 * **serverAuth.pass** - password for nexus-pusher server auth
 * **syncConfigs** - list of 'src' and 'dst' pairs of nexus servers to be synced
 * **format** - format of artifacts to be synced ('npm', 'pypi', 'maven2')
-* **ArtifactsSource** - source of artifacts to feed nexus-pusher server
+* **artifactsSource** - source of artifacts to feed nexus-pusher server
 
 ## Help
 
