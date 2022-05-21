@@ -94,7 +94,7 @@ client:
               pass: "pass"
               repoName: "maven-repo2"
           format: "maven"
-          ArtifactsSource: "https://repo1.maven.org/maven2/"
+          artifactsSource: "https://repo1.maven.org/maven2/"
 ```
 * **daemon.enabled** - run client in daemon mode to sync periodically
 * **daemon.syncEveryMinutes** - time in minutes to schedule re-sync
