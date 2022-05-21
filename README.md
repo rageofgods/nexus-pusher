@@ -21,9 +21,9 @@ to save bandwidth.
 ## Getting Started
 
 ### Supported repository types:
-* NPM
-* PYPI
-* MAVEN2
+* NPM (npm)
+* PYPI (pypi)
+* MAVEN2 (maven2)
 
 ### Installing
 
@@ -93,7 +93,7 @@ client:
               user: "user"
               pass: "pass"
               repoName: "maven-repo2"
-          format: "maven"
+          format: "maven2"
           artifactsSource: "https://repo1.maven.org/maven2/"
 ```
 * **daemon.enabled** - run client in daemon mode to sync periodically
@@ -102,7 +102,7 @@ client:
 * **serverAuth.user** - username for nexus-pusher server auth
 * **serverAuth.pass** - password for nexus-pusher server auth
 * **syncConfigs** - list of 'src' and 'dst' pairs of nexus servers to be synced
-* **format** - format of artifacts to be synced
+* **format** - format of artifacts to be synced ('npm', 'pypi', 'maven2')
 * **ArtifactsSource** - source of artifacts to feed nexus-pusher server
 
 ## Help
