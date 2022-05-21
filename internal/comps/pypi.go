@@ -27,7 +27,7 @@ func NewPypi(server string, path string, fileName string, name string, version s
 	}
 }
 
-func (p Pypi) DownloadComponent() (*http.Response, error) {
+func (p Pypi) DownloadAsset() (*http.Response, error) {
 	// Get PYPI component
 	assetURL, err := p.assetDownloadURL()
 	if err != nil {
@@ -45,7 +45,7 @@ func (p Pypi) DownloadComponent() (*http.Response, error) {
 	return HttpRetryClient(900).Do(req) // Set 15 min timeout to handle large files
 }
 
-func (p *Pypi) PrepareDataToUpload(fileReader io.Reader) (string, io.Reader) {
+func (p *Pypi) PrepareAssetToUpload(fileReader io.Reader) (string, io.Reader) {
 	// Create multipart asset
 	boundary := genRandomBoundary(32)
 	fileName := p.FileName

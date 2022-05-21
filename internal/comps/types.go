@@ -9,8 +9,31 @@ import (
 // ComponentType Custom component type
 type ComponentType string
 
-func (c *ComponentType) Lower() ComponentType {
-	return ComponentType(strings.ToLower(string(*c)))
+// Lower convert component type to lower registry
+func (c ComponentType) Lower() ComponentType {
+	return ComponentType(strings.ToLower(string(c)))
+}
+
+// String convert to string type
+func (c ComponentType) String() string {
+	return string(c)
+}
+
+// Bundled check if ComponentType must be processed as bundle of assets
+// For example, maven2 requires to upload pom with assets simultaneously
+func (c ComponentType) Bundled() bool {
+	switch c.Lower() {
+	case NPM:
+		return false
+	case PYPI:
+		return false
+	case MAVEN2:
+		return true
+	default:
+		// Return false by default is safe here because we already
+		// check component type in the previous code logic
+		return false
+	}
 }
 
 const (
@@ -22,6 +45,10 @@ const (
 	PYPI    ComponentType = "pypi"
 	pypiSrv string        = "https://pypi.org/"
 
+	// MAVEN2 Set MAVEN2 specific variables
+	MAVEN2    ComponentType = "maven2"
+	maven2Srv string        = "https://repo1.maven.org/maven2/"
+
 	// NUGET  ComponentType = "nuget"
 	// HELM   ComponentType = "helm"
 	// DOCKER ComponentType = "docker"
@@ -29,7 +56,12 @@ const (
 	// APT    ComponentType = "apt"
 )
 
-type Typer interface {
-	DownloadComponent() (*http.Response, error)
-	PrepareDataToUpload(io.Reader) (string, io.Reader)
+type Asseter interface {
+	DownloadAsset() (*http.Response, error)
+	PrepareAssetToUpload(io.Reader) (string, io.Reader)
+}
+
+type Componenter interface {
+	DownloadComponent() ([]*http.Response, error)
+	PrepareComponentToUpload([]*http.Response) (string, io.Reader)
 }

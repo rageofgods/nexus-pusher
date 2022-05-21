@@ -21,7 +21,7 @@ func NewNpm(server string, path string, fileName string) *Npm {
 	}
 }
 
-func (n Npm) DownloadComponent() (*http.Response, error) {
+func (n Npm) DownloadAsset() (*http.Response, error) {
 	// Get NPM component
 	req, err := http.NewRequest("GET", n.assetDownloadURL(), nil)
 	if err != nil {
@@ -35,7 +35,7 @@ func (n Npm) DownloadComponent() (*http.Response, error) {
 
 }
 
-func (n *Npm) PrepareDataToUpload(fileReader io.Reader) (string, io.Reader) {
+func (n *Npm) PrepareAssetToUpload(fileReader io.Reader) (string, io.Reader) {
 	// Create multipart asset
 	boundary := genRandomBoundary(32)
 	fileName := n.FileName

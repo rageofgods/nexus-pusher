@@ -2,7 +2,6 @@ package client
 
 import (
 	"nexus-pusher/internal/comps"
-	"strings"
 )
 
 // genNexExpCompFromNexComp is converting original nexus structure data to compact export format
@@ -12,12 +11,9 @@ func genNexExpCompFromNexComp(c []*comps.NexusComponent) *comps.NexusExportCompo
 		var assets []*comps.NexusExportComponentAsset
 		for _, vv := range v.Assets {
 			exportAsset := &comps.NexusExportComponentAsset{
-				Name:    v.Name,
-				Version: v.Version,
-				FileName: func() string { // Get last part of url chunk with filename information
-					cmpPathSplit := strings.Split(vv.Path, "/")
-					return cmpPathSplit[len(cmpPathSplit)-1]
-				}(),
+				Name:        v.Name,
+				Version:     v.Version,
+				FileName:    func() string { return comps.AssetFileNameFromURI(vv.Path) }(),
 				Path:        vv.Path,
 				ContentType: vv.ContentType}
 			assets = append(assets, exportAsset)
@@ -27,6 +23,7 @@ func genNexExpCompFromNexComp(c []*comps.NexusComponent) *comps.NexusExportCompo
 			Version:    v.Version,
 			Repository: v.Repository,
 			Format:     v.Format,
+			Group:      v.Group,
 			Assets:     assets}
 		ec = append(ec, exportComponent)
 	}

@@ -8,35 +8,30 @@ import (
 	"net/http"
 )
 
-func (s *NexusServer) uploadComponent(format ComponentType, asset *NexusExportComponentAsset, repoName string) error {
-	switch format {
-	case NPM:
-		npm := NewNpm(npmSrv, asset.Path, asset.FileName)
+func (s *NexusServer) uploadComponent(format ComponentType, component *NexusExportComponent, repoName string) error {
+	switch format.Lower() {
+	case MAVEN2:
+		maven2 := NewMaven2(maven2Srv, component)
+		maven2.filterExtensions()
+		if len(maven2.Component.Assets) == 0 {
+			return fmt.Errorf("error: zero valid maven artifacts was found after assets filter")
+		}
 
 		// Start to download data and convert it to multipart stream
-		contentType, uploadBody, resp, err := prepareToUpload(npm)
+		contentType, uploadBody, responses, err := prepareToUploadComponent(maven2)
 		if err != nil {
 			return err
 		}
-		defer resp.Body.Close()
+
+		// Close all responses body
+		defer func() {
+			for _, resp := range responses {
+				resp.Body.Close()
+			}
+		}()
 
 		// Upload component to target nexus server
-		if err := s.uploadComponentWithType(repoName, asset, contentType, uploadBody); err != nil {
-			return err
-		}
-
-	case PYPI:
-		pypi := NewPypi(pypiSrv, asset.Path, asset.FileName, asset.Name, asset.Version)
-
-		// Start to download data and convert it to multipart stream
-		contentType, uploadBody, resp, err := prepareToUpload(pypi)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-
-		// Upload component to target nexus server
-		if err := s.uploadComponentWithType(repoName, asset, contentType, uploadBody); err != nil {
+		if err := s.uploadComponentWithType(repoName, component.FullName(), contentType, uploadBody); err != nil {
 			return err
 		}
 	}
@@ -44,17 +39,76 @@ func (s *NexusServer) uploadComponent(format ComponentType, asset *NexusExportCo
 	return nil
 }
 
-// Download component following provided interface type
-func prepareToUpload(t Typer) (string, io.Reader, *http.Response, error) {
+func (s *NexusServer) uploadAsset(format ComponentType, asset *NexusExportComponentAsset, repoName string) error {
+	switch format.Lower() {
+	case NPM:
+		npm := NewNpm(npmSrv, asset.Path, asset.FileName)
+
+		// Start to download data and convert it to multipart stream
+		contentType, uploadBody, resp, err := prepareToUploadAsset(npm)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		// Upload component to target nexus server
+		if err := s.uploadComponentWithType(repoName, asset.FullName(), contentType, uploadBody); err != nil {
+			return err
+		}
+
+	case PYPI:
+		pypi := NewPypi(pypiSrv, asset.Path, asset.FileName, asset.Name, asset.Version)
+
+		// Start to download data and convert it to multipart stream
+		contentType, uploadBody, resp, err := prepareToUploadAsset(pypi)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		// Upload component to target nexus server
+		if err := s.uploadComponentWithType(repoName, asset.FullName(), contentType, uploadBody); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Download component with all assets following provided interface type
+func prepareToUploadComponent(c Componenter) (string, io.Reader, []*http.Response, error) {
 	// Start downloading component from remote repo
-	resp, err := t.DownloadComponent()
+	responses, err := c.DownloadComponent()
+	if err != nil {
+		return "", nil, nil, err
+	}
+
+	for _, resp := range responses {
+		if resp.StatusCode != http.StatusOK {
+			return "", nil, nil, fmt.Errorf("error: unable to download asset. sending '%s' request: status code %d %v",
+				resp.Request.Method,
+				resp.StatusCode,
+				resp.Request.URL)
+		}
+	}
+
+	// Convert to multipart component specific type on the fly
+	// and return converted body with correct content type
+	contentType, uploadBody := c.PrepareComponentToUpload(responses)
+	return contentType, uploadBody, responses, nil
+}
+
+// Download asset following provided interface type
+func prepareToUploadAsset(a Asseter) (string, io.Reader, *http.Response, error) {
+	// Start downloading asset from remote repo
+	resp, err := a.DownloadAsset()
 	if err != nil {
 		return "", nil, nil, err
 	}
 
 	// Check http response ok status
 	if resp.StatusCode != http.StatusOK {
-		return "", nil, nil, fmt.Errorf("error: unable to download npm asset. sending '%s' request: status code %d %v",
+		return "", nil, nil, fmt.Errorf("error: unable to download asset. sending '%s' request: status code %d %v",
 			resp.Request.Method,
 			resp.StatusCode,
 			resp.Request.URL)
@@ -62,12 +116,11 @@ func prepareToUpload(t Typer) (string, io.Reader, *http.Response, error) {
 
 	// Convert to multipart component specific type on the fly
 	// and return converted body with correct content type
-	contentType, uploadBody := t.PrepareDataToUpload(resp.Body)
+	contentType, uploadBody := a.PrepareAssetToUpload(resp.Body)
 	return contentType, uploadBody, resp, nil
 }
 
-func (s *NexusServer) uploadComponentWithType(repoName string, asset *NexusExportComponentAsset,
-	contentType string, body io.Reader) error {
+func (s *NexusServer) uploadComponentWithType(repoName string, cPath string, contentType string, body io.Reader) error {
 	// Upload component to nexus repo
 	srvUrl := fmt.Sprintf("%s%s%s?repository=%s", s.Host,
 		s.BaseUrl,
@@ -92,18 +145,18 @@ func (s *NexusServer) uploadComponentWithType(repoName string, asset *NexusExpor
 	// Check server response
 	if resp.StatusCode != http.StatusNoContent {
 		log.Printf("error: unable to upload component %s to repository '%s' at server %s. Reason: %s",
-			asset.Path,
+			cPath,
 			repoName,
 			s.Host,
 			resp.Status)
 		return fmt.Errorf("error: unable to upload component %s to repository '%s' at server %s. Reason: %s",
-			asset.Path,
+			cPath,
 			repoName,
 			s.Host,
 			resp.Status)
 	} else {
 		log.Printf("Component %s successfully uploaded to repository '%s' at server %s",
-			asset.Path,
+			cPath,
 			repoName,
 			s.Host)
 	}

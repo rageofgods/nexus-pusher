@@ -58,9 +58,9 @@ func (s *NexusServer) GetComponents(
 			len(ncs))
 	}
 
-	// if len(ncs) > 1000 {
-	//	return ncs, nil
-	// }
+	if len(ncs) > 1000 {
+		return ncs, nil
+	}
 
 	// Iterating over all API pages
 	if nc.ContinuationToken != "" {
@@ -86,18 +86,34 @@ func (s *NexusServer) UploadComponents(nec *NexusExportComponents, repoName stri
 
 	var resultsCounter int
 	for _, v := range nec.Items {
-		for _, vv := range v.Assets {
+		if ComponentType(v.Format).Bundled() {
+			// Process assets as a bundle
 			resultsCounter++
-			go func(format ComponentType, asset *NexusExportComponentAsset, repoName string) {
+			go func(format ComponentType, component *NexusExportComponent, repoName string) {
 				limitChan <- struct{}{}
 				result := &UploadResult{}
-				if err := s.uploadComponent(format, asset, repoName); err != nil {
+				if err := s.uploadComponent(format, component, repoName); err != nil {
 					log.Printf("%v", err)
-					result = &UploadResult{Err: err, ComponentPath: asset.Path}
+					result = &UploadResult{Err: err, ComponentPath: component.FullName()}
 				}
 				resultsChan <- result
 				<-limitChan
-			}(ComponentType(v.Format), vv, repoName)
+			}(ComponentType(v.Format), v, repoName)
+		} else {
+			// Process assets individually
+			for _, vv := range v.Assets {
+				resultsCounter++
+				go func(format ComponentType, asset *NexusExportComponentAsset, repoName string) {
+					limitChan <- struct{}{}
+					result := &UploadResult{}
+					if err := s.uploadAsset(format, asset, repoName); err != nil {
+						log.Printf("%v", err)
+						result = &UploadResult{Err: err, ComponentPath: asset.Path}
+					}
+					resultsChan <- result
+					<-limitChan
+				}(ComponentType(v.Format), vv, repoName)
+			}
 		}
 	}
 	var results []UploadResult

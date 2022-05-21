@@ -384,6 +384,8 @@ func checkSupportedRepoTypes(repoType comps.ComponentType) error {
 		return nil
 	case comps.PYPI:
 		return nil
+	case comps.MAVEN2:
+		return nil
 	default:
 		return fmt.Errorf("error: unsuported component type %s", repoType)
 	}
