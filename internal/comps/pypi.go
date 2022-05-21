@@ -62,7 +62,7 @@ func (p *Pypi) PrepareAssetToUpload(fileReader io.Reader) (string, io.Reader) {
 
 func (p Pypi) assetDownloadURL() (string, error) {
 	// Assemble initial request url to get asset version json
-	requestURL := fmt.Sprintf("%spypi/%s/%s/json", pypiSrv, p.Name, p.Version)
+	requestURL := fmt.Sprintf("%spypi/%s/%s/json", p.Server, p.Name, p.Version)
 
 	req, err := http.NewRequest("GET", requestURL, nil)
 	if err != nil {
@@ -123,5 +123,5 @@ func (p Pypi) assetDownloadURL() (string, error) {
 	}
 
 	return "", fmt.Errorf("error: unable to find component: %s version: %s at: %s",
-		p.Name, p.Version, pypiSrv)
+		p.Name, p.Version, p.Server)
 }

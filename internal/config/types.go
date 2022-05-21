@@ -1,4 +1,4 @@
-package comps
+package config
 
 import (
 	"io"
@@ -38,16 +38,13 @@ func (c ComponentType) Bundled() bool {
 
 const (
 	// NPM Set NPM specific variables
-	NPM    ComponentType = "npm"
-	npmSrv string        = "https://registry.npmjs.org/"
+	NPM ComponentType = "npm"
 
 	// PYPI Set PYPI specific variables
-	PYPI    ComponentType = "pypi"
-	pypiSrv string        = "https://pypi.org/"
+	PYPI ComponentType = "pypi"
 
 	// MAVEN2 Set MAVEN2 specific variables
-	MAVEN2    ComponentType = "maven2"
-	maven2Srv string        = "https://repo1.maven.org/maven2/"
+	MAVEN2 ComponentType = "maven2"
 
 	// NUGET  ComponentType = "nuget"
 	// HELM   ComponentType = "helm"

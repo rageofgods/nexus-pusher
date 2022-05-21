@@ -8,12 +8,13 @@ type NexusExportComponents struct {
 }
 
 type NexusExportComponent struct {
-	Name       string                       `json:"name"`
-	Version    string                       `json:"version"`
-	Repository string                       `json:"repository"`
-	Format     string                       `json:"format"`
-	Group      string                       `json:"group"`
-	Assets     []*NexusExportComponentAsset `json:"assets"`
+	Name            string                       `json:"name"`
+	Version         string                       `json:"version"`
+	Repository      string                       `json:"repository"`
+	Format          string                       `json:"format"`
+	Group           string                       `json:"group"`
+	ArtifactsSource string                       `json:"artifactsSource"`
+	Assets          []*NexusExportComponentAsset `json:"assets"`
 }
 
 // FullName returns name and version for component

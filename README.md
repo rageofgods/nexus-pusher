@@ -23,6 +23,7 @@ to save bandwidth.
 ### Supported repository types:
 * NPM
 * PYPI
+* MAVEN2
 
 ### Installing
 
@@ -86,14 +87,23 @@ client:
             server: "https://nexus.some"
             user: "user"
             pass: "pass"
-            repoName: "pypi-repo1"
+            repoName: "maven-repo1"
           dstServerConfig:
               server: "https://nexus.some"
               user: "user"
               pass: "pass"
-              repoName: "pypi-repo2"
-          format: "pypi"
+              repoName: "maven-repo2"
+          format: "maven"
+          ArtifactsSource: "https://repo1.maven.org/maven2/"
 ```
+* **daemon.enabled** - run client in daemon mode to sync periodically
+* **daemon.syncEveryMinutes** - time in minutes to schedule re-sync
+* **server** - address of nexus-pusher server
+* **serverAuth.user** - username for nexus-pusher server auth
+* **serverAuth.pass** - password for nexus-pusher server auth
+* **syncConfigs** - list of 'src' and 'dst' pairs of nexus servers to be synced
+* **format** - format of artifacts to be synced
+* **ArtifactsSource** - source of artifacts to feed nexus-pusher server
 
 ## Help
 
@@ -113,6 +123,10 @@ ex. [@rageofgods](https://github.com/rageofgods)
 
 * 0.1
     * Initial Release
+* 1.0
+    * PYPI support implemented
+* 1.1
+    * MAVEN2 support implemented
 
 ## License
 

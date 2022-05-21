@@ -47,6 +47,7 @@ type ServerAuth struct {
 // SyncConfig is defines set of sync-configs for client
 type SyncConfig struct {
 	Format          string          `yaml:"format"`
+	ArtifactsSource string          `yaml:"artifactsSource"`
 	SrcServerConfig SrcServerConfig `yaml:"srcServerConfig"`
 	DstServerConfig DstServerConfig `yaml:"dstServerConfig"`
 }
@@ -106,4 +107,10 @@ const (
 	JWTCookieName = "token"
 	// JWTTokenRefreshWindow Set JWT token refresh window in seconds
 	JWTTokenRefreshWindow = 30
+)
+
+const (
+	npmSrv    string = "https://registry.npmjs.org/"
+	pypiSrv   string = "https://pypi.org/"
+	maven2Srv string = "https://repo1.maven.org/maven2/"
 )

@@ -6,12 +6,14 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"nexus-pusher/internal/config"
 )
 
-func (s *NexusServer) uploadComponent(format ComponentType, component *NexusExportComponent, repoName string) error {
+func (s *NexusServer) uploadComponent(format config.ComponentType,
+	component *NexusExportComponent, repoName string) error {
 	switch format.Lower() {
-	case MAVEN2:
-		maven2 := NewMaven2(maven2Srv, component)
+	case config.MAVEN2:
+		maven2 := NewMaven2(component.ArtifactsSource, component)
 		maven2.filterExtensions()
 		if len(maven2.Component.Assets) == 0 {
 			return fmt.Errorf("error: zero valid maven artifacts was found after assets filter")
@@ -39,10 +41,11 @@ func (s *NexusServer) uploadComponent(format ComponentType, component *NexusExpo
 	return nil
 }
 
-func (s *NexusServer) uploadAsset(format ComponentType, asset *NexusExportComponentAsset, repoName string) error {
+func (s *NexusServer) uploadAsset(format config.ComponentType, asset *NexusExportComponentAsset,
+	repoName string, artifactsSource string) error {
 	switch format.Lower() {
-	case NPM:
-		npm := NewNpm(npmSrv, asset.Path, asset.FileName)
+	case config.NPM:
+		npm := NewNpm(artifactsSource, asset.Path, asset.FileName)
 
 		// Start to download data and convert it to multipart stream
 		contentType, uploadBody, resp, err := prepareToUploadAsset(npm)
@@ -56,8 +59,8 @@ func (s *NexusServer) uploadAsset(format ComponentType, asset *NexusExportCompon
 			return err
 		}
 
-	case PYPI:
-		pypi := NewPypi(pypiSrv, asset.Path, asset.FileName, asset.Name, asset.Version)
+	case config.PYPI:
+		pypi := NewPypi(artifactsSource, asset.Path, asset.FileName, asset.Name, asset.Version)
 
 		// Start to download data and convert it to multipart stream
 		contentType, uploadBody, resp, err := prepareToUploadAsset(pypi)
@@ -76,7 +79,7 @@ func (s *NexusServer) uploadAsset(format ComponentType, asset *NexusExportCompon
 }
 
 // Download component with all assets following provided interface type
-func prepareToUploadComponent(c Componenter) (string, io.Reader, []*http.Response, error) {
+func prepareToUploadComponent(c config.Componenter) (string, io.Reader, []*http.Response, error) {
 	// Start downloading component from remote repo
 	responses, err := c.DownloadComponent()
 	if err != nil {
@@ -99,7 +102,7 @@ func prepareToUploadComponent(c Componenter) (string, io.Reader, []*http.Respons
 }
 
 // Download asset following provided interface type
-func prepareToUploadAsset(a Asseter) (string, io.Reader, *http.Response, error) {
+func prepareToUploadAsset(a config.Asseter) (string, io.Reader, *http.Response, error) {
 	// Start downloading asset from remote repo
 	resp, err := a.DownloadAsset()
 	if err != nil {

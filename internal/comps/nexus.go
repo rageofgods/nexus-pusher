@@ -58,7 +58,7 @@ func (s *NexusServer) GetComponents(
 			len(ncs))
 	}
 
-	if len(ncs) > 1000 {
+	if len(ncs) > 100 {
 		return ncs, nil
 	}
 
@@ -86,10 +86,10 @@ func (s *NexusServer) UploadComponents(nec *NexusExportComponents, repoName stri
 
 	var resultsCounter int
 	for _, v := range nec.Items {
-		if ComponentType(v.Format).Bundled() {
+		if config.ComponentType(v.Format).Bundled() {
 			// Process assets as a bundle
 			resultsCounter++
-			go func(format ComponentType, component *NexusExportComponent, repoName string) {
+			go func(format config.ComponentType, component *NexusExportComponent, repoName string) {
 				limitChan <- struct{}{}
 				result := &UploadResult{}
 				if err := s.uploadComponent(format, component, repoName); err != nil {
@@ -98,21 +98,21 @@ func (s *NexusServer) UploadComponents(nec *NexusExportComponents, repoName stri
 				}
 				resultsChan <- result
 				<-limitChan
-			}(ComponentType(v.Format), v, repoName)
+			}(config.ComponentType(v.Format), v, repoName)
 		} else {
 			// Process assets individually
 			for _, vv := range v.Assets {
 				resultsCounter++
-				go func(format ComponentType, asset *NexusExportComponentAsset, repoName string) {
+				go func(format config.ComponentType, asset *NexusExportComponentAsset, repoName string, src string) {
 					limitChan <- struct{}{}
 					result := &UploadResult{}
-					if err := s.uploadAsset(format, asset, repoName); err != nil {
+					if err := s.uploadAsset(format, asset, repoName, src); err != nil {
 						log.Printf("%v", err)
 						result = &UploadResult{Err: err, ComponentPath: asset.Path}
 					}
 					resultsChan <- result
 					<-limitChan
-				}(ComponentType(v.Format), vv, repoName)
+				}(config.ComponentType(v.Format), vv, repoName, v.ArtifactsSource)
 			}
 		}
 	}

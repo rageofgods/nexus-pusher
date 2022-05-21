@@ -30,11 +30,11 @@ func TestMaven2_assetClassifier(t *testing.T) {
 		args   args
 		want   string
 	}{
-		{name: "test1", fields: fields{Server: maven2Srv, Component: componentAsset1},
+		{name: "test1", fields: fields{Server: "stub", Component: componentAsset1},
 			args: args{fileName: fileName1, fileExtension: "pom"}, want: ""},
-		{name: "test2", fields: fields{Server: maven2Srv, Component: componentAsset1},
+		{name: "test2", fields: fields{Server: "stub", Component: componentAsset1},
 			args: args{fileName: fileName2, fileExtension: "json"}, want: "1.12.2.Final"},
-		{name: "test3", fields: fields{Server: maven2Srv, Component: componentAsset2},
+		{name: "test3", fields: fields{Server: "stub", Component: componentAsset2},
 			args: args{fileName: fileName3, fileExtension: "jar"}, want: "sources"},
 	}
 	for _, tt := range tests {
@@ -71,8 +71,8 @@ func TestMaven2_pomInComponent(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		{name: "test1", fields: fields{Server: maven2Srv, Component: componentAsset1}, want: true},
-		{name: "test2", fields: fields{Server: maven2Srv, Component: componentAsset2}, want: false},
+		{name: "test1", fields: fields{Server: "stub", Component: componentAsset1}, want: true},
+		{name: "test2", fields: fields{Server: "stub", Component: componentAsset2}, want: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

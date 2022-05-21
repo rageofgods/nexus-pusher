@@ -216,7 +216,7 @@ func doCheckRepoTypes(sc *config.SyncConfig) error {
 	srvUrl2 := fmt.Sprintf("%s%s%s", s2.Host, s2.BaseUrl, s2.ApiComponentsUrl)
 
 	// Check repo for supported types
-	if err := checkSupportedRepoTypes(comps.ComponentType(sc.Format)); err != nil {
+	if err := checkSupportedRepoTypes(config.ComponentType(sc.Format)); err != nil {
 		return err
 	}
 
@@ -340,7 +340,7 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig, version *comps.Vers
 			sc.DstServerConfig.Server)
 
 		// Convert original nexus json to export type
-		data := genNexExpCompFromNexComp(cmpDiff)
+		data := genNexExpCompFromNexComp(sc.ArtifactsSource, cmpDiff)
 		data.NexusServer = comps.NexusServer{
 			Host:             sc.DstServerConfig.Server,
 			BaseUrl:          config.URIBase,
@@ -378,13 +378,13 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig, version *comps.Vers
 	}
 }
 
-func checkSupportedRepoTypes(repoType comps.ComponentType) error {
+func checkSupportedRepoTypes(repoType config.ComponentType) error {
 	switch repoType.Lower() {
-	case comps.NPM:
+	case config.NPM:
 		return nil
-	case comps.PYPI:
+	case config.PYPI:
 		return nil
-	case comps.MAVEN2:
+	case config.MAVEN2:
 		return nil
 	default:
 		return fmt.Errorf("error: unsuported component type %s", repoType)

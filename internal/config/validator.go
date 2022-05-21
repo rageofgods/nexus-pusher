@@ -44,9 +44,22 @@ func (c *NexusConfig) ValidateConfig() error {
 		case c.Client.SyncConfigs == nil:
 			return fmt.Errorf("error: client required 'syncConfigs' variable is missing in %s", c.string)
 		case c.Client.SyncConfigs != nil:
-			for _, v := range c.Client.SyncConfigs {
-				if v.Format == "" {
+			for i, v := range c.Client.SyncConfigs {
+				switch v.Format {
+				case "":
 					return fmt.Errorf("error: syncconfig required 'format' variable is missing in %s", v)
+				case MAVEN2.String():
+					if v.ArtifactsSource == "" {
+						c.Client.SyncConfigs[i].ArtifactsSource = maven2Srv
+					}
+				case PYPI.String():
+					if v.ArtifactsSource == "" {
+						c.Client.SyncConfigs[i].ArtifactsSource = pypiSrv
+					}
+				case NPM.String():
+					if v.ArtifactsSource == "" {
+						c.Client.SyncConfigs[i].ArtifactsSource = npmSrv
+					}
 				}
 			}
 		default:
