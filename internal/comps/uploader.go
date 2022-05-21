@@ -141,19 +141,24 @@ func (s *NexusServer) uploadComponentWithType(repoName string, cPath string, con
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	// Check server response
 	if resp.StatusCode != http.StatusNoContent {
-		log.Printf("error: unable to upload component %s to repository '%s' at server %s. Reason: %s",
-			cPath,
-			repoName,
-			s.Host,
-			resp.Status)
-		return fmt.Errorf("error: unable to upload component %s to repository '%s' at server %s. Reason: %s",
-			cPath,
-			repoName,
-			s.Host,
-			resp.Status)
+		// Read response body with error
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		// Create formatted message
+		const msg = "error: unable to upload component %s to repository '%s' at server %s. Reason: %s. Response: %s"
+
+		// Log error
+		log.Printf(msg, cPath, repoName, s.Host, resp.Status, string(body))
+
+		// Return error
+		return fmt.Errorf(msg, cPath, repoName, s.Host, resp.Status, string(body))
 	} else {
 		log.Printf("Component %s successfully uploaded to repository '%s' at server %s",
 			cPath,
@@ -164,8 +169,6 @@ func (s *NexusServer) uploadComponentWithType(repoName string, cPath string, con
 	if _, err := io.Copy(ioutil.Discard, resp.Body); err != nil {
 		return fmt.Errorf("%w", err)
 	}
-	if err := resp.Body.Close(); err != nil {
-		return fmt.Errorf("%w", err)
-	}
+
 	return nil
 }
