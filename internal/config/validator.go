@@ -25,16 +25,20 @@ func (c *NexusConfig) validateServerConfig() error {
 		switch {
 		case c.Server.Port == "":
 			c.Server.Port = serverPort
+			fallthrough
 		case c.Server.BindAddress == "":
 			c.Server.BindAddress = serverBindAddress
+			fallthrough
 		case len(c.Server.Credentials) == 0:
 			return fmt.Errorf("error: server required 'credentials' variable is missing in %s", c.string)
 		case c.Server.Concurrency == 0:
 			c.Server.Concurrency = clientConcurrency
+			fallthrough
 		case c.Server.TLS.Enabled && c.Server.TLS.Auto:
 			if c.Server.TLS.DomainName == "" {
 				return fmt.Errorf("error: server required 'domainName' variable is missing in %s", c.string)
 			}
+			fallthrough
 		case c.Server.TLS.Enabled && !c.Server.TLS.Auto:
 			if c.Server.TLS.KeyPath == "" || c.Server.TLS.CertPath == "" {
 				return fmt.Errorf("error: you must set 'KeyPath' and 'CertPath' variables in %s", c.string)
@@ -56,6 +60,7 @@ func (c *NexusConfig) validateClientConfig() error {
 			return fmt.Errorf("error: client required 'server' variable is missing in %s", c.string)
 		case c.Client.Daemon.SyncEveryMinutes == 0:
 			c.Client.Daemon.SyncEveryMinutes = clientDaemonSyncEveryMinutes
+			fallthrough
 		case c.Client.SyncConfigs == nil:
 			return fmt.Errorf("error: client required 'syncConfigs' variable is missing in %s", c.string)
 		case c.Client.SyncConfigs != nil:
@@ -102,11 +107,13 @@ func (c *NexusConfig) validateTargetServerConfigs(syncConfig *SyncConfig, index 
 			return fmt.Errorf("error: no 'client.syncGlobalAuth.srcServer' or syncConfig specific defined")
 		}
 		c.Client.SyncConfigs[index].SrcServerConfig.Server = c.Client.SyncGlobalAuth.SrcServer
+		fallthrough
 	case src.User == "":
 		if c.Client.SyncGlobalAuth.SrcServerUser == "" {
 			return fmt.Errorf("error: no 'client.syncGlobalAuth.srcServerUser' or syncConfig specific defined")
 		}
 		c.Client.SyncConfigs[index].SrcServerConfig.User = c.Client.SyncGlobalAuth.SrcServerUser
+		fallthrough
 	case src.Pass == "":
 		if c.Client.SyncGlobalAuth.SrcServerPass == "" {
 			return fmt.Errorf("error: no 'client.syncGlobalAuth.srcServerPass' or syncConfig specific defined")
@@ -120,11 +127,13 @@ func (c *NexusConfig) validateTargetServerConfigs(syncConfig *SyncConfig, index 
 			return fmt.Errorf("error: no 'client.syncGlobalAuth.dstServer' or syncConfig specific defined")
 		}
 		c.Client.SyncConfigs[index].DstServerConfig.Server = c.Client.SyncGlobalAuth.DstServer
+		fallthrough
 	case dst.User == "":
 		if c.Client.SyncGlobalAuth.DstServerUser == "" {
 			return fmt.Errorf("error: no 'client.syncGlobalAuth.dstServerUser' or syncConfig specific defined")
 		}
 		c.Client.SyncConfigs[index].DstServerConfig.User = c.Client.SyncGlobalAuth.DstServerUser
+		fallthrough
 	case dst.Pass == "":
 		if c.Client.SyncGlobalAuth.DstServerPass == "" {
 			return fmt.Errorf("error: no 'client.syncGlobalAuth.dstServerPass' or syncConfig specific defined")
