@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/go-co-op/gocron"
 	"github.com/goccy/go-json"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
@@ -99,7 +99,7 @@ func doCompareComponents(s1 *comps.NexusServer,
 }
 
 func showFinalMessageForGetComponents(repo string, server string, nc []*comps.NexusComponent, t time.Time) {
-	log.Printf("Analyzing repo '%s' for server '%s' is done. Completed %d assets in %v.\n",
+	log.Printf("Analyzing repo '%s' for server '%s' is done. Completed %d assets in %v.",
 		repo,
 		server,
 		len(nc),
@@ -332,7 +332,7 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig, version *comps.Vers
 
 	// If we got some differences in two repos
 	if len(cmpDiff) != 0 {
-		log.Printf("Found %d differences between '%s' repo at server %s and '%s' repo at server %s:\n",
+		log.Printf("Found %d differences between '%s' repo at server %s and '%s' repo at server %s:",
 			len(cmpDiff),
 			sc.SrcServerConfig.RepoName,
 			sc.SrcServerConfig.Server,
@@ -370,7 +370,7 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig, version *comps.Vers
 			log.Printf("%v", err)
 		}
 	} else {
-		log.Printf("'%s' repo at server %s is in sync with repo '%s' at server %s, nothing to do.\n",
+		log.Printf("'%s' repo at server %s is in sync with repo '%s' at server %s, nothing to do.",
 			sc.SrcServerConfig.RepoName,
 			sc.SrcServerConfig.Server,
 			sc.DstServerConfig.RepoName,

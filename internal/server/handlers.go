@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"nexus-pusher/internal/comps"
 )

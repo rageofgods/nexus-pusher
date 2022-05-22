@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"math/big"
 	"net/http"
 	"nexus-pusher/internal/config"

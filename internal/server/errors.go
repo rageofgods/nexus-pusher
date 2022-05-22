@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 	"github.com/goccy/go-json"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 

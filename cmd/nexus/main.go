@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"nexus-pusher/internal/client"
 	"nexus-pusher/internal/comps"
@@ -16,6 +16,14 @@ var (
 	Version string
 	Build   string
 )
+
+func init() {
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors: true,
+		FullTimestamp: true,
+	})
+	log.SetOutput(os.Stdout)
+}
 
 func main() {
 	// Setup version

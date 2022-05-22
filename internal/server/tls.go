@@ -3,8 +3,8 @@ package server
 import (
 	"crypto/tls"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/acme/autocert"
-	"log"
 	"net"
 	"net/http"
 	"nexus-pusher/internal/comps"

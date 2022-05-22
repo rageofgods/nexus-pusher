@@ -2,7 +2,7 @@ package comps
 
 import (
 	"crypto/rand"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"math/big"
 )
 

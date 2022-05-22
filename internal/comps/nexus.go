@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/goccy/go-json"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"nexus-pusher/internal/config"
 )
@@ -52,7 +52,7 @@ func (s *NexusServer) GetComponents(
 
 	// Send log message every 500 new components
 	if len(ncs) <= 10 || len(ncs)%500 == 0 {
-		log.Printf("Analyzing repo '%s' at server '%s', please wait... Processed %d assets.\n",
+		log.Printf("Analyzing repo '%s' at server '%s', please wait... Processed %d assets.",
 			repoName,
 			s.Host,
 			len(ncs))

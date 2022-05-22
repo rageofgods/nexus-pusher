@@ -2,9 +2,9 @@ package comps
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"nexus-pusher/internal/config"
 )
