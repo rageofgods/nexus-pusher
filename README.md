@@ -71,34 +71,35 @@ client:
     serverAuth:
         user: "test"
         pass: "test"
+    syncGlobalAuth:
+      srcServer: "https://nexus.some"
+      srcServerUser: "user"
+      srcServerPass: "pass"
+      dstServer: "https://nexus2.some"
+      dstServerUser: "user"
+      dstServerPass: "pass"
     syncConfigs:
         - srcServerConfig:
-            server: "https://nexus.some"
-            user: "user"
-            pass: "pass"
+            # Global parameters (from 'syncGlobalAuth') will be used here for server config
             repoName: "npm-repo1"
           dstServerConfig:
-            server: "https://nexus.some"
-            user: "user"
-            pass: "pass"
+            # Overwrite global server parameters (from 'syncGlobalAuth')
+            server: "https://nexus-specific.some"
+            user: "user-specific"
+            pass: "pass-specific"
             repoName: "npm-repo2"
           format: "npm"
         - srcServerConfig:
-            server: "https://nexus.some"
-            user: "user"
-            pass: "pass"
             repoName: "maven-repo1"
           dstServerConfig:
-              server: "https://nexus.some"
-              user: "user"
-              pass: "pass"
-              repoName: "maven-repo2"
+            repoName: "maven-repo2"
           format: "maven2"
           artifactsSource: "https://repo1.maven.org/maven2/"
 ```
 * **daemon.enabled** - run client in daemon mode to sync periodically
 * **daemon.syncEveryMinutes** - time in minutes to schedule re-sync
 * **server** - address of nexus-pusher server
+* **syncGlobalAuth** - global default parameters for all syncConfigs elements
 * **serverAuth.user** - username for nexus-pusher server auth
 * **serverAuth.pass** - password for nexus-pusher server auth
 * **syncConfigs** - list of 'src' and 'dst' pairs of nexus servers to be synced

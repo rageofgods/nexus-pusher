@@ -165,8 +165,8 @@ func (p *pushClient) pollComparedResults(body []byte) error {
 	// Setup http client
 	client := comps.HttpRetryClient()
 
-	// Poll maximum for 1800 seconds (30 min)
-	limitTime := 1800
+	// Poll maximum for 3600 seconds (60 min)
+	limitTime := 3600
 	for x := 1; x < limitTime; x++ {
 		// Setup new Request
 		req, err := http.NewRequest("GET", requestUrl, nil)

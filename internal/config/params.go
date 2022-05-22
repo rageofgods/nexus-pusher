@@ -33,9 +33,19 @@ type Client struct {
 		Enabled          bool `yaml:"enabled"`
 		SyncEveryMinutes int  `yaml:"syncEveryMinutes"`
 	} `yaml:"daemon"`
-	Server      string        `yaml:"server"`
-	ServerAuth  ServerAuth    `yaml:"serverAuth"`
-	SyncConfigs []*SyncConfig `yaml:"syncConfigs"`
+	Server         string         `yaml:"server"`
+	ServerAuth     ServerAuth     `yaml:"serverAuth"`
+	SyncGlobalAuth SyncGlobalAuth `yaml:"syncGlobalAuth"`
+	SyncConfigs    []*SyncConfig  `yaml:"syncConfigs"`
+}
+
+type SyncGlobalAuth struct {
+	SrcServer     string `yaml:"srcServer"`
+	SrcServerUser string `yaml:"srcServerUser"`
+	SrcServerPass string `yaml:"srcServerPass"`
+	DstServer     string `yaml:"dstServer"`
+	DstServerUser string `yaml:"dstServerUser"`
+	DstServerPass string `yaml:"dstServerPass"`
 }
 
 // ServerAuth is defines client side server auth
