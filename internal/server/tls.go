@@ -72,7 +72,7 @@ func makeHTTPToHTTPSRedirectServer(port string) *http.Server {
 		// Split host and port in the http request to use host later
 		host, _, err := net.SplitHostPort(r.Host)
 		if err != nil {
-			log.Fatalf("error: unable to split http request for host %s. %v", r.Host, err)
+			log.Fatalf("unable to split http request for host %s. %v", r.Host, err)
 		}
 		newURI := fmt.Sprintf("https://%s%s", net.JoinHostPort(host, port), r.URL.String())
 		http.Redirect(w, r, newURI, http.StatusFound)

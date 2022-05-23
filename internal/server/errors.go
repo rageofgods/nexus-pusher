@@ -12,7 +12,7 @@ func responseError(w http.ResponseWriter, err error, text string) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusUnprocessableEntity)
 	if err := json.NewEncoder(w).Encode(errorText); err != nil {
-		log.Printf("%v", err)
+		log.Errorf("%v", err)
 	}
-	log.Printf("%s", errorText)
+	log.Errorf("%s", errorText)
 }

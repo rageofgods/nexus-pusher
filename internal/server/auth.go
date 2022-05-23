@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"net/http"
 	"nexus-pusher/internal/config"
+	"nexus-pusher/pkg/helper"
 	"time"
 )
 
@@ -28,7 +29,7 @@ func (u *webService) signInMiddle(next http.Handler) http.Handler {
 		// Get credentials from request
 		user, pass, ok := r.BasicAuth()
 		if !ok {
-			log.Printf("error: no basic auth found in request")
+			log.Errorf("no basic auth found in request")
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -37,7 +38,7 @@ func (u *webService) signInMiddle(next http.Handler) http.Handler {
 
 		// Get the expected password from our in memory map
 		if expectedPassword, ok := u.cfg.Credentials[credentials.Username]; !ok || expectedPassword != credentials.Password {
-			log.Printf("error: wrong password provided for username '%s'", credentials.Username)
+			log.Errorf("wrong password provided for username '%s'", credentials.Username)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -59,7 +60,7 @@ func (u *webService) signInMiddle(next http.Handler) http.Handler {
 		tokenString, err := token.SignedString(u.jwtKey)
 		if err != nil {
 			// If there is an error in creating the JWT return an internal server error
-			log.Printf("error: unable to create JWT token for user '%s'", credentials.Username)
+			log.Errorf("unable to create JWT token for user '%s'", credentials.Username)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -80,6 +81,7 @@ func (u *webService) authMiddle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Try to auth with client Cookie
 		if _, err := u.authWithCookie(w, r); err != nil {
+			log.Errorf("%v", err)
 			return
 		}
 		// Serve original request
@@ -92,13 +94,14 @@ func (u *webService) refreshMiddle(next http.Handler) http.Handler {
 		// Try to auth with client Cookie
 		claims, err := u.authWithCookie(w, r)
 		if err != nil {
+			log.Errorf("%v", err)
 			return
 		}
 
 		// A new token will only be issued if the old token is within
 		// 30 seconds of expiry. Otherwise, return a bad request status
 		if time.Until(time.Unix(claims.ExpiresAt, 0)) > config.JWTTokenRefreshWindow*time.Second {
-			log.Printf("error: token is too new to refresh. still valid for: '%v'",
+			log.Errorf("token is too new to refresh. still valid for: '%v'",
 				time.Until(time.Unix(claims.ExpiresAt, 0)).Round(time.Second))
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -110,7 +113,7 @@ func (u *webService) refreshMiddle(next http.Handler) http.Handler {
 		tokenString, err := token.SignedString(u.jwtKey)
 		if err != nil {
 			// If there is an error in creating the JWT return an internal server error
-			log.Printf("error: unable to create JWT token for user '%s'", claims.Username)
+			log.Errorf("unable to create JWT token for user '%s'", claims.Username)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -133,7 +136,7 @@ func genRandomJWTKey(n int) []byte {
 	for i := range b {
 		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(letter))))
 		if err != nil {
-			log.Fatalf("error: can't generate jwt key - %v", err)
+			log.Fatalf("can't generate jwt key - %v", err)
 		}
 		b[i] = letter[n.Uint64()]
 	}
@@ -146,12 +149,12 @@ func (u *webService) authWithCookie(w http.ResponseWriter, r *http.Request) (*Cl
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
 			// If the cookie is not set, return an unauthorized status
-			log.Printf("error: cookie with jwt token is not set for this request")
+			log.Errorf("cookie with jwt token is not set for this request")
 			w.WriteHeader(http.StatusUnauthorized)
 			return nil, err
 		}
 		// For any other type of error, return a bad request status
-		log.Printf("error: can't get cookie for this request. %v", err)
+		log.Errorf("can't get cookie for this request. %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return nil, err
 	}
@@ -169,18 +172,21 @@ func (u *webService) authWithCookie(w http.ResponseWriter, r *http.Request) (*Cl
 		})
 	if err != nil {
 		if errors.Is(err, jwt.ErrSignatureInvalid) {
-			log.Printf("error: can't parse JWT string. %v", err)
+			log.Errorf("can't parse JWT string. %v", err)
 			w.WriteHeader(http.StatusUnauthorized)
 			return nil, err
 		}
-		log.Printf("error: can't parse JWT string. %v", err)
+		log.Errorf("can't parse JWT string. %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return nil, err
 	}
 	if !tkn.Valid {
-		log.Println("error: invalid JWT token provided")
+		log.Errorf("invalid JWT token provided")
 		w.WriteHeader(http.StatusUnauthorized)
-		return nil, fmt.Errorf("%v", "error: invalid JWT token provided")
+		return nil, &helper.ContextError{
+			Context: "authWithCookie",
+			Err:     fmt.Errorf("%v", "invalid JWT token provided"),
+		}
 	}
 	return claims, nil
 }

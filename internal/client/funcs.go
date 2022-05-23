@@ -95,7 +95,7 @@ func doCompareComponents(s1 *comps.NexusServer,
 	if isError {
 		return nil, &helper.ContextError{
 			Context: "doCompareComponents",
-			Err:     fmt.Errorf("error: unable to compare repositories"),
+			Err:     fmt.Errorf("unable to compare repositories"),
 		}
 	}
 
@@ -131,7 +131,7 @@ func ScheduleRunNexusPusher(c *config.Client, version *comps.Version) error {
 	s := gocron.NewScheduler(loc)
 	j, err := s.Every(c.Daemon.SyncEveryMinutes).Minute().Do(RunNexusPusher, c, version)
 	if err != nil {
-		return fmt.Errorf("error: can't schedule sync. job: %v: error: %w", j, err)
+		return fmt.Errorf("can't schedule sync. job: %v: error: %w", j, err)
 	}
 	s.StartBlocking()
 
@@ -342,7 +342,7 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig, version *comps.Vers
 
 	// Check nexus-pusher server status
 	if err := doCheckServerStatus(cc.Server); err != nil {
-		log.Errorf("error: server status check failed: %v", err)
+		log.Errorf("server status check failed: %v", err)
 		return
 	}
 
@@ -413,7 +413,7 @@ func checkSupportedRepoTypes(repoType config.ComponentType) error {
 	default:
 		return &helper.ContextError{
 			Context: "checkSupportedRepoTypes",
-			Err:     fmt.Errorf("error: unsuported component type %s", repoType),
+			Err:     fmt.Errorf("unsuported component type %s", repoType),
 		}
 	}
 }

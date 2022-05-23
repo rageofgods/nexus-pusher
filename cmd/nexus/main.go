@@ -53,7 +53,7 @@ func main() {
 		if cfg.Server.TLS.Enabled {
 			log.WithFields(log.Fields{
 				"proto":        "TLS",
-				"bind-address": cfg.Server.BindAddress,
+				"bind_address": cfg.Server.BindAddress,
 				"port":         cfg.Server.Port},
 			).Info("Running in server mode.")
 
@@ -66,7 +66,7 @@ func main() {
 		} else { // Run HTTP server (not secure!)
 			log.WithFields(log.Fields{
 				"proto":        "HTTP",
-				"bind-address": cfg.Server.BindAddress,
+				"bind_address": cfg.Server.BindAddress,
 				"port":         cfg.Server.Port,
 			}).Info("Running in server mode.")
 

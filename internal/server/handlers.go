@@ -14,20 +14,18 @@ import (
 func stub(w http.ResponseWriter, r *http.Request) {
 	_ = r // ignore request here
 	if _, err := fmt.Fprintln(w, "Welcome to nexus-pusher."); err != nil {
-		log.Printf("%v", err)
+		log.Errorf("%v", err)
 	}
 }
 
-func status(w http.ResponseWriter, r *http.Request) {
-	_ = r // ignore request here
+func status(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if _, err := fmt.Fprintln(w, "Status OK"); err != nil {
-		log.Printf("%v", err)
+		log.Errorf("%v", err)
 	}
 }
 
-func (u *webService) version(w http.ResponseWriter, r *http.Request) {
-	_ = r // ignore request here
+func (u *webService) version(w http.ResponseWriter, _ *http.Request) {
 	if err := json.NewEncoder(w).Encode(u.ver); err != nil {
 		responseError(w, err, "error message encode")
 		return
@@ -47,11 +45,11 @@ func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 	// Read request body
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, maxBodySize))
 	if err != nil {
-		log.Printf("%v", err)
+		log.Errorf("%v", err)
 		return
 	}
 	if err := r.Body.Close(); err != nil {
-		log.Printf("%v", err)
+		log.Errorf("%v", err)
 	}
 	// Try to decode body to NexusExportComponents struct
 	if err := json.Unmarshal(body, nec); err != nil {
@@ -87,20 +85,20 @@ func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if errorsCounter != 0 {
-			log.Printf("Upload request complete with %d errors:", errorsCounter)
+			log.Warnf("Upload request complete with %d errors:", errorsCounter)
 			for _, v := range errorsText {
-				log.Println(v)
+				log.Warnln(v)
 			}
 			// Set complete flag to current client request
 			if err := u.completeById(msg.ID, errorsText...); err != nil {
-				log.Printf("%v", err)
+				log.Errorf("%v", err)
 			}
 		} else {
 			log.Printf("Upload request successfully complete.")
 			// Set complete flag to current client request
 			if err := u.completeById(msg.ID, fmt.Sprintf("All assets successfully uploaded for repository '%s'",
 				repo)); err != nil {
-				log.Printf("%v", err)
+				log.Errorf("%v", err)
 			}
 		}
 	}()
