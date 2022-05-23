@@ -41,11 +41,6 @@ func main() {
 		log.Fatalf("unable to load config: %v", err)
 	}
 
-	// Validate config for correct syntax
-	if err := cfg.ValidateConfig(); err != nil {
-		log.Fatalf("%v", err)
-	}
-
 	// Schedule periodic config file re-read
 	if err := cfg.ScheduleLoadConfig(args.ConfigPath, 30); err != nil {
 		log.Printf("error: %v", err)

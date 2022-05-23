@@ -5,6 +5,7 @@ import (
 	"github.com/go-co-op/gocron"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
+	"log"
 	"time"
 )
 
@@ -18,6 +19,11 @@ func (c *NexusConfig) LoadConfig(fileName string) error {
 	}
 	// Set config path
 	c.string = fileName
+
+	// Validate config for correct syntax and assign default values
+	if err := c.validateConfig(); err != nil {
+		log.Fatalf("%v", err)
+	}
 
 	return nil
 }
