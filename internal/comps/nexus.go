@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"nexus-pusher/internal/config"
+	"nexus-pusher/pkg/helper"
 )
 
 func (s *NexusServer) GetComponents(
@@ -19,8 +20,11 @@ func (s *NexusServer) GetComponents(
 	contToken ...string) ([]*NexusComponent, error) {
 	select {
 	case <-ctx.Done():
-		return nil, fmt.Errorf("error: canceling processing repo '%s' because of upstream error",
-			repoName)
+		return nil, &helper.ContextError{
+			Context: "GetComponents",
+			Err: fmt.Errorf("error: canceling processing repo '%s' because of upstream error",
+				repoName),
+		}
 	default:
 		// Do nothing (continue execution)
 	}
@@ -41,12 +45,12 @@ func (s *NexusServer) GetComponents(
 
 	body, err := s.SendRequest(srvUrl, "GET", c, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetComponents: %w", err)
 	}
 
 	var nc NexusComponents
 	if err := json.Unmarshal(body, &nc); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetComponents: %w", err)
 	}
 	ncs = append(ncs, nc.Items...)
 
@@ -66,7 +70,7 @@ func (s *NexusServer) GetComponents(
 	if nc.ContinuationToken != "" {
 		ncs, err = s.GetComponents(ctx, c, ncs, repoName, nc.ContinuationToken)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("GetComponents: %w", err)
 		}
 	}
 
@@ -93,7 +97,7 @@ func (s *NexusServer) UploadComponents(nec *NexusExportComponents, repoName stri
 				limitChan <- struct{}{}
 				result := &UploadResult{}
 				if err := s.uploadComponent(format, component, repoName); err != nil {
-					log.Printf("%v", err)
+					log.Errorf("%v", err)
 					result = &UploadResult{Err: err, ComponentPath: component.FullName()}
 				}
 				resultsChan <- result
@@ -107,7 +111,7 @@ func (s *NexusServer) UploadComponents(nec *NexusExportComponents, repoName stri
 					limitChan <- struct{}{}
 					result := &UploadResult{}
 					if err := s.uploadAsset(format, asset, repoName, src); err != nil {
-						log.Printf("%v", err)
+						log.Errorf("%v", err)
 						result = &UploadResult{Err: err, ComponentPath: asset.Path}
 					}
 					resultsChan <- result
@@ -132,7 +136,7 @@ func (s *NexusServer) UploadComponents(nec *NexusExportComponents, repoName stri
 func (s *NexusServer) SendRequest(srvUrl string, method string, c *http.Client, b io.Reader) ([]byte, error) {
 	req, err := http.NewRequest(method, srvUrl, b)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("SendRequest: %w", err)
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
@@ -140,21 +144,24 @@ func (s *NexusServer) SendRequest(srvUrl string, method string, c *http.Client, 
 	// Send request
 	resp, err := c.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("SendRequest: %w", err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error: sending '%s' request: status code %d %v",
-			resp.Request.Method,
-			resp.StatusCode,
-			resp.Request.URL)
+		return nil, &helper.ContextError{
+			Context: "SendRequest",
+			Err: fmt.Errorf("error: sending '%s' request: status code %d %v",
+				resp.Request.Method,
+				resp.StatusCode,
+				resp.Request.URL),
+		}
 	}
 	// Read all body data
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("SendRequest: %w", err)
 	}
 	if err := resp.Body.Close(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("SendRequest: %w", err)
 	}
 	return body, nil
 }

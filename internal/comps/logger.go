@@ -24,19 +24,16 @@ func (c *CustomRetryLogger) Error(msg string, keysAndValues ...interface{}) {
 }
 
 // Info mock
-func (c *CustomRetryLogger) Info(msg string, keysAndValues ...interface{}) {
+func (c *CustomRetryLogger) Info(_ string, _ ...interface{}) {
 	// Do nothing to disable this type of logs
-	_, _ = msg, keysAndValues
 }
 
 // Debug mock
-func (c *CustomRetryLogger) Debug(msg string, keysAndValues ...interface{}) {
+func (c *CustomRetryLogger) Debug(_ string, _ ...interface{}) {
 	// Do nothing to disable this type of logs
-	_, _ = msg, keysAndValues
 }
 
 // Warn Mock
-func (c *CustomRetryLogger) Warn(msg string, keysAndValues ...interface{}) {
+func (c *CustomRetryLogger) Warn(_ string, _ ...interface{}) {
 	// Do nothing to disable this type of logs
-	_, _ = msg, keysAndValues
 }

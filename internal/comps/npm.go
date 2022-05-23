@@ -25,7 +25,7 @@ func (n Npm) DownloadAsset() (*http.Response, error) {
 	// Get NPM component
 	req, err := http.NewRequest("GET", n.assetDownloadURL(), nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("DownloadAsset: %w", err)
 	}
 
 	req.Header.Set("Accept", "application/octet-stream")

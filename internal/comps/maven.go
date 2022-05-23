@@ -51,14 +51,14 @@ func (m Maven2) DownloadComponent() ([]*http.Response, error) {
 	for i := range m.Component.Assets {
 		req, err := http.NewRequest("GET", m.assetDownloadURL(i), nil)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("DownloadComponent: %w", err)
 		}
 		req.Header.Set("Accept", "application/octet-stream")
 
 		// Send request
 		resp, err := HttpRetryClient(180).Do(req)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("DownloadComponent: %w", err)
 		}
 
 		responses = append(responses, resp)

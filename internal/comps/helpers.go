@@ -13,7 +13,7 @@ func genRandomBoundary(n int) string {
 	for i := range b {
 		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(letter))))
 		if err != nil {
-			log.Fatalf("error: can't generate boundary - %v", err)
+			log.Fatalf("can't generate boundary - %v", err)
 		}
 		b[i] = letter[n.Uint64()]
 	}

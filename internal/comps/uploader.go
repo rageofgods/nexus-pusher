@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"nexus-pusher/internal/config"
+	"nexus-pusher/pkg/helper"
 )
 
 func (s *NexusServer) uploadComponent(format config.ComponentType,
@@ -16,13 +17,16 @@ func (s *NexusServer) uploadComponent(format config.ComponentType,
 		maven2 := NewMaven2(component.ArtifactsSource, component)
 		maven2.filterExtensions()
 		if len(maven2.Component.Assets) == 0 {
-			return fmt.Errorf("error: zero valid maven artifacts was found after assets filter")
+			return &helper.ContextError{
+				Context: "uploadComponent",
+				Err:     fmt.Errorf("error: zero valid maven artifacts was found after assets filter"),
+			}
 		}
 
 		// Start to download data and convert it to multipart stream
 		contentType, uploadBody, responses, err := prepareToUploadComponent(maven2)
 		if err != nil {
-			return err
+			return fmt.Errorf("uploadComponent: %w", err)
 		}
 
 		// Close all responses body
@@ -34,7 +38,7 @@ func (s *NexusServer) uploadComponent(format config.ComponentType,
 
 		// Upload component to target nexus server
 		if err := s.uploadComponentWithType(repoName, component.FullName(), contentType, uploadBody); err != nil {
-			return err
+			return fmt.Errorf("uploadComponent: %w", err)
 		}
 	}
 
@@ -50,13 +54,13 @@ func (s *NexusServer) uploadAsset(format config.ComponentType, asset *NexusExpor
 		// Start to download data and convert it to multipart stream
 		contentType, uploadBody, resp, err := prepareToUploadAsset(npm)
 		if err != nil {
-			return err
+			return fmt.Errorf("uploadAsset: %w", err)
 		}
 		defer resp.Body.Close()
 
 		// Upload component to target nexus server
 		if err := s.uploadComponentWithType(repoName, asset.FullName(), contentType, uploadBody); err != nil {
-			return err
+			return fmt.Errorf("uploadAsset: %w", err)
 		}
 
 	case config.PYPI:
@@ -65,13 +69,13 @@ func (s *NexusServer) uploadAsset(format config.ComponentType, asset *NexusExpor
 		// Start to download data and convert it to multipart stream
 		contentType, uploadBody, resp, err := prepareToUploadAsset(pypi)
 		if err != nil {
-			return err
+			return fmt.Errorf("uploadAsset: %w", err)
 		}
 		defer resp.Body.Close()
 
 		// Upload component to target nexus server
 		if err := s.uploadComponentWithType(repoName, asset.FullName(), contentType, uploadBody); err != nil {
-			return err
+			return fmt.Errorf("uploadAsset: %w", err)
 		}
 	}
 
@@ -83,15 +87,18 @@ func prepareToUploadComponent(c config.Componenter) (string, io.Reader, []*http.
 	// Start downloading component from remote repo
 	responses, err := c.DownloadComponent()
 	if err != nil {
-		return "", nil, nil, err
+		return "", nil, nil, fmt.Errorf("prepareToUploadComponent: %w", err)
 	}
 
 	for _, resp := range responses {
 		if resp.StatusCode != http.StatusOK {
-			return "", nil, nil, fmt.Errorf("error: unable to download asset. sending '%s' request: status code %d %v",
-				resp.Request.Method,
-				resp.StatusCode,
-				resp.Request.URL)
+			return "", nil, nil, &helper.ContextError{
+				Context: "prepareToUploadComponent",
+				Err: fmt.Errorf("error: unable to download asset. sending '%s' request: status code %d %v",
+					resp.Request.Method,
+					resp.StatusCode,
+					resp.Request.URL),
+			}
 		}
 	}
 
@@ -106,15 +113,18 @@ func prepareToUploadAsset(a config.Asseter) (string, io.Reader, *http.Response, 
 	// Start downloading asset from remote repo
 	resp, err := a.DownloadAsset()
 	if err != nil {
-		return "", nil, nil, err
+		return "", nil, nil, fmt.Errorf("prepareToUploadAsset: %w", err)
 	}
 
 	// Check http response ok status
 	if resp.StatusCode != http.StatusOK {
-		return "", nil, nil, fmt.Errorf("error: unable to download asset. sending '%s' request: status code %d %v",
-			resp.Request.Method,
-			resp.StatusCode,
-			resp.Request.URL)
+		return "", nil, nil, &helper.ContextError{
+			Context: "prepareToUploadAsset",
+			Err: fmt.Errorf("error: unable to download asset. sending '%s' request: status code %d %v",
+				resp.Request.Method,
+				resp.StatusCode,
+				resp.Request.URL),
+		}
 	}
 
 	// Convert to multipart component specific type on the fly
@@ -131,7 +141,7 @@ func (s *NexusServer) uploadComponentWithType(repoName string, cPath string, con
 		repoName)
 	req, err := http.NewRequest("POST", srvUrl, body)
 	if err != nil {
-		return err
+		return fmt.Errorf("uploadComponentWithType: %w", err)
 	}
 	req.Header.Set("Content-Type", contentType)
 	req.SetBasicAuth(s.Username, s.Password)
@@ -142,7 +152,7 @@ func (s *NexusServer) uploadComponentWithType(repoName string, cPath string, con
 	// of direct stream data incompatibility
 	resp, err := HttpClient(900).Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("uploadComponentWithType: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -151,14 +161,14 @@ func (s *NexusServer) uploadComponentWithType(repoName string, cPath string, con
 		// Read response body with error
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return err
+			return fmt.Errorf("uploadComponentWithType: %w", err)
 		}
 
 		// Create formatted message
 		const msg = "error: unable to upload component %s to repository '%s' at server %s. Reason: %s. Response: %s"
 
 		// Log error
-		log.Printf(msg, cPath, repoName, s.Host, resp.Status, string(body))
+		log.Errorf(msg, cPath, repoName, s.Host, resp.Status, string(body))
 
 		// Return error
 		return fmt.Errorf(msg, cPath, repoName, s.Host, resp.Status, string(body))
@@ -170,7 +180,7 @@ func (s *NexusServer) uploadComponentWithType(repoName string, cPath string, con
 	}
 
 	if _, err := io.Copy(ioutil.Discard, resp.Body); err != nil {
-		return fmt.Errorf("%w", err)
+		return fmt.Errorf("uploadComponentWithType: %w", err)
 	}
 
 	return nil

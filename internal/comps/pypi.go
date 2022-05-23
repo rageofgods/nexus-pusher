@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"nexus-pusher/pkg/helper"
 	"strings"
 )
 
@@ -31,12 +32,12 @@ func (p Pypi) DownloadAsset() (*http.Response, error) {
 	// Get PYPI component
 	assetURL, err := p.assetDownloadURL()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("DownloadAsset: %w", err)
 	}
 
 	req, err := http.NewRequest("GET", assetURL, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("DownloadAsset: %w", err)
 	}
 
 	req.Header.Set("Accept", "application/octet-stream")
@@ -66,7 +67,7 @@ func (p Pypi) assetDownloadURL() (string, error) {
 
 	req, err := http.NewRequest("GET", requestURL, nil)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("assetDownloadURL: %w", err)
 	}
 
 	req.Header.Set("Accept", "application/json")
@@ -74,28 +75,31 @@ func (p Pypi) assetDownloadURL() (string, error) {
 	// Send request
 	resp, err := HttpRetryClient().Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("assetDownloadURL: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// Check response for error
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("error: unable to get version for pypi asset. sending '%s' request: status code %d %v",
-			resp.Request.Method,
-			resp.StatusCode,
-			resp.Request.URL)
+		return "", &helper.ContextError{
+			Context: "assetDownloadURL",
+			Err: fmt.Errorf("error: unable to get version for pypi asset. sending '%s' request: status code %d %v",
+				resp.Request.Method,
+				resp.StatusCode,
+				resp.Request.URL),
+		}
 	}
 
 	// Read response body
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("assetDownloadURL: %w", err)
 	}
 
 	var result map[string]interface{}
 	// Try to unmarshal json as unstructured data
 	if err := json.Unmarshal(body, &result); err != nil {
-		return "", err
+		return "", fmt.Errorf("assetDownloadURL: %w", err)
 	}
 
 	// Validate JSON data to correct format
@@ -108,20 +112,35 @@ func (p Pypi) assetDownloadURL() (string, error) {
 						if url, ok := value["url"].(string); ok { // Get URL string
 							return url, nil // Return found URL
 						} else {
-							return "", fmt.Errorf("%s want: 'string', get: %T", errorText, value["url"])
+							return "", &helper.ContextError{
+								Context: "assetDownloadURL",
+								Err:     fmt.Errorf("%s want: 'string', get: %T", errorText, value["url"]),
+							}
 						}
 					}
 				} else {
-					return "", fmt.Errorf("%s want: 'string', get: %T", errorText, value["filename"])
+					return "", &helper.ContextError{
+						Context: "assetDownloadURL",
+						Err:     fmt.Errorf("%s want: 'string', get: %T", errorText, value["filename"]),
+					}
 				}
 			} else {
-				return "", fmt.Errorf("%s want: 'map[string]interface{}', get: %T", errorText, v)
+				return "", &helper.ContextError{
+					Context: "assetDownloadURL",
+					Err:     fmt.Errorf("%s want: 'map[string]interface{}', get: %T", errorText, v),
+				}
 			}
 		}
 	} else {
-		return "", fmt.Errorf("%s want: '[]interface{}', get: %T", errorText, result["urls"])
+		return "", &helper.ContextError{
+			Context: "assetDownloadURL",
+			Err:     fmt.Errorf("%s want: '[]interface{}', get: %T", errorText, result["urls"]),
+		}
 	}
 
-	return "", fmt.Errorf("error: unable to find component: %s version: %s at: %s",
-		p.Name, p.Version, p.Server)
+	return "", &helper.ContextError{
+		Context: "assetDownloadURL",
+		Err: fmt.Errorf("error: unable to find component: %s version: %s at: %s",
+			p.Name, p.Version, p.Server),
+	}
 }
