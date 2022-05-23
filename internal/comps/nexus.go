@@ -58,7 +58,7 @@ func (s *NexusServer) GetComponents(
 			len(ncs))
 	}
 
-	// if len(ncs) > 100 {
+	// if len(ncs) > 10 {
 	//	return ncs, nil
 	// }
 

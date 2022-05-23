@@ -5,7 +5,7 @@ import (
 )
 
 // ValidateConfig is used to validate config file for correct parameters
-func (c *NexusConfig) ValidateConfig() error {
+func (c *NexusConfig) validateConfig() error {
 	// Validate server config
 	if err := c.validateServerConfig(); err != nil {
 		return err
