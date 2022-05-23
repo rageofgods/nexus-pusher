@@ -12,10 +12,10 @@ import (
 func (c *NexusConfig) LoadConfig(fileName string) error {
 	config, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return err
+		return fmt.Errorf("LoadConfig: %w", err)
 	}
 	if err := yaml.Unmarshal(config, c); err != nil {
-		return err
+		return fmt.Errorf("LoadConfig: %w", err)
 	}
 	// Set config path
 	c.string = fileName
@@ -32,7 +32,7 @@ func (c *NexusConfig) LoadConfig(fileName string) error {
 func (c *NexusConfig) ScheduleLoadConfig(fileName string, seconds int) error {
 	loc, err := time.LoadLocation(TimeZone)
 	if err != nil {
-		return err
+		return fmt.Errorf("ScheduleLoadConfig: %w", err)
 	}
 
 	s := gocron.NewScheduler(loc)

@@ -10,6 +10,7 @@ import (
 	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
 	"nexus-pusher/internal/server"
+	"nexus-pusher/pkg/helper"
 	"time"
 )
 
@@ -31,19 +32,22 @@ func (p *pushClient) authorize() error {
 	client := comps.HttpRetryClient()
 	req, err := http.NewRequest("GET", requestUrl, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("authorize: %w", err)
 	}
 	req.Header.Set("Content-Type", "text/plain; charset=utf-8")
 	req.SetBasicAuth(p.serverUser, p.serverPass)
 	// Send request
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("authorize: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error: %s responded with status: %d", p.serverAddress, resp.StatusCode)
+		return &helper.ContextError{
+			Context: "authorize",
+			Err:     fmt.Errorf("%s responded with status: %d", p.serverAddress, resp.StatusCode),
+		}
 	}
 	// Finding JWT Cookie in response
 	for _, v := range resp.Cookies() {
@@ -54,7 +58,10 @@ func (p *pushClient) authorize() error {
 		}
 	}
 	// If we can't find Cookie in the server response, return error
-	return fmt.Errorf("error: unable to find JWT Cookie in ")
+	return &helper.ContextError{
+		Context: "authorize",
+		Err:     fmt.Errorf("unable to find JWT Cookie in "),
+	}
 }
 
 // refreshAuth will refresh JWT token for client through server request
@@ -67,7 +74,7 @@ func (p *pushClient) refreshAuth() error {
 		// Make new request
 		req, err := http.NewRequest("GET", requestUrl, nil)
 		if err != nil {
-			return err
+			return fmt.Errorf("refreshAuth: %w", err)
 		}
 		req.Header.Set("Content-Type", "text/plain; charset=utf-8")
 		// Append JWT auth Cookie
@@ -76,14 +83,17 @@ func (p *pushClient) refreshAuth() error {
 		// Send request
 		resp, err := client.Do(req)
 		if err != nil {
-			return err
+			return fmt.Errorf("refreshAuth: %w", err)
 		}
 		defer resp.Body.Close()
 
 		// Check server response
 		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("error: unable to refresh JWT auth token. Server responded with status: %s",
-				resp.Status)
+			return &helper.ContextError{
+				Context: "refreshAuth",
+				Err: fmt.Errorf("error: unable to refresh JWT auth token. Server responded with status: %s",
+					resp.Status),
+			}
 		}
 
 		// Finding JWT Cookie in response
@@ -112,11 +122,11 @@ func (p *pushClient) sendComparedRequest(data *comps.NexusExportComponents, repo
 	// Encode data to buffer
 	err := json.NewEncoder(&buf).Encode(data)
 	if err != nil {
-		return nil, fmt.Errorf("%w", err)
+		return nil, fmt.Errorf("sendComparedRequest: %w", err)
 	}
 	req, err := http.NewRequest("POST", requestUrl, &buf)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sendComparedRequest: %w", err)
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
@@ -127,20 +137,23 @@ func (p *pushClient) sendComparedRequest(data *comps.NexusExportComponents, repo
 	log.Printf("Sending components diff to %s server...", p.serverAddress)
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sendComparedRequest: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// Check server response
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error: %s responded with status: %s", p.serverAddress, resp.Status)
+		return nil, &helper.ContextError{
+			Context: "sendComparedRequest",
+			Err:     fmt.Errorf("error: %s responded with status: %s", p.serverAddress, resp.Status),
+		}
 	}
 	log.Printf("Sending components diff to %s successfully complete.", p.serverAddress)
 
 	// Read all body data
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sendComparedRequest: %w", err)
 	}
 
 	return body, nil
@@ -151,7 +164,7 @@ func (p *pushClient) pollComparedResults(body []byte) error {
 	// Convert body to Message type
 	msg := &server.Message{}
 	if err := json.Unmarshal(body, msg); err != nil {
-		return err
+		return fmt.Errorf("pollComparedResults: %w", err)
 	}
 
 	log.Printf("Starting server polling for message id %s to get upload results...", msg.ID)
@@ -171,7 +184,7 @@ func (p *pushClient) pollComparedResults(body []byte) error {
 		// Setup new Request
 		req, err := http.NewRequest("GET", requestUrl, nil)
 		if err != nil {
-			return err
+			return fmt.Errorf("pollComparedResults: %w", err)
 		}
 
 		// Set headers
@@ -183,29 +196,32 @@ func (p *pushClient) pollComparedResults(body []byte) error {
 		// Send request
 		resp, err := client.Do(req)
 		if err != nil {
-			return err
+			return fmt.Errorf("pollComparedResults: %w", err)
 		}
 
 		// Check server response
 		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("error: %s responded with status: %s",
-				p.serverAddress,
-				resp.Status)
+			return &helper.ContextError{
+				Context: "pollComparedResults",
+				Err: fmt.Errorf("error: %s responded with status: %s",
+					p.serverAddress,
+					resp.Status),
+			}
 		}
 
 		// Read all body data
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return err
+			return fmt.Errorf("pollComparedResults: %w", err)
 		}
 		// Close response body
 		if err := resp.Body.Close(); err != nil {
-			return err
+			return fmt.Errorf("pollComparedResults: %w", err)
 		}
 
 		// Convert body to Message type
 		if err := json.Unmarshal(body, msg); err != nil {
-			return err
+			return fmt.Errorf("pollComparedResults: %w", err)
 		}
 
 		// If server respond with 'complete' message stop polling
@@ -223,13 +239,16 @@ func (p *pushClient) pollComparedResults(body []byte) error {
 		}
 		// Try to refresh auth token
 		if err := p.refreshAuth(); err != nil {
-			return err
+			return fmt.Errorf("pollComparedResults: %w", err)
 		}
 		// Limit server requests to 1 RPS
 		time.Sleep(1 * time.Second)
 	}
 	// Show error if we don't get results in time
-	return fmt.Errorf("error: unable to get results from for message id %s in %d seconds",
-		msg.ID,
-		limitTime)
+	return &helper.ContextError{
+		Context: "pollComparedResults",
+		Err: fmt.Errorf("error: unable to get results from for message id %s in %d seconds",
+			msg.ID,
+			limitTime),
+	}
 }

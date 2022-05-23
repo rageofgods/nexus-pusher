@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -18,8 +19,12 @@ func HttpRetryClient(seconds ...int) *http.Client {
 		MaxIdleConns:        100,
 		DisableKeepAlives:   true,
 	}
-	customLogger := &CustomRetryLogger{log.New()}
-	//customLogger := &CustomRetryLogger{log.New(os.Stdout, "", log.Ldate|log.Ltime)}
+
+	customLogger := &CustomRetryLogger{&log.Logger{
+		Out:       os.Stdout,
+		Formatter: &log.TextFormatter{FullTimestamp: true},
+		Level:     log.InfoLevel,
+	}}
 	retryClient.Logger = customLogger
 	retryClient.RetryMax = 3
 	if len(seconds) != 0 {

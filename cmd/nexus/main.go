@@ -19,10 +19,10 @@ var (
 
 func init() {
 	log.SetFormatter(&log.TextFormatter{
-		DisableColors: true,
 		FullTimestamp: true,
 	})
 	log.SetOutput(os.Stdout)
+	log.SetLevel(log.InfoLevel)
 }
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 	// Get Config Args
 	args := &config.Args{}
 	if args = args.GetConfigArgs(); args == nil {
-		return
+		log.Fatalf("args is nil")
 	}
 
 	// Load Nexus-Pusher configuration from file
@@ -46,13 +46,17 @@ func main() {
 		log.Printf("error: %v", err)
 	}
 
-	log.Printf("Starting application... Version: %s, Build: %s", Version, Build)
+	log.WithFields(log.Fields{"version": Version, "build": Build}).Info("Starting application...")
+
 	// Run in Server mode
 	if cfg.Server != nil {
 		if cfg.Server.TLS.Enabled {
-			log.Printf("Running in server mode (TLS). Listening on: %s:%s",
-				cfg.Server.BindAddress,
-				cfg.Server.Port)
+			log.WithFields(log.Fields{
+				"proto":        "TLS",
+				"bind-address": cfg.Server.BindAddress,
+				"port":         cfg.Server.Port},
+			).Info("Running in server mode.")
+
 			// Run Server with Let's encrypt autocert
 			if cfg.Server.TLS.Auto {
 				server.RunAutoCertServer(cfg.Server, version)
@@ -60,23 +64,31 @@ func main() {
 				server.RunStaticCertServer(cfg.Server, version)
 			}
 		} else { // Run HTTP server (not secure!)
-			log.Printf("Running in server mode (HTTP). Listening on: %s:%s",
-				cfg.Server.BindAddress,
-				cfg.Server.Port)
+			log.WithFields(log.Fields{
+				"proto":        "HTTP",
+				"bind-address": cfg.Server.BindAddress,
+				"port":         cfg.Server.Port,
+			}).Info("Running in server mode.")
+
 			log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", cfg.Server.BindAddress, cfg.Server.Port),
 				server.NewRouter(cfg.Server, version)))
 		}
 
 	} else if cfg.Client != nil { // Run in Client mode
 		if cfg.Client.Daemon.Enabled {
-			log.Printf("Running client in 'daemon' mode. Scheduling re-sync every %d minutes",
-				cfg.Client.Daemon.SyncEveryMinutes)
+			log.WithFields(log.Fields{
+				"sync(minutes)": cfg.Client.Daemon.SyncEveryMinutes,
+			}).Info("Running client in 'daemon' mode.")
+
 			if err := client.ScheduleRunNexusPusher(cfg.Client, version); err != nil {
 				log.Printf("%v", err)
 				os.Exit(1)
 			}
 		} else {
-			log.Println("Running client in 'ad hoc' mode. Will do sync only once.")
+			log.WithFields(log.Fields{
+				"sync(minutes)": cfg.Client.Daemon.SyncEveryMinutes,
+			}).Info("Running client in 'ad hoc' mode. Will do sync only once.")
+
 			client.RunNexusPusher(cfg.Client, version)
 		}
 	}
