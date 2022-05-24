@@ -29,6 +29,8 @@ func (c ComponentType) Bundled() bool {
 		return false
 	case MAVEN2:
 		return true
+	case NUGET:
+		return false
 	default:
 		// Return false by default is safe here because we already
 		// check component type in the previous code logic
@@ -46,7 +48,9 @@ const (
 	// MAVEN2 Set MAVEN2 specific variables
 	MAVEN2 ComponentType = "maven2"
 
-	// NUGET  ComponentType = "nuget"
+	// NUGET Set NUGET specific variables
+	NUGET ComponentType = "nuget"
+
 	// HELM   ComponentType = "helm"
 	// DOCKER ComponentType = "docker"
 	// RUBY   ComponentType = "rubygems"

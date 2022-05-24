@@ -77,6 +77,21 @@ func (s *NexusServer) uploadAsset(format config.ComponentType, asset *NexusExpor
 		if err := s.uploadComponentWithType(repoName, asset.FullName(), contentType, uploadBody); err != nil {
 			return fmt.Errorf("uploadAsset: %w", err)
 		}
+
+	case config.NUGET:
+		nuget := NewNuget(artifactsSource, asset.FileName, asset.Name, asset.Version)
+
+		// Start to download data and convert it to multipart stream
+		contentType, uploadBody, resp, err := prepareToUploadAsset(nuget)
+		if err != nil {
+			return fmt.Errorf("uploadAsset: %w", err)
+		}
+		defer resp.Body.Close()
+
+		// Upload component to target nexus server
+		if err := s.uploadComponentWithType(repoName, asset.FullName(), contentType, uploadBody); err != nil {
+			return fmt.Errorf("uploadAsset: %w", err)
+		}
 	}
 
 	return nil

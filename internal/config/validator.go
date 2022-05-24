@@ -120,6 +120,10 @@ func (c *NexusConfig) validateArtifactsSource(syncConfig *SyncConfig, index int)
 		if syncConfig.ArtifactsSource == "" {
 			c.Client.SyncConfigs[index].ArtifactsSource = npmSrv
 		}
+	case NUGET.String():
+		if syncConfig.ArtifactsSource == "" {
+			c.Client.SyncConfigs[index].ArtifactsSource = nugetSrv
+		}
 	}
 	return nil
 }

@@ -21,9 +21,10 @@ to save bandwidth.
 ## Getting Started
 
 ### Supported repository types:
-* NPM (npm)
-* PYPI (pypi)
-* MAVEN2 (maven2)
+* NPM (type: npm)
+* PYPI (type: pypi)
+* MAVEN2 (type: maven2)
+* NUGET (type: nuget)
 
 ### Installing
 
@@ -124,10 +125,14 @@ ex. [@rageofgods](https://github.com/rageofgods)
 
 * 0.1
     * Initial Release
+* 0.5
+    * NPM support implemented
 * 1.0
     * PYPI support implemented
 * 1.1
     * MAVEN2 support implemented
+* 1.2
+    * NUGET support implemented 
 
 ## License
 

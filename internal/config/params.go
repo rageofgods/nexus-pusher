@@ -123,6 +123,7 @@ const (
 	npmSrv    string = "https://registry.npmjs.org/"
 	pypiSrv   string = "https://pypi.org/"
 	maven2Srv string = "https://repo1.maven.org/maven2/"
+	nugetSrv  string = "https://api.nuget.org/v3-flatcontainer/"
 )
 
 // LogTimeFormat will format logrus time to specified format

@@ -410,6 +410,8 @@ func checkSupportedRepoTypes(repoType config.ComponentType) error {
 		return nil
 	case config.MAVEN2:
 		return nil
+	case config.NUGET:
+		return nil
 	default:
 		return &helper.ContextError{
 			Context: "checkSupportedRepoTypes",
