@@ -17,16 +17,10 @@ var (
 	Build   string
 )
 
-func init() {
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp: true,
-		DisableQuote:  true,
-	})
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.InfoLevel)
-}
-
 func main() {
+	// Setup logger
+	config.NewLogger().SetupLogger()
+
 	// Setup version
 	version := comps.NewVersion(Version, Build)
 

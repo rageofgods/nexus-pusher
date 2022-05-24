@@ -124,3 +124,6 @@ const (
 	pypiSrv   string = "https://pypi.org/"
 	maven2Srv string = "https://repo1.maven.org/maven2/"
 )
+
+// LogTimeFormat will format logrus time to specified format
+const LogTimeFormat string = "02-01-2006 15:04:05 MST-07"
