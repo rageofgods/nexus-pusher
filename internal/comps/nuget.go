@@ -76,16 +76,15 @@ func (n Nuget) assetDownloadURL() (string, error) {
 	// format returned asset path following V2 standard
 	if baseDownloadUrl == n.Server {
 		return fmt.Sprintf("%s/package/%s/%s",
-			baseDownloadUrl,
+			removeLastSlash(baseDownloadUrl),
 			strings.ToLower(n.Name),
 			strings.ToLower(version),
 		), nil
 	}
 
-	// TODO: remove trailing slash for baseDownloadUrl (if it exists)
 	// Return V3 formatted path
 	return fmt.Sprintf("%s/%s/%s/%s.%s.nupkg",
-		baseDownloadUrl,
+		removeLastSlash(baseDownloadUrl),
 		strings.ToLower(n.Name),
 		strings.ToLower(version),
 		strings.ToLower(n.Name),
@@ -167,4 +166,12 @@ func (n Nuget) baseUrlV3() (string, error) {
 		Err: fmt.Errorf("unable to find base download path for provided url '%s' in nuget index.json response",
 			n.Server),
 	}
+}
+
+// removeLastSlash remove slash from last symbol if exists
+func removeLastSlash(path string) string {
+	if string(path[len(path)-1]) == "/" {
+		return path[:len(path)-1]
+	}
+	return path
 }
