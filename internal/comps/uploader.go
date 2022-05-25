@@ -109,7 +109,7 @@ func prepareToUploadComponent(c config.Componenter) (string, io.Reader, []*http.
 		if resp.StatusCode != http.StatusOK {
 			return "", nil, nil, &helper.ContextError{
 				Context: "prepareToUploadComponent",
-				Err: fmt.Errorf("error: unable to download asset. sending '%s' request: status code %d %v",
+				Err: fmt.Errorf("unable to download asset. sending '%s' request: status code %d %v",
 					resp.Request.Method,
 					resp.StatusCode,
 					resp.Request.URL),
@@ -135,7 +135,7 @@ func prepareToUploadAsset(a config.Asseter) (string, io.Reader, *http.Response, 
 	if resp.StatusCode != http.StatusOK {
 		return "", nil, nil, &helper.ContextError{
 			Context: "prepareToUploadAsset",
-			Err: fmt.Errorf("error: unable to download asset. sending '%s' request: status code %d %v",
+			Err: fmt.Errorf("unable to download asset. sending '%s' request: status code %d %v",
 				resp.Request.Method,
 				resp.StatusCode,
 				resp.Request.URL),
@@ -180,10 +180,7 @@ func (s *NexusServer) uploadComponentWithType(repoName string, cPath string, con
 		}
 
 		// Create formatted message
-		const msg = "error: unable to upload component %s to repository '%s' at server %s. Reason: %s. Response: %s"
-
-		// Log error
-		log.Errorf(msg, cPath, repoName, s.Host, resp.Status, string(body))
+		const msg = "unable to upload component %s to repository '%s' at server %s. Reason: %s. Response: %s"
 
 		// Return error
 		return fmt.Errorf(msg, cPath, repoName, s.Host, resp.Status, string(body))
