@@ -82,6 +82,7 @@ func (n Nuget) assetDownloadURL() (string, error) {
 		), nil
 	}
 
+	// TODO: remove trailing slash for baseDownloadUrl (if it exists)
 	// Return V3 formatted path
 	return fmt.Sprintf("%s/%s/%s/%s.%s.nupkg",
 		baseDownloadUrl,

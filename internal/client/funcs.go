@@ -25,7 +25,7 @@ func fileNameFromPath(path string) string { // Get last part of url chunk with f
 // compareComponents will compare src to dst and return diff
 func compareComponents(src []*comps.NexusComponent, dst []*comps.NexusComponent) []*comps.NexusComponent {
 	// Make dst hash-map
-	dstNca := make(map[string]struct{})
+	dstNca := make(map[string]struct{}, len(dst))
 	for _, v := range dst {
 		for _, vv := range v.Assets {
 			dstNca[fileNameFromPath(vv.Path)] = struct{}{}
