@@ -3,6 +3,7 @@ package config
 import (
 	log "github.com/sirupsen/logrus"
 	"os"
+	"strings"
 )
 
 type Logger struct {
@@ -18,7 +19,7 @@ func NewLogger() *Logger {
 				DisableQuote:    true,
 				TimestampFormat: LogTimeFormat,
 			},
-			Level: log.InfoLevel,
+			Level: logLevelFromEnv(),
 		},
 	}
 }
@@ -28,3 +29,24 @@ func (l Logger) SetupLogger() {
 	log.SetOutput(l.Logger.Out)
 	log.SetLevel(l.Logger.Level)
 }
+
+// logLevelFromEnv read environment for log level
+func logLevelFromEnv() log.Level {
+	level := os.Getenv(envLogLevel)
+	switch strings.ToLower(level) {
+	case "debug":
+		return log.DebugLevel
+	case "warn":
+		return log.WarnLevel
+	case "info":
+		return log.InfoLevel
+	case "error":
+		return log.ErrorLevel
+	default:
+		return log.InfoLevel
+	}
+}
+
+const (
+	envLogLevel string = "NEXUS_PUSHER_LOG_LEVEL"
+)

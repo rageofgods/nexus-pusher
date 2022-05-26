@@ -68,6 +68,7 @@ func doCompareComponents(s1 *comps.NexusServer,
 	wg.Add(2)
 	go func() {
 		var err error
+		log.Infof("Start analyzing repository '%s' at server '%s'", r1, s1.Host)
 		src, err = s1.GetComponents(ctx, c1, nc1, r1)
 		if err != nil {
 			cancel()
@@ -80,6 +81,7 @@ func doCompareComponents(s1 *comps.NexusServer,
 	}()
 	go func() {
 		var err error
+		log.Infof("Start analyzing repository '%s' at server '%s'", r2, s2.Host)
 		dst, err = s2.GetComponents(ctx, c2, nc2, r2)
 		if err != nil {
 			cancel()
@@ -103,7 +105,7 @@ func doCompareComponents(s1 *comps.NexusServer,
 }
 
 func showFinalMessageForGetComponents(repo string, server string, nc []*comps.NexusComponent, t time.Time) {
-	log.Printf("Analyzing repo '%s' for server '%s' is done. Completed %d assets in %v.",
+	log.Debugf("Analyzing repo '%s' for server '%s' is done. Completed %d assets in %v.",
 		repo,
 		server,
 		len(nc),
@@ -390,7 +392,7 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig, version *comps.Vers
 		}
 
 		// Start server polling to get request results
-		if err := pc.pollComparedResults(body); err != nil {
+		if err := pc.pollComparedResults(body, sc.DstServerConfig.RepoName, sc.DstServerConfig.Server); err != nil {
 			log.Errorf("%v", err)
 		}
 	} else {

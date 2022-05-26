@@ -134,7 +134,7 @@ func (p *pushClient) sendComparedRequest(data *comps.NexusExportComponents, repo
 	req.AddCookie(p.cookie)
 
 	// Send request
-	log.Printf("Sending components diff to %s server...", p.serverAddress)
+	log.Debugf("Sending components diff to %s server...", p.serverAddress)
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("sendComparedRequest: %w", err)
@@ -148,7 +148,7 @@ func (p *pushClient) sendComparedRequest(data *comps.NexusExportComponents, repo
 			Err:     fmt.Errorf("error: %s responded with status: %s", p.serverAddress, resp.Status),
 		}
 	}
-	log.Printf("Sending components diff to %s successfully complete.", p.serverAddress)
+	log.Debugf("Sending components diff to %s successfully complete.", p.serverAddress)
 
 	// Read all body data
 	body, err := ioutil.ReadAll(resp.Body)
@@ -160,14 +160,16 @@ func (p *pushClient) sendComparedRequest(data *comps.NexusExportComponents, repo
 }
 
 // pollComparedResults long-http polling function to get upload results from server
-func (p *pushClient) pollComparedResults(body []byte) error {
+func (p *pushClient) pollComparedResults(body []byte, dstRepo string, dstServer string) error {
 	// Convert body to Message type
 	msg := &server.Message{}
 	if err := json.Unmarshal(body, msg); err != nil {
 		return fmt.Errorf("pollComparedResults: %w", err)
 	}
 
-	log.Printf("Starting server polling for message id %s to get upload results...", msg.ID)
+	log.WithFields(
+		log.Fields{"id": msg.ID},
+	).Infof("Start polling results for destination repo '%s' at server '%s'", dstRepo, dstServer)
 	// Queue http polling
 	requestUrl := fmt.Sprintf("%s%s%s?uuid=%s",
 		p.serverAddress,
@@ -226,16 +228,18 @@ func (p *pushClient) pollComparedResults(body []byte) error {
 
 		// If server respond with 'complete' message stop polling
 		if msg.Complete {
-			log.Printf("Server polling for message id %s is complete with response from server:\n>>>\n%v\n<<<",
-				msg.ID,
+			log.WithFields(
+				log.Fields{"id": msg.ID},
+			).Infof("Polling complete for destinantion repo '%s' at server '%s' with response:\n>>>\n%v\n<<<",
+				dstRepo,
+				dstServer,
 				msg.Response)
 			return nil
 		}
 		// Report server polling status every 30 seconds
 		if x%30 == 0 {
-			log.Printf("Server polling for message id %s in progress... %d seconds passed",
-				msg.ID,
-				x)
+			log.WithFields(
+				log.Fields{"id": msg.ID}).Debugf("Server polling in progress... %d seconds passed", x)
 		}
 		// Try to refresh auth token
 		if err := p.refreshAuth(); err != nil {
@@ -247,7 +251,7 @@ func (p *pushClient) pollComparedResults(body []byte) error {
 	// Show error if we don't get results in time
 	return &helper.ContextError{
 		Context: "pollComparedResults",
-		Err: fmt.Errorf("error: unable to get results from for message id %s in %d seconds",
+		Err: fmt.Errorf("unable to get results from for message id %s in %d seconds",
 			msg.ID,
 			limitTime),
 	}

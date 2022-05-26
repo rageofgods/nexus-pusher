@@ -20,7 +20,7 @@ func (c *CustomRetryLogger) Error(msg string, keysAndValues ...interface{}) {
 		case *url.URL:
 		}
 	}
-	c.Println(msg, logMessage)
+	c.Warnln(msg, logMessage)
 }
 
 // Info mock
