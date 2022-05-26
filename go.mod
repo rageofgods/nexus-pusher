@@ -11,15 +11,15 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/pflag v1.0.5
-	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
+	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
+	gopkg.in/yaml.v3 v3.0.0
 )
 
 require (
-	github.com/hashicorp/go-cleanhttp v0.5.1 // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
-	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
-	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
-	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/net v0.0.0-20220524220425-1d687d428aca // indirect
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	golang.org/x/text v0.3.7 // indirect
 )
