@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"nexus-pusher/pkg/helper"
-	"strings"
 )
 
 func (u *webService) searchById(id uuid.UUID) (*Message, error) {
@@ -29,14 +28,15 @@ func (u *webService) genMessageWithId() (*Message, error) {
 	}
 	// Save to data
 	m := &Message{
-		ID: id,
+		ID:       id,
+		Response: nil,
 	}
 	u.messages[id] = m
 	return m, nil
 }
 
 // completeById set complete flag to message which returned to client
-func (u *webService) completeById(id uuid.UUID, textResult ...string) error {
+func (u *webService) completeById(id uuid.UUID, textResult []string) error {
 	// Search in map
 	msg, err := u.searchById(id)
 	if err != nil {
@@ -44,7 +44,7 @@ func (u *webService) completeById(id uuid.UUID, textResult ...string) error {
 	}
 	// Set complete flag
 	msg.Complete = true
-	msg.Response = strings.Join(textResult, "\n")
+	msg.Response = textResult
 
 	return nil
 }

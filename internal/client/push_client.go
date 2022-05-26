@@ -230,10 +230,13 @@ func (p *pushClient) pollComparedResults(body []byte, dstRepo string, dstServer 
 		if msg.Complete {
 			log.WithFields(
 				log.Fields{"id": msg.ID},
-			).Infof("Polling complete for destinantion repo '%s' at server '%s' with response:\n>>>\n%v\n<<<",
-				dstRepo,
-				dstServer,
-				msg.Response)
+			).Infof("Polling complete for destinantion repo '%s' at server '%s'", dstRepo, dstServer)
+			for _, m := range msg.Response {
+				// log all response errors
+				log.WithFields(
+					log.Fields{"id": msg.ID},
+				).Warnf("%s", m)
+			}
 			return nil
 		}
 		// Report server polling status every 30 seconds

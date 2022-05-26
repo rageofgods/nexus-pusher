@@ -60,6 +60,7 @@ func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 	if err := r.Body.Close(); err != nil {
 		log.Errorf("%v", err)
 	}
+
 	// Try to decode body to NexusExportComponents struct
 	if err := json.Unmarshal(body, nec); err != nil {
 		responseError(w, err, "unable to decode request data")
@@ -71,7 +72,7 @@ func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 		responseError(w, err, "error")
 		return
 	}
-	msg.Response = "Successfully uploaded"
+
 	if err := json.NewEncoder(w).Encode(msg); err != nil {
 		responseError(w, err, "error message encode")
 		return
@@ -90,7 +91,7 @@ func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 			if v.Err != nil {
 				errorsCounter++
 				errorsText = append(errorsText,
-					fmt.Sprintf("request error: %s\n for component '%s'", v.Err.Error(), v.ComponentPath))
+					fmt.Sprintf("Asset processing error: %s (asset: %s)", v.Err.Error(), v.ComponentPath))
 			}
 		}
 		if errorsCounter != 0 {
@@ -99,14 +100,13 @@ func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 				log.Warnln(v)
 			}
 			// Set complete flag to current client request
-			if err := u.completeById(msg.ID, errorsText...); err != nil {
+			if err := u.completeById(msg.ID, errorsText); err != nil {
 				log.Errorf("%v", err)
 			}
 		} else {
 			log.Printf("Upload request successfully complete.")
 			// Set complete flag to current client request
-			if err := u.completeById(msg.ID, fmt.Sprintf("All assets successfully uploaded for repository '%s'",
-				repo)); err != nil {
+			if err := u.completeById(msg.ID, nil); err != nil {
 				log.Errorf("%v", err)
 			}
 		}

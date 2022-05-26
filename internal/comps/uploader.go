@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"nexus-pusher/internal/config"
 	"nexus-pusher/pkg/helper"
+	"time"
 )
 
 func (s *NexusServer) uploadComponent(format config.ComponentType,
@@ -164,11 +165,27 @@ func (s *NexusServer) uploadComponentWithType(repoName string, cPath string, con
 	// Start uploading component to remote nexus
 	// Set 15 min timeout to handle large files
 	// We can't use retryable client here because
-	// of direct stream data incompatibility
-	resp, err := HttpClient(900).Do(req)
-	if err != nil {
-		return fmt.Errorf("uploadComponentWithType: %w", err)
+	// of direct stream data incompatibility so
+	// let's implement simple retry behaviour
+	var resp *http.Response
+	for i := 1; i <= 4; {
+		resp, err = HttpClient(900).Do(req)
+		if err != nil {
+			if i == 4 {
+				// if it's last iteration, return error
+				return fmt.Errorf("uploadComponentWithType: %w", err)
+			} else {
+				// if we got error, log it and continue attempts
+				log.WithFields(log.Fields{"retry": i}).Errorf("uploadComponentWithType: %v", err)
+				// Sleep a little to relax error
+				time.Sleep(100 * time.Millisecond)
+			}
+			i++
+		} else {
+			break
+		}
 	}
+
 	defer resp.Body.Close()
 
 	// Check server response

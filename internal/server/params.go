@@ -20,7 +20,7 @@ type Route struct {
 
 type Message struct {
 	ID       uuid.UUID `json:"id"`
-	Response string    `json:"response"`
+	Response []string  `json:"response"`
 	Complete bool      `json:"complete"`
 }
 

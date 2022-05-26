@@ -35,7 +35,7 @@ func NewRouter(cfg *config.Server, v *comps.Version) *mux.Router {
 			// Skip authentication for 'status' requests
 			handler = route.HandlerFunc
 		case "version":
-			// Skip authentication for 'status' requests
+			// Skip authentication for 'version' requests
 			handler = route.HandlerFunc
 		default:
 			// Default to auth the request
