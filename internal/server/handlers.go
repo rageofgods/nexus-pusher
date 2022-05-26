@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"nexus-pusher/internal/comps"
+	"strings"
 )
 
 func stub(w http.ResponseWriter, r *http.Request) {
@@ -45,9 +46,10 @@ func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 		responseError(w, fmt.Errorf("only letters, digits, underscores(_),"+
 			" hyphens(-), and dots(.) are allowed in repository name. but got: '%s'", urlParam), "error")
 		return
-	} else {
-		repo = urlParam
 	}
+	// Sanitize user input for repo name
+	repo = strings.Replace(urlParam, "\n", "", -1)
+	repo = strings.Replace(repo, "\r", "", -1)
 
 	// Read request body
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, maxBodySize))
