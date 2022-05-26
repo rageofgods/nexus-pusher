@@ -44,7 +44,6 @@ func (n Nuget) DownloadAsset() (*http.Response, error) {
 
 	// Send request
 	return HttpRetryClient(180).Do(req) // Set 3 min timeout to handle files
-
 }
 
 func (n Nuget) PrepareAssetToUpload(fileReader io.Reader) (string, io.Reader) {

@@ -37,11 +37,18 @@ func (u *webService) version(w http.ResponseWriter, _ *http.Request) {
 func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 	nec := &comps.NexusExportComponents{}
 	// Get repository parameter from URL
-	repo := r.URL.Query().Get("repository")
-	if repo == "" {
-		responseError(w, fmt.Errorf("parameter 'repository' is required"), "error")
+	urlParam := r.URL.Query().Get("repository")
+
+	var repo string
+	// Check for valid repository name in user request following nexus supported pattern
+	if !isValidNexusRepoName(urlParam) {
+		responseError(w, fmt.Errorf("only letters, digits, underscores(_),"+
+			" hyphens(-), and dots(.) are allowed in repository name. but got: '%s'", urlParam), "error")
 		return
+	} else {
+		repo = urlParam
 	}
+
 	// Read request body
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, maxBodySize))
 	if err != nil {
