@@ -109,10 +109,13 @@ client:
 
 ## Help
 
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
-```
+### Environment variables
+* **NEXUS_PUSHER_LOG_LEVEL** - set log level at startup.\
+Supported values:
+  * debug
+  * error
+  * info (default)
+  * warn
 
 ## Authors
 
