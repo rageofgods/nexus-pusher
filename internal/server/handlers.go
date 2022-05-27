@@ -91,7 +91,7 @@ func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 			if v.Err != nil {
 				errorsCounter++
 				errorsText = append(errorsText,
-					fmt.Sprintf("Asset processing error: %s (asset: %s)", v.Err.Error(), v.ComponentPath))
+					fmt.Sprintf("Asset processing error: %s asset=%s", v.Err.Error(), v.ComponentPath))
 			}
 		}
 		if errorsCounter != 0 {

@@ -230,7 +230,8 @@ func (p *pushClient) pollComparedResults(body []byte, dstRepo string, dstServer 
 		if msg.Complete {
 			log.WithFields(
 				log.Fields{"id": msg.ID},
-			).Infof("Polling complete for destinantion repo '%s' at server '%s'", dstRepo, dstServer)
+			).Infof("Polling complete for destinantion repo '%s' at server '%s' with %d messages",
+				dstRepo, dstServer, len(msg.Response))
 			for _, m := range msg.Response {
 				// log all response errors
 				log.WithFields(

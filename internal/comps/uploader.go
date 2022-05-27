@@ -20,7 +20,7 @@ func (s *NexusServer) uploadComponent(format config.ComponentType,
 		if len(maven2.Component.Assets) == 0 {
 			return &helper.ContextError{
 				Context: "uploadComponent",
-				Err:     fmt.Errorf("error: zero valid maven artifacts was found after assets filter"),
+				Err:     fmt.Errorf("zero valid maven artifacts was found after assets filter"),
 			}
 		}
 
