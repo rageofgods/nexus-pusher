@@ -62,9 +62,9 @@ func (s *NexusServer) GetComponents(
 			len(ncs))
 	}
 
-	//if len(ncs) > 100 {
+	// if len(ncs) > 100 {
 	//	return ncs, nil
-	//}
+	// }
 
 	// Iterating over all API pages
 	if nc.ContinuationToken != "" {

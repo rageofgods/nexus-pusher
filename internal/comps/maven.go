@@ -92,16 +92,16 @@ func (m *Maven2) PrepareComponentToUpload(responses []*http.Response) (string, i
 	readers = append(readers, strings.NewReader(pomGenerationPart))
 
 	// Add required fields if we don't have pom in assets list
-	if !m.pomInComponent() {
-		artifactIdPart := fmt.Sprintf(fieldFormat, boundary, fieldArtifactID, m.Component.Name)
-		groupIdPart := fmt.Sprintf(fieldFormat, boundary, fieldGroupIdID, m.Component.Group)
-		versionPart := fmt.Sprintf(fieldFormat, boundary, fieldVersion, m.Component.Version)
+	//if !m.pomInComponent() {
+	artifactIdPart := fmt.Sprintf(fieldFormat, boundary, fieldArtifactID, m.Component.Name)
+	groupIdPart := fmt.Sprintf(fieldFormat, boundary, fieldGroupIdID, m.Component.Group)
+	versionPart := fmt.Sprintf(fieldFormat, boundary, fieldVersion, m.Component.Version)
 
-		readers = append(readers,
-			strings.NewReader(artifactIdPart),
-			strings.NewReader(groupIdPart),
-			strings.NewReader(versionPart))
-	}
+	readers = append(readers,
+		strings.NewReader(artifactIdPart),
+		strings.NewReader(groupIdPart),
+		strings.NewReader(versionPart))
+	//}
 
 	// Iterate over all assets and form resulting body
 	for i, resp := range responses {
