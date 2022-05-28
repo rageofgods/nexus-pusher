@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+export CGO_ENABLED=0
 TESTS=$(go test -v -covermode=count -coverprofile=count.txt ./...)
 echo "$TESTS"
 
