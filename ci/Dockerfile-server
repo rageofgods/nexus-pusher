@@ -15,7 +15,8 @@ COPY . ./
 
 RUN chmod +x ./tests.sh && \
     ./tests.sh && \
-    make docker_build #&& \
+    make docker_build  \
+    #&& \
     #upx --best --lzma nexus-pusher
 
 #########################
