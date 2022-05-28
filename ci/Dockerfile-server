@@ -5,27 +5,32 @@ FROM golang:1.17-buster as builder
 
 WORKDIR /app
 
+RUN apk add --no-cache upx=3.96-r1 && \
+    rm -rf /var/cache/apk/*
+
 COPY go.* ./
 RUN go mod download
 
 COPY . ./
 
-RUN chmod +x ./tests.sh
-RUN ./tests.sh
-
-RUN make docker_build
+RUN chmod +x ./tests.sh && \
+    ./tests.sh && \
+    make docker_build && \
+    upx --best --lzma nexus-pusher
 
 #########################
 # Get certs and TZ data #
 #########################
-FROM alpine:latest as certer
-RUN apk update && apk add ca-certificates tzdata
+FROM alpine:3.16 as certer
+RUN apk --no-cache add ca-certificates tzdata && \
+    rm -rf /var/cache/apk/*
 
 ####################
 # Configure server #
 ####################
-FROM alpine:latest as configurer
-RUN apk update && apk add yq
+FROM alpine:3.16 as configurer
+RUN  apk --no-cache add yq=4.25.1-r1 && \
+     rm -rf /var/cache/apk/*
 
 WORKDIR /app
 COPY ci/server-config.yaml ./
