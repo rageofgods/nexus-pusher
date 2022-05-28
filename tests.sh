@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 TESTS=$(go test -v -covermode=count -coverprofile=count.txt ./...)
 echo "$TESTS"
