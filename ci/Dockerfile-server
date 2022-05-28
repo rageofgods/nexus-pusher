@@ -5,7 +5,7 @@ FROM golang:1.17.10-alpine3.16 as builder
 
 WORKDIR /app
 
-RUN apk add --no-cache upx=3.96-r1 make=4.3-r0 bash=5.1.16-r2 && \
+RUN apk add --no-cache upx=3.96-r1 make=4.3-r0 && \
     rm -rf /var/cache/apk/*
 
 COPY go.* ./
@@ -13,11 +13,9 @@ RUN go mod download
 
 COPY . ./
 
-RUN chmod +x ./tests.sh && ./tests.sh
-
-RUN make docker_build
-
-RUN upx --best --lzma /app/nexus-pusher
+RUN chmod +x ./tests.sh && ./tests.sh && \
+    make docker_build && \
+    upx --best --lzma /app/nexus-pusher
 
 #########################
 # Get certs and TZ data #

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 export CGO_ENABLED=0
 TESTS=$(go test -v -covermode=count -coverprofile=count.txt ./...)
