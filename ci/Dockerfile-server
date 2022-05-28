@@ -15,8 +15,9 @@ COPY . ./
 
 RUN chmod +x ./tests.sh && \
     ./tests.sh && \
-    make docker_build && \
-    upx --best --lzma /app/nexus-pusher
+    make docker_build \
+
+RUN upx --best --lzma /app/nexus-pusher
 
 #########################
 # Get certs and TZ data #
