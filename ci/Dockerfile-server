@@ -5,7 +5,7 @@ FROM golang:1.17.10-alpine3.16 as builder
 
 WORKDIR /app
 
-RUN apk add --no-cache upx=3.96-r1 && \
+RUN apk add --no-cache upx=3.96-r1 make=4.3-r0 && \
     rm -rf /var/cache/apk/*
 
 COPY go.* ./
