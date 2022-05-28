@@ -13,9 +13,9 @@ RUN go mod download
 
 COPY . ./
 
-RUN chmod +x ./tests.sh && \
-    ./tests.sh && \
-    make docker_build
+#RUN chmod +x ./tests.sh && ./tests.sh
+
+RUN make docker_build
 
 RUN upx --best --lzma /app/nexus-pusher
 
