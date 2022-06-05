@@ -238,7 +238,7 @@ func (p *pushClient) pollComparedResults(body []byte, dstRepo string, dstServer 
 				dstRepo, dstServer)
 
 			// Update metric for errors count
-			p.metrics.SyncErrorsCountByLabels(dstServer, dstRepo).Set(float64(len(msg.Response)))
+			p.metrics.SyncErrorsCountByLabels(dstServer, dstRepo, msg.ID.String()).Set(float64(len(msg.Response)))
 
 			// log all response errors
 			for _, m := range msg.Response {

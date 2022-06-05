@@ -22,7 +22,7 @@ type staticMetrics struct {
 }
 
 type syncConfigMetrics struct {
-	errorsCount *prometheus.GaugeVec
+	lastErrorsCount *prometheus.GaugeVec
 }
 
 func NewMetrics(registry *prometheus.Registry) *nexusClientMetrics {
@@ -45,12 +45,12 @@ func NewMetrics(registry *prometheus.Registry) *nexusClientMetrics {
 			}, []string{"version", "build"}),
 		},
 		&syncConfigMetrics{
-			errorsCount: promauto.With(registry).NewGaugeVec(prometheus.GaugeOpts{
+			lastErrorsCount: promauto.With(registry).NewGaugeVec(prometheus.GaugeOpts{
 				Namespace: clientName,
-				Subsystem: "sync",
-				Name:      "errors_total",
+				Subsystem: "last",
+				Name:      "sync_errors_total",
 				Help:      "Represents errors count for sync config",
-			}, []string{labelDestinationServer, labelDestinationRepo}),
+			}, []string{labelDestinationServer, labelDestinationRepo, labelId}),
 		},
 	}
 }
@@ -60,10 +60,11 @@ func (ncm nexusClientMetrics) ClientInfo() *prometheus.GaugeVec {
 	return ncm.staticMetrics.clientInfo
 }
 
-func (ncm nexusClientMetrics) SyncErrorsCountByLabels(server string, repo string) prometheus.Gauge {
-	g, err := ncm.dynamicMetrics.errorsCount.GetMetricWith(prometheus.Labels{
+func (ncm nexusClientMetrics) SyncErrorsCountByLabels(server string, repo string, id string) prometheus.Gauge {
+	g, err := ncm.dynamicMetrics.lastErrorsCount.GetMetricWith(prometheus.Labels{
 		labelDestinationServer: server,
 		labelDestinationRepo:   repo,
+		labelId:                id,
 	})
 	if err != nil {
 		log.Errorf("unable to set dynamic metric for destination repo %s: %v", repo, err)
@@ -75,4 +76,5 @@ func (ncm nexusClientMetrics) SyncErrorsCountByLabels(server string, repo string
 const (
 	labelDestinationServer = "destination_server"
 	labelDestinationRepo   = "destination_repo"
+	labelId                = "id"
 )

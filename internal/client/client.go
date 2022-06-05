@@ -424,8 +424,6 @@ func (nc client) doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 			sc.SrcServerConfig.Server,
 			sc.DstServerConfig.RepoName,
 			sc.DstServerConfig.Server)
-		// Update metric for errors count
-		nc.metrics.SyncErrorsCountByLabels(sc.DstServerConfig.Server, sc.DstServerConfig.RepoName).Set(0)
 	}
 }
 
