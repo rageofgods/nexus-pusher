@@ -3,14 +3,14 @@ package server
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"nexus-pusher/pkg/helper"
+	"nexus-pusher/pkg/utils"
 )
 
 func (u *webService) searchById(id uuid.UUID) (*Message, error) {
 	if msg, ok := u.messages[id]; ok {
 		return msg, nil
 	}
-	return nil, &helper.ContextError{
+	return nil, &utils.ContextError{
 		Context: "searchById",
 		Err:     fmt.Errorf("id %v not found", id),
 	}

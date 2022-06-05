@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"nexus-pusher/pkg/helper"
+	"nexus-pusher/pkg/utils"
 	"path"
 	"strings"
 )
@@ -127,7 +127,7 @@ func (n Nuget) baseUrlV3() (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", &helper.ContextError{
+		return "", &utils.ContextError{
 			Context: "baseUrlV3",
 			Err: fmt.Errorf("sending '%s' request: status code %d %v",
 				resp.Request.Method,
@@ -160,7 +160,7 @@ func (n Nuget) baseUrlV3() (string, error) {
 		}
 	}
 
-	return "", &helper.ContextError{
+	return "", &utils.ContextError{
 		Context: "baseUrlV3",
 		Err: fmt.Errorf("unable to find base download path for provided url '%s' in nuget index.json response",
 			n.Server),

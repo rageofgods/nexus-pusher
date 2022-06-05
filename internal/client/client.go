@@ -11,11 +11,21 @@ import (
 	"net/http"
 	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
-	"nexus-pusher/pkg/helper"
+	"nexus-pusher/pkg/utils"
 	"strings"
 	"sync"
 	"time"
 )
+
+type client struct {
+	config  *config.Client
+	metrics *nexusClientMetrics
+	version *comps.Version
+}
+
+func NewClient(version *comps.Version, config *config.Client, metrics *nexusClientMetrics) *client {
+	return &client{config: config, metrics: metrics, version: version}
+}
 
 func fileNameFromPath(path string) string { // Get last part of url chunk with filename information
 	cmpPathSplit := strings.Split(path, "/")
@@ -95,7 +105,7 @@ func doCompareComponents(s1 *comps.NexusServer,
 	wg.Wait()
 	// Check for errors in requests
 	if isError {
-		return nil, &helper.ContextError{
+		return nil, &utils.ContextError{
 			Context: "doCompareComponents",
 			Err:     fmt.Errorf("unable to compare repositories"),
 		}
@@ -113,25 +123,39 @@ func showFinalMessageForGetComponents(repo string, server string, nc []*comps.Ne
 }
 
 // RunNexusPusher client entry point
-func RunNexusPusher(c *config.Client, version *comps.Version) {
+func (nc client) RunNexusPusher() {
+	// Check nexus-pusher server status
+	if err := nc.doCheckServerStatus(); err != nil {
+		log.Errorf("server status check failed: %v", err)
+		return
+	}
+
+	// Check server version
+	if err := nc.doCheckServerVersion(); err != nil {
+		log.Errorf("%v", err)
+		return
+	}
+
 	wg := &sync.WaitGroup{}
-	for _, v := range c.SyncConfigs {
+	for _, v := range nc.config.SyncConfigs {
 		wg.Add(1)
-		syncConfig := v
-		go func() { doSyncConfigs(c, syncConfig, version); wg.Done() }()
+		go func(c *config.Client, syncConfig *config.SyncConfig) {
+			doSyncConfigs(c, syncConfig)
+			wg.Done()
+		}(nc.config, v)
 	}
 	wg.Wait()
 }
 
 // ScheduleRunNexusPusher wrapper around RunNexusPusher to schedule syncs
-func ScheduleRunNexusPusher(c *config.Client, version *comps.Version) error {
+func (nc client) ScheduleRunNexusPusher(interval interface{}) error {
 	loc, err := time.LoadLocation(config.TimeZone)
 	if err != nil {
 		return fmt.Errorf("ScheduleRunNexusPusher: %w", err)
 	}
 
 	s := gocron.NewScheduler(loc)
-	j, err := s.Every(c.Daemon.SyncEveryMinutes).Minute().Do(RunNexusPusher, c, version)
+	j, err := s.Every(interval).Minute().Do(nc.RunNexusPusher)
 	if err != nil {
 		return fmt.Errorf("can't schedule sync. job: %v: error: %w", j, err)
 	}
@@ -140,9 +164,9 @@ func ScheduleRunNexusPusher(c *config.Client, version *comps.Version) error {
 	return nil
 }
 
-func doCheckServerStatus(server string) error {
+func (nc client) doCheckServerStatus() error {
 	// Create URL for status checking
-	srvUrl := fmt.Sprintf("%s%s%s", server, config.URIBase, config.URIStatus)
+	srvUrl := fmt.Sprintf("%s%s%s", nc.config.Server, config.URIBase, config.URIStatus)
 	// Define client
 	c := comps.HttpRetryClient()
 
@@ -158,17 +182,24 @@ func doCheckServerStatus(server string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return &helper.ContextError{
+		// Export server status
+		nc.metrics.serverStatus.Set(0)
+
+		return &utils.ContextError{
 			Context: "doCheckServerStatus",
 			Err:     fmt.Errorf("bad server status returned. server responded with: %s", resp.Status),
 		}
 	}
+
+	// Export server status
+	nc.metrics.serverStatus.Set(1)
+
 	return nil
 }
 
-func doCheckServerVersion(server string, clientVersion *comps.Version) error {
+func (nc client) doCheckServerVersion() error {
 	// Create URL for status checking
-	srvUrl := fmt.Sprintf("%s%s%s", server, config.URIBase, config.URIVersion)
+	srvUrl := fmt.Sprintf("%s%s%s", nc.config.Server, config.URIBase, config.URIVersion)
 	// Define client
 	client := comps.HttpRetryClient()
 	// Create request
@@ -191,7 +222,7 @@ func doCheckServerVersion(server string, clientVersion *comps.Version) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return &helper.ContextError{
+		return &utils.ContextError{
 			Context: "doCheckServerVersion",
 			Err:     fmt.Errorf("bad server status returned. server responded with: %s", resp.Status),
 		}
@@ -200,17 +231,20 @@ func doCheckServerVersion(server string, clientVersion *comps.Version) error {
 	// Try to decode body to NexusExportComponents struct
 	serverVersion := &comps.Version{}
 	if err := json.Unmarshal(body, serverVersion); err != nil {
-		return &helper.ContextError{
+		return &utils.ContextError{
 			Context: "doCheckServerVersion",
 			Err:     fmt.Errorf("unable to validate server version: %w", err),
 		}
 	}
 
-	if clientVersion.Version != serverVersion.Version {
-		return &helper.ContextError{
+	// Export server version and build info
+	nc.metrics.serverInfo.WithLabelValues(serverVersion.Version, serverVersion.Build).Set(1)
+
+	if nc.version.Version != serverVersion.Version {
+		return &utils.ContextError{
 			Context: "doCheckServerVersion",
 			Err: fmt.Errorf("client version: '%s' is differ from server version: '%s'. please update",
-				clientVersion.Version, serverVersion.Version),
+				nc.version.Version, serverVersion.Version),
 		}
 	}
 
@@ -257,7 +291,7 @@ func doCheckRepoTypes(sc *config.SyncConfig) error {
 			if strings.EqualFold(v.Name, sc.SrcServerConfig.RepoName) {
 				// Check for correct repo format
 				if !strings.EqualFold(v.Format, sc.Format) {
-					return &helper.ContextError{
+					return &utils.ContextError{
 						Context: "doCheckRepoTypes",
 						Err: fmt.Errorf("wrong repository '%s' format type for server %s. want: %s, get: %s",
 							sc.SrcServerConfig.RepoName,
@@ -271,7 +305,7 @@ func doCheckRepoTypes(sc *config.SyncConfig) error {
 			}
 		}
 
-		return &helper.ContextError{
+		return &utils.ContextError{
 			Context: "doCheckRepoTypes",
 			Err: fmt.Errorf("repo with name '%s' not found on server %s",
 				sc.SrcServerConfig.RepoName, sc.SrcServerConfig.Server),
@@ -294,7 +328,7 @@ func doCheckRepoTypes(sc *config.SyncConfig) error {
 			if !strings.EqualFold(v.Name, sc.DstServerConfig.RepoName) {
 				// Check for correct repo format
 				if strings.EqualFold(v.Format, sc.Format) {
-					return &helper.ContextError{
+					return &utils.ContextError{
 						Context: "doCheckRepoTypes",
 						Err: fmt.Errorf("wrong repository '%s' format type for server %s. want: %s, get: %s",
 							sc.DstServerConfig.RepoName,
@@ -319,7 +353,7 @@ func doCheckRepoTypes(sc *config.SyncConfig) error {
 	return nil
 }
 
-func doSyncConfigs(cc *config.Client, sc *config.SyncConfig, version *comps.Version) {
+func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 	// Define two groups of resources to compare remote repos
 	s1 := comps.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
 		sc.SrcServerConfig.Server, config.URIBase, config.URIComponents)
@@ -330,21 +364,9 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig, version *comps.Vers
 	var nc1 []*comps.NexusComponent
 	var nc2 []*comps.NexusComponent
 
-	// Check server version
-	if err := doCheckServerVersion(cc.Server, version); err != nil {
-		log.Errorf("%v", err)
-		return
-	}
-
 	// Check repos type
 	if err := doCheckRepoTypes(sc); err != nil {
 		log.Errorf("repository validation check failed: %v", err)
-		return
-	}
-
-	// Check nexus-pusher server status
-	if err := doCheckServerStatus(cc.Server); err != nil {
-		log.Errorf("server status check failed: %v", err)
 		return
 	}
 
@@ -415,7 +437,7 @@ func checkSupportedRepoTypes(repoType config.ComponentType) error {
 	case config.NUGET:
 		return nil
 	default:
-		return &helper.ContextError{
+		return &utils.ContextError{
 			Context: "checkSupportedRepoTypes",
 			Err:     fmt.Errorf("unsuported component type %s", repoType),
 		}

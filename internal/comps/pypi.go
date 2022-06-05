@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"nexus-pusher/pkg/helper"
+	"nexus-pusher/pkg/utils"
 	"strings"
 )
 
@@ -81,7 +81,7 @@ func (p Pypi) assetDownloadURL() (string, error) {
 
 	// Check response for error
 	if resp.StatusCode != http.StatusOK {
-		return "", &helper.ContextError{
+		return "", &utils.ContextError{
 			Context: "assetDownloadURL",
 			Err: fmt.Errorf("error: unable to get version for pypi asset. sending '%s' request: status code %d %v",
 				resp.Request.Method,
@@ -112,33 +112,33 @@ func (p Pypi) assetDownloadURL() (string, error) {
 						if url, ok := value["url"].(string); ok { // Get URL string
 							return url, nil // Return found URL
 						} else {
-							return "", &helper.ContextError{
+							return "", &utils.ContextError{
 								Context: "assetDownloadURL",
 								Err:     fmt.Errorf("%s want: 'string', get: %T", errorText, value["url"]),
 							}
 						}
 					}
 				} else {
-					return "", &helper.ContextError{
+					return "", &utils.ContextError{
 						Context: "assetDownloadURL",
 						Err:     fmt.Errorf("%s want: 'string', get: %T", errorText, value["filename"]),
 					}
 				}
 			} else {
-				return "", &helper.ContextError{
+				return "", &utils.ContextError{
 					Context: "assetDownloadURL",
 					Err:     fmt.Errorf("%s want: 'map[string]interface{}', get: %T", errorText, v),
 				}
 			}
 		}
 	} else {
-		return "", &helper.ContextError{
+		return "", &utils.ContextError{
 			Context: "assetDownloadURL",
 			Err:     fmt.Errorf("%s want: '[]interface{}', get: %T", errorText, result["urls"]),
 		}
 	}
 
-	return "", &helper.ContextError{
+	return "", &utils.ContextError{
 		Context: "assetDownloadURL",
 		Err: fmt.Errorf("error: unable to find component: %s version: %s at: %s",
 			p.Name, p.Version, p.Server),

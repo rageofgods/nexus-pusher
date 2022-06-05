@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"nexus-pusher/internal/config"
-	"nexus-pusher/pkg/helper"
+	"nexus-pusher/pkg/utils"
 )
 
 func (s *NexusServer) GetComponents(
@@ -20,7 +20,7 @@ func (s *NexusServer) GetComponents(
 	contToken ...string) ([]*NexusComponent, error) {
 	select {
 	case <-ctx.Done():
-		return nil, &helper.ContextError{
+		return nil, &utils.ContextError{
 			Context: "GetComponents",
 			Err: fmt.Errorf("error: canceling processing repo '%s' because of upstream error",
 				repoName),
@@ -147,7 +147,7 @@ func (s *NexusServer) SendRequest(srvUrl string, method string, c *http.Client, 
 		return nil, fmt.Errorf("SendRequest: %w", err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, &helper.ContextError{
+		return nil, &utils.ContextError{
 			Context: "SendRequest",
 			Err: fmt.Errorf("error: sending '%s' request: status code %d %v",
 				resp.Request.Method,

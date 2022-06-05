@@ -79,6 +79,10 @@ client:
       dstServer: "https://nexus2.some"
       dstServerUser: "user"
       dstServerPass: "pass"
+    metrics:
+      enabled: true
+      endpointPort: 9090
+      endpointUri: "/metrics"
     syncConfigs:
         - srcServerConfig:
             # Global parameters (from 'syncGlobalAuth') will be used here for server config
@@ -101,6 +105,9 @@ client:
 * **daemon.syncEveryMinutes** - time in minutes to schedule re-sync
 * **server** - address of nexus-pusher server
 * **syncGlobalAuth** - global default parameters for all syncConfigs elements
+* **metrics.enabled** - start exporting client metrics in prometheus format
+* **metrics.endpointPort** - port where metrics will be exposed (Default: 9090)
+* **metrics.endpointUri** - uri path for metrics exporter (Default: /metrics)
 * **serverAuth.user** - username for nexus-pusher server auth
 * **serverAuth.pass** - password for nexus-pusher server auth
 * **syncConfigs** - list of 'src' and 'dst' pairs of nexus servers to be synced

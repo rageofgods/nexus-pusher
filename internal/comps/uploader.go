@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"nexus-pusher/internal/config"
-	"nexus-pusher/pkg/helper"
+	"nexus-pusher/pkg/utils"
 	"time"
 )
 
@@ -18,7 +18,7 @@ func (s *NexusServer) uploadComponent(format config.ComponentType,
 		maven2 := NewMaven2(component.ArtifactsSource, component)
 		maven2.filterExtensions()
 		if len(maven2.Component.Assets) == 0 {
-			return &helper.ContextError{
+			return &utils.ContextError{
 				Context: "uploadComponent",
 				Err:     fmt.Errorf("zero valid maven artifacts was found after assets filter"),
 			}
@@ -108,7 +108,7 @@ func prepareToUploadComponent(c config.Componenter) (string, io.Reader, []*http.
 
 	for _, resp := range responses {
 		if resp.StatusCode != http.StatusOK {
-			return "", nil, nil, &helper.ContextError{
+			return "", nil, nil, &utils.ContextError{
 				Context: "prepareToUploadComponent",
 				Err: fmt.Errorf("unable to download asset. sending '%s' request: status code %d %v",
 					resp.Request.Method,
@@ -134,7 +134,7 @@ func prepareToUploadAsset(a config.Asseter) (string, io.Reader, *http.Response, 
 
 	// Check http response ok status
 	if resp.StatusCode != http.StatusOK {
-		return "", nil, nil, &helper.ContextError{
+		return "", nil, nil, &utils.ContextError{
 			Context: "prepareToUploadAsset",
 			Err: fmt.Errorf("unable to download asset. sending '%s' request: status code %d %v",
 				resp.Request.Method,

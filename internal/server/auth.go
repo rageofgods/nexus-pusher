@@ -9,7 +9,7 @@ import (
 	"math/big"
 	"net/http"
 	"nexus-pusher/internal/config"
-	"nexus-pusher/pkg/helper"
+	"nexus-pusher/pkg/utils"
 	"time"
 )
 
@@ -183,7 +183,7 @@ func (u *webService) authWithCookie(w http.ResponseWriter, r *http.Request) (*Cl
 	if !tkn.Valid {
 		log.Errorf("invalid JWT token provided")
 		w.WriteHeader(http.StatusUnauthorized)
-		return nil, &helper.ContextError{
+		return nil, &utils.ContextError{
 			Context: "authWithCookie",
 			Err:     fmt.Errorf("%v", "invalid JWT token provided"),
 		}

@@ -8,6 +8,7 @@ import (
 	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
 	"nexus-pusher/internal/server"
+	"nexus-pusher/pkg/metrics"
 	"os"
 )
 
@@ -70,12 +71,31 @@ func main() {
 		}
 
 	} else if cfg.Client != nil { // Run in Client mode
+		// Create new prometheus registry
+		r := metrics.NewRegister(cfg.Client.Metrics.EndpointURI, cfg.Client.Metrics.EndpointPort)
+
+		// Start serving metrics endpoint
+		if cfg.Client.Metrics.Enabled {
+			r.StartServing()
+		}
+
+		// Create client metrics with prometheus exporter
+		clientMetrics := client.NewMetrics(r.Registry())
+
+		// Export client version and build info
+		clientMetrics.ClientInfo().WithLabelValues(version.Version, version.Build).Set(1)
+
+		// Create new nexus-pusher client
+		c := client.NewClient(version, cfg.Client, clientMetrics)
+
 		if cfg.Client.Daemon.Enabled {
+			syncMinutes := cfg.Client.Daemon.SyncEveryMinutes
 			log.WithFields(log.Fields{
-				"sync(minutes)": cfg.Client.Daemon.SyncEveryMinutes,
+				"sync_minutes": syncMinutes,
 			}).Info("Running client in 'daemon' mode.")
 
-			if err := client.ScheduleRunNexusPusher(cfg.Client, version); err != nil {
+			// Run client in daemon mode (schedule)
+			if err := c.ScheduleRunNexusPusher(syncMinutes); err != nil {
 				log.Printf("%v", err)
 				os.Exit(1)
 			}
@@ -84,7 +104,8 @@ func main() {
 				"sync(minutes)": cfg.Client.Daemon.SyncEveryMinutes,
 			}).Info("Running client in 'ad hoc' mode. Will do sync only once.")
 
-			client.RunNexusPusher(cfg.Client, version)
+			// Run client in ad-hoc mode
+			c.RunNexusPusher()
 		}
 	}
 }

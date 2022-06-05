@@ -10,7 +10,7 @@ import (
 	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
 	"nexus-pusher/internal/server"
-	"nexus-pusher/pkg/helper"
+	"nexus-pusher/pkg/utils"
 	"time"
 )
 
@@ -44,7 +44,7 @@ func (p *pushClient) authorize() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return &helper.ContextError{
+		return &utils.ContextError{
 			Context: "authorize",
 			Err:     fmt.Errorf("%s responded with status: %d", p.serverAddress, resp.StatusCode),
 		}
@@ -58,7 +58,7 @@ func (p *pushClient) authorize() error {
 		}
 	}
 	// If we can't find Cookie in the server response, return error
-	return &helper.ContextError{
+	return &utils.ContextError{
 		Context: "authorize",
 		Err:     fmt.Errorf("unable to find JWT Cookie in "),
 	}
@@ -89,7 +89,7 @@ func (p *pushClient) refreshAuth() error {
 
 		// Check server response
 		if resp.StatusCode != http.StatusOK {
-			return &helper.ContextError{
+			return &utils.ContextError{
 				Context: "refreshAuth",
 				Err: fmt.Errorf("error: unable to refresh JWT auth token. Server responded with status: %s",
 					resp.Status),
@@ -143,7 +143,7 @@ func (p *pushClient) sendComparedRequest(data *comps.NexusExportComponents, repo
 
 	// Check server response
 	if resp.StatusCode != http.StatusOK {
-		return nil, &helper.ContextError{
+		return nil, &utils.ContextError{
 			Context: "sendComparedRequest",
 			Err:     fmt.Errorf("error: %s responded with status: %s", p.serverAddress, resp.Status),
 		}
@@ -203,7 +203,7 @@ func (p *pushClient) pollComparedResults(body []byte, dstRepo string, dstServer 
 
 		// Check server response
 		if resp.StatusCode != http.StatusOK {
-			return &helper.ContextError{
+			return &utils.ContextError{
 				Context: "pollComparedResults",
 				Err: fmt.Errorf("error: %s responded with status: %s",
 					p.serverAddress,
@@ -256,7 +256,7 @@ func (p *pushClient) pollComparedResults(body []byte, dstRepo string, dstServer 
 		time.Sleep(1 * time.Second)
 	}
 	// Show error if we don't get results in time
-	return &helper.ContextError{
+	return &utils.ContextError{
 		Context: "pollComparedResults",
 		Err: fmt.Errorf("unable to get results from for message id %s in %d seconds",
 			msg.ID,
