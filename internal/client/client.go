@@ -140,7 +140,7 @@ func (nc client) RunNexusPusher() {
 	for _, v := range nc.config.SyncConfigs {
 		wg.Add(1)
 		go func(c *config.Client, syncConfig *config.SyncConfig) {
-			doSyncConfigs(c, syncConfig)
+			nc.doSyncConfigs(c, syncConfig)
 			wg.Done()
 		}(nc.config, v)
 	}
@@ -183,7 +183,7 @@ func (nc client) doCheckServerStatus() error {
 
 	if resp.StatusCode != http.StatusOK {
 		// Export server status
-		nc.metrics.serverStatus.Set(0)
+		nc.metrics.staticMetrics.serverStatus.Set(0)
 
 		return &utils.ContextError{
 			Context: "doCheckServerStatus",
@@ -192,7 +192,7 @@ func (nc client) doCheckServerStatus() error {
 	}
 
 	// Export server status
-	nc.metrics.serverStatus.Set(1)
+	nc.metrics.staticMetrics.serverStatus.Set(1)
 
 	return nil
 }
@@ -238,7 +238,7 @@ func (nc client) doCheckServerVersion() error {
 	}
 
 	// Export server version and build info
-	nc.metrics.serverInfo.WithLabelValues(serverVersion.Version, serverVersion.Build).Set(1)
+	nc.metrics.staticMetrics.serverInfo.WithLabelValues(serverVersion.Version, serverVersion.Build).Set(1)
 
 	if nc.version.Version != serverVersion.Version {
 		return &utils.ContextError{
@@ -353,7 +353,7 @@ func doCheckRepoTypes(sc *config.SyncConfig) error {
 	return nil
 }
 
-func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
+func (nc client) doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 	// Define two groups of resources to compare remote repos
 	s1 := comps.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
 		sc.SrcServerConfig.Server, config.URIBase, config.URIComponents)
@@ -398,7 +398,7 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 		}
 
 		// Send diff data to nexus-pusher server
-		pc := newPushClient(cc.Server, cc.ServerAuth.User, cc.ServerAuth.Pass)
+		pc := newPushClient(cc.Server, cc.ServerAuth.User, cc.ServerAuth.Pass, nc.metrics)
 
 		// Use basic auth to get JWT token
 		if err := pc.authorize(); err != nil {
@@ -418,11 +418,14 @@ func doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 			log.Errorf("%v", err)
 		}
 	} else {
+		// Log repo is 'in-sync' event
 		log.Printf("'%s' repo at server %s is in sync with repo '%s' at server %s, nothing to do.",
 			sc.SrcServerConfig.RepoName,
 			sc.SrcServerConfig.Server,
 			sc.DstServerConfig.RepoName,
 			sc.DstServerConfig.Server)
+		// Update metric for errors count
+		nc.metrics.SyncErrorsCountByLabels(sc.DstServerConfig.Server, sc.DstServerConfig.RepoName).Set(0)
 	}
 }
 

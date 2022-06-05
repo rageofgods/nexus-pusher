@@ -20,10 +20,11 @@ type pushClient struct {
 	serverUser    string
 	serverPass    string
 	cookie        *http.Cookie
+	metrics       *nexusClientMetrics
 }
 
-func newPushClient(serverAddress string, serverUser string, serverPass string) *pushClient {
-	return &pushClient{serverAddress: serverAddress, serverUser: serverUser, serverPass: serverPass}
+func newPushClient(serverAddress string, serverUser string, serverPass string, metrics *nexusClientMetrics) *pushClient {
+	return &pushClient{serverAddress: serverAddress, serverUser: serverUser, serverPass: serverPass, metrics: metrics}
 }
 
 // authorize the client with server using plain type credentials from configuration file
@@ -235,8 +236,12 @@ func (p *pushClient) pollComparedResults(body []byte, dstRepo string, dstServer 
 				},
 			).Infof("Polling complete for destinantion repo '%s' at server '%s'",
 				dstRepo, dstServer)
+
+			// Update metric for errors count
+			p.metrics.SyncErrorsCountByLabels(dstServer, dstRepo).Set(float64(len(msg.Response)))
+
+			// log all response errors
 			for _, m := range msg.Response {
-				// log all response errors
 				log.WithFields(
 					log.Fields{"id": msg.ID},
 				).Warnf("%s", m)
