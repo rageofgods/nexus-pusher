@@ -69,46 +69,41 @@ func doCompareComponents(s1 *comps.NexusServer,
 	nc2 []*comps.NexusComponent,
 	r2 string) ([]*comps.NexusComponent, error) {
 
-	var src, dst []*comps.NexusComponent
-	wg := &sync.WaitGroup{}
-	var isError bool
-	tn := time.Now()
 	ctx, cancel := context.WithCancel(context.Background())
+	group, errCtx := errgroup.WithContext(ctx)
+	var src, dst []*comps.NexusComponent
+	tn := time.Now()
 
-	wg.Add(2)
-	go func() {
-		var err error
+	group.Go(func() error {
 		log.Infof("Start analyzing repository '%s' at server '%s'", r1, s1.Host)
-		src, err = s1.GetComponents(ctx, c1, nc1, r1)
+		src, err := s1.GetComponents(errCtx, c1, nc1, r1)
 		if err != nil {
 			cancel()
-			log.Errorf("%v", err)
-			isError = true
+			return err
 		} else {
 			showFinalMessageForGetComponents(r1, s1.Host, src, tn)
 		}
-		wg.Done()
-	}()
-	go func() {
-		var err error
+		return nil
+	})
+	group.Go(func() error {
 		log.Infof("Start analyzing repository '%s' at server '%s'", r2, s2.Host)
-		dst, err = s2.GetComponents(ctx, c2, nc2, r2)
+		dst, err := s2.GetComponents(errCtx, c2, nc2, r2)
 		if err != nil {
 			cancel()
-			log.Errorf("%v", err)
-			isError = true
+			return err
 		} else {
 			showFinalMessageForGetComponents(r2, s2.Host, dst, tn)
 		}
-		wg.Done()
-	}()
-	wg.Wait()
+		return nil
+	})
+
 	// Check for errors in requests
-	if isError {
+	err := group.Wait()
+	if err != nil {
 		return nil, &utils.ContextError{
 			Context: "doCompareComponents",
 			Err: fmt.Errorf("unable to compare source repository '%s' at server '%s' "+
-				"with destination repository '%s' at server '%s' ", r1, s1.Host, r2, s2.Host),
+				"with destination repository '%s' at server '%s' beacuse of error: %v", r1, s1.Host, r2, s2.Host, err),
 		}
 	}
 
