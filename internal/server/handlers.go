@@ -48,8 +48,8 @@ func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Sanitize user input for repo name
-	repo = strings.Replace(urlParam, "\n", "", -1)
-	repo = strings.Replace(repo, "\r", "", -1)
+	repo = strings.ReplaceAll(urlParam, "\n", "")
+	repo = strings.ReplaceAll(repo, "\r", "")
 
 	// Read request body
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, maxBodySize))

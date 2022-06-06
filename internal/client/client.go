@@ -101,12 +101,11 @@ func doCompareComponents(s1 *core.NexusServer,
 	})
 
 	// Check for errors in requests
-	err := group.Wait()
-	if err != nil {
+	if err := group.Wait(); err != nil {
 		return nil, &utils.ContextError{
 			Context: "doCompareComponents",
 			Err: fmt.Errorf("unable to compare source repository '%s' at server '%s' "+
-				"with destination repository '%s' at server '%s' beacuse of error: %v", r1, s1.Host, r2, s2.Host, err),
+				"with destination repository '%s' at server '%s' because of error: %v", r1, s1.Host, r2, s2.Host, err),
 		}
 	}
 

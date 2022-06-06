@@ -24,7 +24,11 @@ type pushClient struct {
 	metrics       *nexusClientMetrics
 }
 
-func newPushClient(serverAddress string, serverUser string, serverPass string, metrics *nexusClientMetrics) *pushClient {
+func newPushClient(
+	serverAddress string,
+	serverUser string,
+	serverPass string,
+	metrics *nexusClientMetrics) *pushClient {
 	return &pushClient{serverAddress: serverAddress, serverUser: serverUser, serverPass: serverPass, metrics: metrics}
 }
 
