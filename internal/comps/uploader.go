@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"nexus-pusher/internal/config"
+	http2 "nexus-pusher/pkg/http"
 	"nexus-pusher/pkg/utils"
 	"time"
 )
@@ -169,7 +170,7 @@ func (s *NexusServer) uploadComponentWithType(repoName string, cPath string, con
 	// let's implement simple retry behaviour
 	var resp *http.Response
 	for i := 1; i <= 4; {
-		resp, err = utils.HttpClient(900).Do(req)
+		resp, err = http2.HttpClient(900).Do(req)
 		if err != nil {
 			if i == 4 {
 				// if it's last iteration, return error

@@ -1,9 +1,10 @@
-package utils
+package http
 
 import (
 	"github.com/hashicorp/go-retryablehttp"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"nexus-pusher/pkg/logger"
 	"time"
 )
 
@@ -19,7 +20,7 @@ func HttpRetryClient(seconds ...int) *http.Client {
 		DisableKeepAlives:   true,
 	}
 
-	customLogger := &CustomRetryLogger{log.StandardLogger()}
+	customLogger := &logger.CustomRetryLogger{log.StandardLogger()}
 	retryClient.Logger = customLogger
 	retryClient.RetryMax = 3
 	if len(seconds) != 0 {

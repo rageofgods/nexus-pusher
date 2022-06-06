@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"nexus-pusher/pkg/utils"
+	http2 "nexus-pusher/pkg/http"
 	"strings"
 )
 
@@ -57,7 +57,7 @@ func (m Maven2) DownloadComponent() ([]*http.Response, error) {
 		req.Header.Set("Accept", "application/octet-stream")
 
 		// Send request
-		resp, err := utils.HttpRetryClient(180).Do(req)
+		resp, err := http2.HttpRetryClient(180).Do(req)
 		if err != nil {
 			return nil, fmt.Errorf("DownloadComponent: %w", err)
 		}
