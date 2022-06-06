@@ -29,7 +29,7 @@ spec:
             subPath: {{ .Values.configFile.name }}
             readOnly: true
           ports:
-            - name: {{ .Chart.Name }}-{{ .Values.client.metrics.portName }}
+            - name: {{ .Values.client.metrics.portName }}
               containerPort: {{ .Values.client.metrics.port }}
       volumes:
         - name: {{ include "nexus-pusher-client.volume-name" . }}
