@@ -7,8 +7,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
+	"nexus-pusher/internal/core"
 	"nexus-pusher/internal/server"
 	http2 "nexus-pusher/pkg/http_clients"
 	"nexus-pusher/pkg/utils"
@@ -112,7 +112,7 @@ func (p *pushClient) refreshAuth() error {
 }
 
 // sendComparedRequest sends diff data to server
-func (p *pushClient) sendComparedRequest(data *comps.NexusExportComponents, repoName string) ([]byte, error) {
+func (p *pushClient) sendComparedRequest(data *core.NexusExportComponents, repoName string) ([]byte, error) {
 	var buf bytes.Buffer
 	requestUrl := fmt.Sprintf("%s%s%s?repository=%s",
 		p.serverAddress,

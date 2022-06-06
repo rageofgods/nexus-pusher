@@ -7,13 +7,13 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 	"net"
 	"net/http"
-	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
+	"nexus-pusher/internal/core"
 	"time"
 )
 
 // RunAutoCertServer run TLS server with Let's Encrypt auto cert manager
-func RunAutoCertServer(cfg *config.Server, v *comps.Version) {
+func RunAutoCertServer(cfg *config.Server, v *core.Version) {
 	// Setup cache directory to store certificate
 	c := autocert.DirCache("certs")
 	// Generating autocert manager to handle let's encrypt api calls
@@ -47,7 +47,7 @@ func RunAutoCertServer(cfg *config.Server, v *comps.Version) {
 }
 
 // RunStaticCertServer run TLS server with static key/cert provided as a files
-func RunStaticCertServer(cfg *config.Server, v *comps.Version) {
+func RunStaticCertServer(cfg *config.Server, v *core.Version) {
 	log.Fatal(http.ListenAndServeTLS(fmt.Sprintf("%s:%s",
 		cfg.BindAddress,
 		cfg.Port),

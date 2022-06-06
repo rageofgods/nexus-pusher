@@ -1,4 +1,4 @@
-package comps
+package core
 
 import "testing"
 

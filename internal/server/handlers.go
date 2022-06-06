@@ -8,7 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"nexus-pusher/internal/comps"
+	"nexus-pusher/internal/core"
 	"strings"
 )
 
@@ -36,7 +36,7 @@ func (u *webService) version(w http.ResponseWriter, _ *http.Request) {
 
 // Upload components to remote nexus
 func (u *webService) components(w http.ResponseWriter, r *http.Request) {
-	nec := &comps.NexusExportComponents{}
+	nec := &core.NexusExportComponents{}
 	// Get repository parameter from URL
 	urlParam := r.URL.Query().Get("repository")
 
@@ -81,7 +81,7 @@ func (u *webService) components(w http.ResponseWriter, r *http.Request) {
 
 	// Upload components
 	go func() {
-		s := comps.NewNexusServer(nec.NexusServer.Username, nec.NexusServer.Password,
+		s := core.NewNexusServer(nec.NexusServer.Username, nec.NexusServer.Password,
 			nec.NexusServer.Host, nec.NexusServer.BaseUrl, nec.NexusServer.ApiComponentsUrl)
 		results := s.UploadComponents(nec, repo, u.cfg)
 

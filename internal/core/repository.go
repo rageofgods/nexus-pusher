@@ -1,4 +1,4 @@
-package comps
+package core
 
 // NexusRepository struct to hold nexus repo
 type NexusRepository struct {

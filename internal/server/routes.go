@@ -4,11 +4,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"net/http"
-	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
+	"nexus-pusher/internal/core"
 )
 
-func NewRouter(cfg *config.Server, v *comps.Version) *mux.Router {
+func NewRouter(cfg *config.Server, v *core.Version) *mux.Router {
 	us := newWebService(cfg, make(map[uuid.UUID]*Message), genRandomJWTKey(32), v)
 	var r = Routes{Routes: []Route{
 		{"login", "GET", config.URIBase + config.URILogin, stub},

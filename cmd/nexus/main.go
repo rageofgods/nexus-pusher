@@ -5,8 +5,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"nexus-pusher/internal/client"
-	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
+	"nexus-pusher/internal/core"
 	"nexus-pusher/internal/server"
 	"nexus-pusher/pkg/logger"
 	"nexus-pusher/pkg/metrics"
@@ -24,7 +24,7 @@ func main() {
 	logger.NewLogger().SetupLogger()
 
 	// Setup version
-	version := comps.NewVersion(Version, Build)
+	version := core.NewVersion(Version, Build)
 
 	// Get Config Args
 	args := &config.Args{}

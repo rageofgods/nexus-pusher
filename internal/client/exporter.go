@@ -1,24 +1,24 @@
 package client
 
 import (
-	"nexus-pusher/internal/comps"
+	"nexus-pusher/internal/core"
 )
 
 // genNexExpCompFromNexComp is converting original nexus structure data to compact export format
-func genNexExpCompFromNexComp(artifactsSource string, c []*comps.NexusComponent) *comps.NexusExportComponents {
-	ec := make([]*comps.NexusExportComponent, 0, len(c))
+func genNexExpCompFromNexComp(artifactsSource string, c []*core.NexusComponent) *core.NexusExportComponents {
+	ec := make([]*core.NexusExportComponent, 0, len(c))
 	for _, v := range c {
-		var assets []*comps.NexusExportComponentAsset
+		var assets []*core.NexusExportComponentAsset
 		for _, vv := range v.Assets {
-			exportAsset := &comps.NexusExportComponentAsset{
+			exportAsset := &core.NexusExportComponentAsset{
 				Name:        v.Name,
 				Version:     v.Version,
-				FileName:    func() string { return comps.AssetFileNameFromURI(vv.Path) }(),
+				FileName:    func() string { return core.AssetFileNameFromURI(vv.Path) }(),
 				Path:        vv.Path,
 				ContentType: vv.ContentType}
 			assets = append(assets, exportAsset)
 		}
-		exportComponent := &comps.NexusExportComponent{
+		exportComponent := &core.NexusExportComponent{
 			Name:            v.Name,
 			Version:         v.Version,
 			Repository:      v.Repository,
@@ -29,5 +29,5 @@ func genNexExpCompFromNexComp(artifactsSource string, c []*comps.NexusComponent)
 		}
 		ec = append(ec, exportComponent)
 	}
-	return &comps.NexusExportComponents{Items: ec}
+	return &core.NexusExportComponents{Items: ec}
 }

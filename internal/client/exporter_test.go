@@ -1,7 +1,7 @@
 package client
 
 import (
-	"nexus-pusher/internal/comps"
+	"nexus-pusher/internal/core"
 	"reflect"
 	"testing"
 )
@@ -9,16 +9,16 @@ import (
 func Test_genNexExpCompFromNexComp(t *testing.T) {
 	type args struct {
 		artifactsSource string
-		c               []*comps.NexusComponent
+		c               []*core.NexusComponent
 	}
 	tests := []struct {
 		name string
 		args args
-		want *comps.NexusExportComponents
+		want *core.NexusExportComponents
 	}{
 		{
 			name: "test1",
-			args: args{artifactsSource: "some_source", c: []*comps.NexusComponent{
+			args: args{artifactsSource: "some_source", c: []*core.NexusComponent{
 				{
 					ID:         "id1",
 					Repository: "repo1",
@@ -26,7 +26,7 @@ func Test_genNexExpCompFromNexComp(t *testing.T) {
 					Group:      "group1",
 					Name:       "name1",
 					Version:    "1.0",
-					Assets: []*comps.NexusComponentAsset{
+					Assets: []*core.NexusComponentAsset{
 						{
 							DownloadURL: "https://some.org/file1.tar",
 							Path:        "https://some.org/path/file1.tar",
@@ -46,8 +46,8 @@ func Test_genNexExpCompFromNexComp(t *testing.T) {
 					},
 				},
 			},
-			}, want: &comps.NexusExportComponents{
-				Items: []*comps.NexusExportComponent{
+			}, want: &core.NexusExportComponents{
+				Items: []*core.NexusExportComponent{
 					{
 						Name:            "name1",
 						Version:         "1.0",
@@ -55,7 +55,7 @@ func Test_genNexExpCompFromNexComp(t *testing.T) {
 						Format:          "npm",
 						Group:           "group1",
 						ArtifactsSource: "some_source",
-						Assets: []*comps.NexusExportComponentAsset{
+						Assets: []*core.NexusExportComponentAsset{
 							{
 								Name:        "name1",
 								FileName:    "file1.tar",

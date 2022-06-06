@@ -9,8 +9,8 @@ import (
 	"golang.org/x/sync/errgroup"
 	"io/ioutil"
 	"net/http"
-	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
+	"nexus-pusher/internal/core"
 	http2 "nexus-pusher/pkg/http_clients"
 	"nexus-pusher/pkg/utils"
 	"strings"
@@ -21,10 +21,10 @@ import (
 type client struct {
 	config  *config.Client
 	metrics *nexusClientMetrics
-	version *comps.Version
+	version *core.Version
 }
 
-func NewClient(version *comps.Version, config *config.Client, metrics *nexusClientMetrics) *client {
+func NewClient(version *core.Version, config *config.Client, metrics *nexusClientMetrics) *client {
 	return &client{config: config, metrics: metrics, version: version}
 }
 
@@ -34,7 +34,7 @@ func fileNameFromPath(path string) string { // Get last part of url chunk with f
 }
 
 // compareComponents will compare src to dst and return diff
-func compareComponents(src []*comps.NexusComponent, dst []*comps.NexusComponent) []*comps.NexusComponent {
+func compareComponents(src []*core.NexusComponent, dst []*core.NexusComponent) []*core.NexusComponent {
 	// Make dst hash-map
 	dstNca := make(map[string]struct{}, len(dst))
 	for _, v := range dst {
@@ -44,9 +44,9 @@ func compareComponents(src []*comps.NexusComponent, dst []*comps.NexusComponent)
 	}
 
 	// Search in dst
-	var nc []*comps.NexusComponent
+	var nc []*core.NexusComponent
 	for i, v := range src {
-		var nca []*comps.NexusComponentAsset
+		var nca []*core.NexusComponentAsset
 		for ii, vv := range v.Assets {
 			if _, ok := dstNca[strings.ToLower(vv.Path)]; !ok {
 				nca = append(nca, v.Assets[ii])
@@ -61,18 +61,18 @@ func compareComponents(src []*comps.NexusComponent, dst []*comps.NexusComponent)
 	return nc
 }
 
-func doCompareComponents(s1 *comps.NexusServer,
+func doCompareComponents(s1 *core.NexusServer,
 	c1 *http.Client,
-	nc1 []*comps.NexusComponent,
+	nc1 []*core.NexusComponent,
 	r1 string,
-	s2 *comps.NexusServer,
+	s2 *core.NexusServer,
 	c2 *http.Client,
-	nc2 []*comps.NexusComponent,
-	r2 string) ([]*comps.NexusComponent, error) {
+	nc2 []*core.NexusComponent,
+	r2 string) ([]*core.NexusComponent, error) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	group, errCtx := errgroup.WithContext(ctx)
-	var src, dst []*comps.NexusComponent
+	var src, dst []*core.NexusComponent
 	tn := time.Now()
 
 	group.Go(func() error {
@@ -113,7 +113,7 @@ func doCompareComponents(s1 *comps.NexusServer,
 	return compareComponents(src, dst), nil
 }
 
-func showFinalMessageForGetComponents(repo string, server string, nc []*comps.NexusComponent, t time.Time) {
+func showFinalMessageForGetComponents(repo string, server string, nc []*core.NexusComponent, t time.Time) {
 	log.Debugf("Analyzing repo '%s' for server '%s' is done. Completed %d assets in %v.",
 		repo,
 		server,
@@ -228,7 +228,7 @@ func (nc client) doCheckServerVersion() error {
 	}
 
 	// Try to decode body to NexusExportComponents struct
-	serverVersion := &comps.Version{}
+	serverVersion := &core.Version{}
 	if err := json.Unmarshal(body, serverVersion); err != nil {
 		return &utils.ContextError{
 			Context: "doCheckServerVersion",
@@ -252,16 +252,16 @@ func (nc client) doCheckServerVersion() error {
 
 func doCheckRepoTypes(sc *config.SyncConfig) error {
 	// Define variables
-	s1 := comps.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
+	s1 := core.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
 		sc.SrcServerConfig.Server, config.URIBase, config.URIRepositories)
-	s2 := comps.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
+	s2 := core.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
 		sc.DstServerConfig.Server, config.URIBase, config.URIRepositories)
 
 	c1 := http2.HttpRetryClient()
 	c2 := http2.HttpRetryClient()
 
-	var nr1 []*comps.NexusRepository
-	var nr2 []*comps.NexusRepository
+	var nr1 []*core.NexusRepository
+	var nr2 []*core.NexusRepository
 
 	srvUrl1 := fmt.Sprintf("%s%s%s", s1.Host, s1.BaseUrl, s1.ApiComponentsUrl)
 	srvUrl2 := fmt.Sprintf("%s%s%s", s2.Host, s2.BaseUrl, s2.ApiComponentsUrl)
@@ -354,14 +354,14 @@ func doCheckRepoTypes(sc *config.SyncConfig) error {
 
 func (nc client) doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 	// Define two groups of resources to compare remote repos
-	s1 := comps.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
+	s1 := core.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
 		sc.SrcServerConfig.Server, config.URIBase, config.URIComponents)
-	s2 := comps.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
+	s2 := core.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
 		sc.DstServerConfig.Server, config.URIBase, config.URIComponents)
 	c1 := http2.HttpRetryClient()
 	c2 := http2.HttpRetryClient()
-	var nc1 []*comps.NexusComponent
-	var nc2 []*comps.NexusComponent
+	var nc1 []*core.NexusComponent
+	var nc2 []*core.NexusComponent
 
 	// Check repos type
 	if err := doCheckRepoTypes(sc); err != nil {
@@ -388,7 +388,7 @@ func (nc client) doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 
 		// Convert original nexus json to export type
 		data := genNexExpCompFromNexComp(sc.ArtifactsSource, cmpDiff)
-		data.NexusServer = comps.NexusServer{
+		data.NexusServer = core.NexusServer{
 			Host:             sc.DstServerConfig.Server,
 			BaseUrl:          config.URIBase,
 			ApiComponentsUrl: config.URIComponents,

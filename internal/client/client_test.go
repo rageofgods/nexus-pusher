@@ -1,7 +1,7 @@
 package client
 
 import (
-	"nexus-pusher/internal/comps"
+	"nexus-pusher/internal/core"
 	"reflect"
 	"testing"
 )
@@ -37,17 +37,17 @@ func Test_fileNameFromPath(t *testing.T) {
 
 func Test_compareComponents(t *testing.T) {
 	type args struct {
-		src []*comps.NexusComponent
-		dst []*comps.NexusComponent
+		src []*core.NexusComponent
+		dst []*core.NexusComponent
 	}
 	tests := []struct {
 		name string
 		args args
-		want []*comps.NexusComponent
+		want []*core.NexusComponent
 	}{
 		{
 			name: "test1",
-			args: args{src: []*comps.NexusComponent{
+			args: args{src: []*core.NexusComponent{
 				{
 					ID:         "id1",
 					Repository: "repo1",
@@ -55,7 +55,7 @@ func Test_compareComponents(t *testing.T) {
 					Group:      "group1",
 					Name:       "name1",
 					Version:    "1.0",
-					Assets: []*comps.NexusComponentAsset{
+					Assets: []*core.NexusComponentAsset{
 						{
 							DownloadURL: "https://some.org/file1.tar",
 							Path:        "https://Some.org/path/file1.tar",
@@ -79,7 +79,7 @@ func Test_compareComponents(t *testing.T) {
 					Group:      "group2",
 					Name:       "name2",
 					Version:    "1.0",
-					Assets: []*comps.NexusComponentAsset{
+					Assets: []*core.NexusComponentAsset{
 						{
 							DownloadURL: "https://some.org/file3.tar",
 							Path:        "https://Some.org/path/file3.tar",
@@ -103,7 +103,7 @@ func Test_compareComponents(t *testing.T) {
 					Group:      "group3",
 					Name:       "name3",
 					Version:    "1.0",
-					Assets: []*comps.NexusComponentAsset{
+					Assets: []*core.NexusComponentAsset{
 						{
 							DownloadURL: "https://some.org/file5.tar",
 							Path:        "https://some.org/path/file5.tar",
@@ -121,7 +121,7 @@ func Test_compareComponents(t *testing.T) {
 					},
 				},
 			},
-				dst: []*comps.NexusComponent{
+				dst: []*core.NexusComponent{
 					{
 						ID:         "id1",
 						Repository: "repo1",
@@ -129,7 +129,7 @@ func Test_compareComponents(t *testing.T) {
 						Group:      "group1",
 						Name:       "name1",
 						Version:    "1.0",
-						Assets: []*comps.NexusComponentAsset{
+						Assets: []*core.NexusComponentAsset{
 							{
 								DownloadURL: "https://some.org/file1.tar",
 								Path:        "https://some.org/path/file1.tar",
@@ -146,7 +146,7 @@ func Test_compareComponents(t *testing.T) {
 						Group:      "group2",
 						Name:       "name2",
 						Version:    "1.0",
-						Assets: []*comps.NexusComponentAsset{
+						Assets: []*core.NexusComponentAsset{
 							{
 								DownloadURL: "https://some.org/file3.tar",
 								Path:        "https://some.org/path/file3.tar",
@@ -158,7 +158,7 @@ func Test_compareComponents(t *testing.T) {
 					},
 				},
 			},
-			want: []*comps.NexusComponent{
+			want: []*core.NexusComponent{
 				{
 					ID:         "id1",
 					Repository: "repo1",
@@ -166,7 +166,7 @@ func Test_compareComponents(t *testing.T) {
 					Group:      "group1",
 					Name:       "name1",
 					Version:    "1.0",
-					Assets: []*comps.NexusComponentAsset{
+					Assets: []*core.NexusComponentAsset{
 						{
 							DownloadURL: "https://some2.org/file2.tar",
 							Path:        "https://some2.org/path2/file2.tar",
@@ -183,7 +183,7 @@ func Test_compareComponents(t *testing.T) {
 					Group:      "group2",
 					Name:       "name2",
 					Version:    "1.0",
-					Assets: []*comps.NexusComponentAsset{
+					Assets: []*core.NexusComponentAsset{
 						{
 							DownloadURL: "https://some2.org/file4.tar",
 							Path:        "https://some2.org/path2/file4.tar",
@@ -200,7 +200,7 @@ func Test_compareComponents(t *testing.T) {
 					Group:      "group3",
 					Name:       "name3",
 					Version:    "1.0",
-					Assets: []*comps.NexusComponentAsset{
+					Assets: []*core.NexusComponentAsset{
 						{
 							DownloadURL: "https://some.org/file5.tar",
 							Path:        "https://some.org/path/file5.tar",
