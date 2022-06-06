@@ -107,7 +107,8 @@ func doCompareComponents(s1 *comps.NexusServer,
 	if isError {
 		return nil, &utils.ContextError{
 			Context: "doCompareComponents",
-			Err:     fmt.Errorf("unable to compare repositories"),
+			Err: fmt.Errorf("unable to compare source repository '%s' at server '%s' "+
+				"with destination repository '%s' at server '%s' ", r1, s1.Host, r2, s2.Host),
 		}
 	}
 
