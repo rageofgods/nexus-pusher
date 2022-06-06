@@ -10,7 +10,7 @@ import (
 	"nexus-pusher/internal/config"
 	"nexus-pusher/internal/core"
 	"nexus-pusher/internal/server"
-	http2 "nexus-pusher/pkg/http_clients"
+	"nexus-pusher/pkg/http_clients"
 	"nexus-pusher/pkg/utils"
 	"time"
 )
@@ -31,7 +31,7 @@ func newPushClient(serverAddress string, serverUser string, serverPass string, m
 // authorize the client with server using plain type credentials from configuration file
 func (p *pushClient) authorize() error {
 	requestUrl := fmt.Sprintf("%s%s%s", p.serverAddress, config.URIBase, config.URILogin)
-	client := http2.HttpRetryClient()
+	client := http_clients.HttpRetryClient()
 	req, err := http.NewRequest("GET", requestUrl, nil)
 	if err != nil {
 		return fmt.Errorf("authorize: %w", err)
@@ -72,7 +72,7 @@ func (p *pushClient) refreshAuth() error {
 	if time.Until(p.cookie.Expires) < config.JWTTokenRefreshWindow*time.Second {
 		requestUrl := fmt.Sprintf("%s%s%s", p.serverAddress, config.URIBase, config.URIRefresh)
 		// Setup http client
-		client := http2.HttpRetryClient()
+		client := http_clients.HttpRetryClient()
 		// Make new request
 		req, err := http.NewRequest("GET", requestUrl, nil)
 		if err != nil {
@@ -120,7 +120,7 @@ func (p *pushClient) sendComparedRequest(data *core.NexusExportComponents, repoN
 		config.URIComponents,
 		repoName)
 	// Setup http client
-	client := http2.HttpRetryClient()
+	client := http_clients.HttpRetryClient()
 	// Encode data to buffer
 	err := json.NewEncoder(&buf).Encode(data)
 	if err != nil {
@@ -180,7 +180,7 @@ func (p *pushClient) pollComparedResults(body []byte, dstRepo string, dstServer 
 		msg.ID)
 
 	// Setup http client
-	client := http2.HttpRetryClient()
+	client := http_clients.HttpRetryClient()
 
 	// Poll maximum for 3600 seconds (60 min)
 	limitTime := 3600

@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"nexus-pusher/internal/config"
 	"nexus-pusher/internal/core"
-	http2 "nexus-pusher/pkg/http_clients"
+	"nexus-pusher/pkg/http_clients"
 	"nexus-pusher/pkg/utils"
 	"strings"
 	"sync"
@@ -167,7 +167,7 @@ func (nc client) doCheckServerStatus() error {
 	// Create URL for status checking
 	srvUrl := fmt.Sprintf("%s%s%s", nc.config.Server, config.URIBase, config.URIStatus)
 	// Define client
-	c := http2.HttpRetryClient()
+	c := http_clients.HttpRetryClient()
 
 	req, err := http.NewRequest("GET", srvUrl, nil)
 	if err != nil {
@@ -200,7 +200,7 @@ func (nc client) doCheckServerVersion() error {
 	// Create URL for status checking
 	srvUrl := fmt.Sprintf("%s%s%s", nc.config.Server, config.URIBase, config.URIVersion)
 	// Define client
-	client := http2.HttpRetryClient()
+	client := http_clients.HttpRetryClient()
 	// Create request
 	req, err := http.NewRequest("GET", srvUrl, nil)
 	if err != nil {
@@ -257,8 +257,8 @@ func doCheckRepoTypes(sc *config.SyncConfig) error {
 	s2 := core.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
 		sc.DstServerConfig.Server, config.URIBase, config.URIRepositories)
 
-	c1 := http2.HttpRetryClient()
-	c2 := http2.HttpRetryClient()
+	c1 := http_clients.HttpRetryClient()
+	c2 := http_clients.HttpRetryClient()
 
 	var nr1 []*core.NexusRepository
 	var nr2 []*core.NexusRepository
@@ -358,8 +358,8 @@ func (nc client) doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 		sc.SrcServerConfig.Server, config.URIBase, config.URIComponents)
 	s2 := core.NewNexusServer(sc.DstServerConfig.User, sc.DstServerConfig.Pass,
 		sc.DstServerConfig.Server, config.URIBase, config.URIComponents)
-	c1 := http2.HttpRetryClient()
-	c2 := http2.HttpRetryClient()
+	c1 := http_clients.HttpRetryClient()
+	c2 := http_clients.HttpRetryClient()
 	var nc1 []*core.NexusComponent
 	var nc2 []*core.NexusComponent
 
