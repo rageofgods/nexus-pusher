@@ -1,4 +1,4 @@
-package comps
+package utils
 
 import (
 	"github.com/hashicorp/go-retryablehttp"

@@ -30,7 +30,7 @@ func newPushClient(serverAddress string, serverUser string, serverPass string, m
 // authorize the client with server using plain type credentials from configuration file
 func (p *pushClient) authorize() error {
 	requestUrl := fmt.Sprintf("%s%s%s", p.serverAddress, config.URIBase, config.URILogin)
-	client := comps.HttpRetryClient()
+	client := utils.HttpRetryClient()
 	req, err := http.NewRequest("GET", requestUrl, nil)
 	if err != nil {
 		return fmt.Errorf("authorize: %w", err)
@@ -71,7 +71,7 @@ func (p *pushClient) refreshAuth() error {
 	if time.Until(p.cookie.Expires) < config.JWTTokenRefreshWindow*time.Second {
 		requestUrl := fmt.Sprintf("%s%s%s", p.serverAddress, config.URIBase, config.URIRefresh)
 		// Setup http client
-		client := comps.HttpRetryClient()
+		client := utils.HttpRetryClient()
 		// Make new request
 		req, err := http.NewRequest("GET", requestUrl, nil)
 		if err != nil {
@@ -119,7 +119,7 @@ func (p *pushClient) sendComparedRequest(data *comps.NexusExportComponents, repo
 		config.URIComponents,
 		repoName)
 	// Setup http client
-	client := comps.HttpRetryClient()
+	client := utils.HttpRetryClient()
 	// Encode data to buffer
 	err := json.NewEncoder(&buf).Encode(data)
 	if err != nil {
@@ -179,7 +179,7 @@ func (p *pushClient) pollComparedResults(body []byte, dstRepo string, dstServer 
 		msg.ID)
 
 	// Setup http client
-	client := comps.HttpRetryClient()
+	client := utils.HttpRetryClient()
 
 	// Poll maximum for 3600 seconds (60 min)
 	limitTime := 3600

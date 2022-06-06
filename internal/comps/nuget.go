@@ -43,7 +43,7 @@ func (n Nuget) DownloadAsset() (*http.Response, error) {
 	req.Header.Set("Accept", "application/octet-stream")
 
 	// Send request
-	return HttpRetryClient(180).Do(req) // Set 3 min timeout to handle files
+	return utils.HttpRetryClient(180).Do(req) // Set 3 min timeout to handle files
 }
 
 func (n Nuget) PrepareAssetToUpload(fileReader io.Reader) (string, io.Reader) {
@@ -120,7 +120,7 @@ func (n Nuget) baseUrlV3() (string, error) {
 	req.Header.Set("Accept", "application/json")
 
 	// Send request
-	resp, err := HttpRetryClient().Do(req)
+	resp, err := utils.HttpRetryClient().Do(req)
 	if err != nil {
 		return "", fmt.Errorf("baseUrlV3: %w", err)
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"nexus-pusher/pkg/utils"
 	"strings"
 )
 
@@ -31,7 +32,7 @@ func (n Npm) DownloadAsset() (*http.Response, error) {
 	req.Header.Set("Accept", "application/octet-stream")
 
 	// Send request
-	return HttpRetryClient(180).Do(req) // Set 3 min timeout to handle files
+	return utils.HttpRetryClient(180).Do(req) // Set 3 min timeout to handle files
 
 }
 
