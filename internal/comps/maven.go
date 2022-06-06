@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"nexus-pusher/pkg/http_clients"
+	"nexus-pusher/pkg/utils"
 	"strings"
 )
 
@@ -70,7 +71,7 @@ func (m Maven2) DownloadComponent() ([]*http.Response, error) {
 
 func (m *Maven2) PrepareComponentToUpload(responses []*http.Response) (string, io.Reader) {
 	// Create random boundary id
-	boundary := genRandomBoundary(32)
+	boundary := utils.GenRandomBoundary(32)
 	// Create slice of reader with length of responses
 	// multiplied by 2 (format + binary data) plus
 	// one element - bodyBottom closer

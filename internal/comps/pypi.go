@@ -49,7 +49,7 @@ func (p Pypi) DownloadAsset() (*http.Response, error) {
 
 func (p *Pypi) PrepareAssetToUpload(fileReader io.Reader) (string, io.Reader) {
 	// Create multipart asset
-	boundary := genRandomBoundary(32)
+	boundary := utils.GenRandomBoundary(32)
 	fileName := p.FileName
 	fileHeader := "Content-type: application/octet-stream"
 	fileType := "pypi.asset"

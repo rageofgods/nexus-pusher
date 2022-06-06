@@ -49,7 +49,7 @@ func (n Nuget) DownloadAsset() (*http.Response, error) {
 
 func (n Nuget) PrepareAssetToUpload(fileReader io.Reader) (string, io.Reader) {
 	// Create multipart asset
-	boundary := genRandomBoundary(32)
+	boundary := utils.GenRandomBoundary(32)
 	fileName := n.FileName
 	const fileHeader = "Content-type: application/octet-stream"
 	const fileType = "nuget.asset"

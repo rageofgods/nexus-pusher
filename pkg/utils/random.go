@@ -1,4 +1,4 @@
-package comps
+package utils
 
 import (
 	"crypto/rand"
@@ -6,7 +6,7 @@ import (
 	"math/big"
 )
 
-func genRandomBoundary(n int) string {
+func GenRandomBoundary(n int) string {
 	var letter = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 	b := make([]rune, n)

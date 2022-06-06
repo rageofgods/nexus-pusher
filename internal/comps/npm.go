@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"nexus-pusher/pkg/http_clients"
+	"nexus-pusher/pkg/utils"
 	"strings"
 )
 
@@ -38,7 +39,7 @@ func (n Npm) DownloadAsset() (*http.Response, error) {
 
 func (n *Npm) PrepareAssetToUpload(fileReader io.Reader) (string, io.Reader) {
 	// Create multipart asset
-	boundary := genRandomBoundary(32)
+	boundary := utils.GenRandomBoundary(32)
 	fileName := n.FileName
 	fileHeader := "Content-type: application/octet-stream"
 	fileType := "npm.asset"
