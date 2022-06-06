@@ -28,6 +28,9 @@ client:
   serverAuth:
     user:  # nexus-pusher username
     pass:  # nexus-pusher password
+  metrics:
+    portName: metrics
+    port: 9090
 # syncConfigs reads base64 encoded yaml with lists of syncConfigs
 # Example format:
 #  - srcServerConfig:
