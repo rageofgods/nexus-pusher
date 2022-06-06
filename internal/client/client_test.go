@@ -58,7 +58,7 @@ func Test_compareComponents(t *testing.T) {
 					Assets: []*comps.NexusComponentAsset{
 						{
 							DownloadURL: "https://some.org/file1.tar",
-							Path:        "https://some.org/path/file1.tar",
+							Path:        "https://Some.org/path/file1.tar",
 							ID:          "id1",
 							Repository:  "repo1",
 							Format:      "npm",
@@ -82,7 +82,7 @@ func Test_compareComponents(t *testing.T) {
 					Assets: []*comps.NexusComponentAsset{
 						{
 							DownloadURL: "https://some.org/file3.tar",
-							Path:        "https://some.org/path/file3.tar",
+							Path:        "https://Some.org/path/file3.tar",
 							ID:          "id1",
 							Repository:  "repo1",
 							Format:      "npm",
