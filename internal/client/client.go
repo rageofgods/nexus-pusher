@@ -76,7 +76,8 @@ func doCompareComponents(s1 *comps.NexusServer,
 
 	group.Go(func() error {
 		log.Infof("Start analyzing repository '%s' at server '%s'", r1, s1.Host)
-		src, err := s1.GetComponents(errCtx, c1, nc1, r1)
+		var err error
+		src, err = s1.GetComponents(errCtx, c1, nc1, r1)
 		if err != nil {
 			cancel()
 			return err
@@ -87,7 +88,8 @@ func doCompareComponents(s1 *comps.NexusServer,
 	})
 	group.Go(func() error {
 		log.Infof("Start analyzing repository '%s' at server '%s'", r2, s2.Host)
-		dst, err := s2.GetComponents(errCtx, c2, nc2, r2)
+		var err error
+		dst, err = s2.GetComponents(errCtx, c2, nc2, r2)
 		if err != nil {
 			cancel()
 			return err
