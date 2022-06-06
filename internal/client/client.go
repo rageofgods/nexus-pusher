@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
-	http2 "nexus-pusher/pkg/http"
+	http2 "nexus-pusher/pkg/http_clients"
 	"nexus-pusher/pkg/utils"
 	"strings"
 	"sync"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	http2 "nexus-pusher/pkg/http"
+	http2 "nexus-pusher/pkg/http_clients"
 	"strings"
 )
 

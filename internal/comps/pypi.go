@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	http2 "nexus-pusher/pkg/http"
+	http2 "nexus-pusher/pkg/http_clients"
 	"nexus-pusher/pkg/utils"
 	"strings"
 )
