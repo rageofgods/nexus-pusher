@@ -38,7 +38,7 @@ func compareComponents(src []*comps.NexusComponent, dst []*comps.NexusComponent)
 	dstNca := make(map[string]struct{}, len(dst))
 	for _, v := range dst {
 		for _, vv := range v.Assets {
-			dstNca[fileNameFromPath(vv.Path)] = struct{}{}
+			dstNca[vv.Path] = struct{}{}
 		}
 	}
 
@@ -47,7 +47,7 @@ func compareComponents(src []*comps.NexusComponent, dst []*comps.NexusComponent)
 	for i, v := range src {
 		var nca []*comps.NexusComponentAsset
 		for ii, vv := range v.Assets {
-			if _, ok := dstNca[fileNameFromPath(vv.Path)]; !ok {
+			if _, ok := dstNca[vv.Path]; !ok {
 				nca = append(nca, v.Assets[ii])
 			}
 		}
