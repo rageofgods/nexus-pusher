@@ -102,7 +102,7 @@ func (p *pushClient) refreshAuth() error {
 			if v.Name == config.JWTCookieName {
 				// If Cookie was found when set pointer to it
 				p.cookie = v
-				log.Printf("Successfully refreshed JWT auth token. Continue polling...")
+				log.Debugf("Successfully refreshed JWT auth token. Continue polling...")
 				return nil
 			}
 		}
