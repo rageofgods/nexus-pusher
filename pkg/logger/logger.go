@@ -1,7 +1,8 @@
-package config
+package logger
 
 import (
 	log "github.com/sirupsen/logrus"
+	"nexus-pusher/internal/config"
 	"os"
 	"strings"
 )
@@ -17,7 +18,7 @@ func NewLogger() *Logger {
 			Formatter: &log.TextFormatter{
 				FullTimestamp:   true,
 				DisableQuote:    true,
-				TimestampFormat: LogTimeFormat,
+				TimestampFormat: config.LogTimeFormat,
 			},
 			Level: logLevelFromEnv(),
 		},

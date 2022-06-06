@@ -8,6 +8,7 @@ import (
 	"nexus-pusher/internal/comps"
 	"nexus-pusher/internal/config"
 	"nexus-pusher/internal/server"
+	"nexus-pusher/pkg/logger"
 	"nexus-pusher/pkg/metrics"
 	"os"
 )
@@ -20,7 +21,7 @@ var (
 
 func main() {
 	// Setup logger
-	config.NewLogger().SetupLogger()
+	logger.NewLogger().SetupLogger()
 
 	// Setup version
 	version := comps.NewVersion(Version, Build)
