@@ -237,8 +237,10 @@ func (p *pushClient) pollComparedResults(body []byte, dstRepo string, dstServer 
 			).Infof("Polling complete for destinantion repo '%s' at server '%s'",
 				dstRepo, dstServer)
 
-			// Update metric for errors count
-			p.metrics.SyncErrorsCountByLabels(dstServer, dstRepo, msg.ID.String()).Set(float64(len(msg.Response)))
+			// Update metric for errors count if any
+			if len(msg.Response) > 0 {
+				p.metrics.SyncErrorsCountByLabels(dstServer, dstRepo, msg.ID.String()).Set(float64(len(msg.Response)))
+			}
 
 			// log all response errors
 			for _, m := range msg.Response {
