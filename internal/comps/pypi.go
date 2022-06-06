@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	http2 "nexus-pusher/pkg/http_clients"
+	"nexus-pusher/pkg/http_clients"
 	"nexus-pusher/pkg/utils"
 	"strings"
 )
@@ -44,7 +44,7 @@ func (p Pypi) DownloadAsset() (*http.Response, error) {
 	req.Header.Set("Accept", "application/octet-stream")
 
 	// Send request
-	return http2.HttpRetryClient(900).Do(req) // Set 15 min timeout to handle large files
+	return http_clients.HttpRetryClient(900).Do(req) // Set 15 min timeout to handle large files
 }
 
 func (p *Pypi) PrepareAssetToUpload(fileReader io.Reader) (string, io.Reader) {
@@ -74,7 +74,7 @@ func (p Pypi) assetDownloadURL() (string, error) {
 	req.Header.Set("Accept", "application/json")
 
 	// Send request
-	resp, err := http2.HttpRetryClient().Do(req)
+	resp, err := http_clients.HttpRetryClient().Do(req)
 	if err != nil {
 		return "", fmt.Errorf("assetDownloadURL: %w", err)
 	}
