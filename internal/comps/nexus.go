@@ -20,11 +20,8 @@ func (s *NexusServer) GetComponents(
 	contToken ...string) ([]*NexusComponent, error) {
 	select {
 	case <-ctx.Done():
-		return nil, &utils.ContextError{
-			Context: "GetComponents",
-			Err: fmt.Errorf("error: canceling processing repo '%s' because of upstream error",
-				repoName),
-		}
+		return nil, fmt.Errorf("GetComponents: canceling processing repo '%s' because of upstream error",
+			repoName)
 	default:
 		// Do nothing (continue execution)
 	}
@@ -45,12 +42,12 @@ func (s *NexusServer) GetComponents(
 
 	body, err := s.SendRequest(srvUrl, "GET", c, nil)
 	if err != nil {
-		return nil, fmt.Errorf("GetComponents: %w", err)
+		return nil, err
 	}
 
 	var nc NexusComponents
 	if err := json.Unmarshal(body, &nc); err != nil {
-		return nil, fmt.Errorf("GetComponents: %w", err)
+		return nil, err
 	}
 	ncs = append(ncs, nc.Items...)
 
@@ -70,7 +67,7 @@ func (s *NexusServer) GetComponents(
 	if nc.ContinuationToken != "" {
 		ncs, err = s.GetComponents(ctx, c, ncs, repoName, nc.ContinuationToken)
 		if err != nil {
-			return nil, fmt.Errorf("GetComponents: %w", err)
+			return nil, err
 		}
 	}
 
