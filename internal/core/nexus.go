@@ -12,61 +12,61 @@ import (
 	"nexus-pusher/pkg/utils"
 )
 
-func (s *NexusServer) GetComponents(ctx context.Context, c *http.Client, ncs []*NexusComponent,
-	repoName string) ([]*NexusComponent, error) {
-	srvUrl := fmt.Sprintf("%s%s%s?repository=%s",
-		s.Host,
-		s.BaseUrl,
-		s.ApiComponentsUrl,
-		repoName)
-
-	body, err := s.SendRequest(srvUrl, "GET", c, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var nc NexusComponents
+func (s *NexusServer) GetComponents(ctx context.Context, c *http.Client, repoName string) ([]*NexusComponent, error) {
 	var json = jsoniter.ConfigCompatibleWithStandardLibrary
-	if err := json.Unmarshal(body, &nc); err != nil {
-		return nil, err
-	}
-	ncs = append(ncs, nc.Items...)
-
-	if nc.ContinuationToken != "" {
-	Outer:
-		for {
-			select {
-			case <-ctx.Done():
-				return nil, fmt.Errorf("GetComponents: canceling processing repo '%s' because of upstream error",
+	var ncs []*NexusComponent
+	var continuationToken string
+Outer:
+	for i := 0; ; i++ {
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("GetComponents: canceling processing repo '%s' because of upstream error",
+				repoName)
+		default:
+			var srvUrl string
+			if i == 0 {
+				// First iteration is always without continuationToken
+				srvUrl = fmt.Sprintf("%s%s%s?repository=%s",
+					s.Host,
+					s.BaseUrl,
+					s.ApiComponentsUrl,
 					repoName)
-			default:
+			} else {
 				srvUrl = fmt.Sprintf("%s%s%s?repository=%s&continuationToken=%s",
 					s.Host,
 					s.BaseUrl,
 					s.ApiComponentsUrl,
 					repoName,
-					nc.ContinuationToken)
-				body, err := s.SendRequest(srvUrl, "GET", c, nil)
-				if err != nil {
-					return nil, err
-				}
+					continuationToken)
+			}
 
-				if err := json.Unmarshal(body, &nc); err != nil {
-					return nil, err
-				}
-				ncs = append(ncs, nc.Items...)
+			body, err := s.SendRequest(srvUrl, "GET", c, nil)
+			if err != nil {
+				return nil, err
+			}
 
-				// Send log message every 500 new components
-				if len(ncs) <= 20 || len(ncs)%500 == 0 {
-					log.Debugf("Analyzing repo '%s' at server '%s', please wait... Processed %d assets.",
-						repoName,
-						s.Host,
-						len(ncs))
-				}
+			var nc NexusComponents
+			if err := json.Unmarshal(body, &nc); err != nil {
+				return nil, err
+			}
 
-				if nc.ContinuationToken == "" {
-					break Outer
-				}
+			continuationToken = nc.ContinuationToken
+			ncs = append(ncs, nc.Items...)
+
+			// Send log message every 500 new components
+			if len(ncs) <= 10 || len(ncs)%500 == 0 {
+				log.Debugf("Analyzing repo '%s' at server '%s', please wait... Processed %d assets.",
+					repoName,
+					s.Host,
+					len(ncs))
+			}
+
+			// if len(ncs) > 100 {
+			//	return ncs, nil
+			// }
+
+			if continuationToken == "" {
+				break Outer
 			}
 		}
 	}

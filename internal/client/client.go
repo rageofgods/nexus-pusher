@@ -61,15 +61,14 @@ func compareComponents(src []*core.NexusComponent, dst []*core.NexusComponent) [
 	return nc
 }
 
-func doCompareComponents(s1 *core.NexusServer,
+func doCompareComponents(
+	s1 *core.NexusServer,
 	c1 *http.Client,
-	nc1 []*core.NexusComponent,
 	r1 string,
 	s2 *core.NexusServer,
 	c2 *http.Client,
-	nc2 []*core.NexusComponent,
-	r2 string) ([]*core.NexusComponent, error) {
-
+	r2 string,
+) ([]*core.NexusComponent, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	group, errCtx := errgroup.WithContext(ctx)
 	var src, dst []*core.NexusComponent
@@ -78,7 +77,7 @@ func doCompareComponents(s1 *core.NexusServer,
 	group.Go(func() error {
 		log.Infof("Start analyzing repository '%s' at server '%s'", r1, s1.Host)
 		var err error
-		src, err = s1.GetComponents(errCtx, c1, nc1, r1)
+		src, err = s1.GetComponents(errCtx, c1, r1)
 		if err != nil {
 			cancel()
 			return err
@@ -90,7 +89,7 @@ func doCompareComponents(s1 *core.NexusServer,
 	group.Go(func() error {
 		log.Infof("Start analyzing repository '%s' at server '%s'", r2, s2.Host)
 		var err error
-		dst, err = s2.GetComponents(errCtx, c2, nc2, r2)
+		dst, err = s2.GetComponents(errCtx, c2, r2)
 		if err != nil {
 			cancel()
 			return err
@@ -359,8 +358,6 @@ func (nc client) doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 		sc.DstServerConfig.Server, config.URIBase, config.URIComponents)
 	c1 := http_clients.HttpRetryClient()
 	c2 := http_clients.HttpRetryClient()
-	var nc1 []*core.NexusComponent
-	var nc2 []*core.NexusComponent
 
 	// Check repos type
 	if err := doCheckRepoTypes(sc); err != nil {
@@ -369,8 +366,7 @@ func (nc client) doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 	}
 
 	// Get repo diff
-	cmpDiff, err := doCompareComponents(s1, c1, nc1, sc.SrcServerConfig.RepoName,
-		s2, c2, nc2, sc.DstServerConfig.RepoName)
+	cmpDiff, err := doCompareComponents(s1, c1, sc.SrcServerConfig.RepoName, s2, c2, sc.DstServerConfig.RepoName)
 	if err != nil {
 		log.Errorf("%v", err)
 		return
