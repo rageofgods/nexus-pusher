@@ -37,6 +37,7 @@ func (s *NexusServer) GetComponents(ctx context.Context, c *http.Client, ncs []*
 			s.ApiComponentsUrl,
 			repoName)
 
+	Outer:
 		for {
 			select {
 			case <-ctx.Done():
@@ -54,7 +55,7 @@ func (s *NexusServer) GetComponents(ctx context.Context, c *http.Client, ncs []*
 				ncs = append(ncs, nc.Items...)
 
 				// Send log message every 500 new components
-				if len(ncs) <= 10 || len(ncs)%500 == 0 {
+				if len(ncs) <= 20 || len(ncs)%500 == 0 {
 					log.Debugf("Analyzing repo '%s' at server '%s', please wait... Processed %d assets.",
 						repoName,
 						s.Host,
@@ -62,7 +63,7 @@ func (s *NexusServer) GetComponents(ctx context.Context, c *http.Client, ncs []*
 				}
 
 				if nc.ContinuationToken == "" {
-					break
+					break Outer
 				}
 			}
 		}
