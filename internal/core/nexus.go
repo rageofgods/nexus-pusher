@@ -3,7 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
-	"github.com/goccy/go-json"
+	"github.com/mailru/easyjson"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
@@ -46,7 +46,7 @@ func (s *NexusServer) GetComponents(
 	}
 
 	var nc NexusComponents
-	if err := json.Unmarshal(body, &nc); err != nil {
+	if err := easyjson.Unmarshal(body, &nc); err != nil {
 		return nil, err
 	}
 	ncs = append(ncs, nc.Items...)
@@ -63,15 +63,13 @@ func (s *NexusServer) GetComponents(
 	//	return ncs, nil
 	// }
 
-	// Iterating over all API pages
-	if nc.ContinuationToken != "" {
-		ncs, err = s.GetComponents(ctx, c, ncs, repoName, nc.ContinuationToken)
-		if err != nil {
-			return nil, err
-		}
+	// If it's last page - return results
+	if nc.ContinuationToken == "" {
+		return ncs, nil
 	}
 
-	return ncs, nil
+	// Iterating over all API pages
+	return s.GetComponents(ctx, c, ncs, repoName, nc.ContinuationToken)
 }
 
 // UploadComponents is used to upload nexus artifacts following by 'nec' list
