@@ -3,7 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
-	"github.com/mailru/easyjson"
+	jsoniter "github.com/json-iterator/go"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
@@ -12,33 +12,12 @@ import (
 	"nexus-pusher/pkg/utils"
 )
 
-func (s *NexusServer) GetComponents(
-	ctx context.Context,
-	c *http.Client,
-	ncs []*NexusComponent,
-	repoName string,
-	contToken ...string) ([]*NexusComponent, error) {
-	select {
-	case <-ctx.Done():
-		return nil, fmt.Errorf("GetComponents: canceling processing repo '%s' because of upstream error",
-			repoName)
-	default:
-		// Do nothing (continue execution)
-	}
-
-	var srvUrl string
-	if len(contToken) != 0 {
-		srvUrl = fmt.Sprintf("%s%s%s?repository=%s&continuationToken=%s", s.Host,
-			s.BaseUrl,
-			s.ApiComponentsUrl,
-			repoName,
-			contToken[0])
-	} else {
-		srvUrl = fmt.Sprintf("%s%s%s?repository=%s", s.Host,
-			s.BaseUrl,
-			s.ApiComponentsUrl,
-			repoName)
-	}
+func (s *NexusServer) GetComponents(ctx context.Context, c *http.Client, ncs []*NexusComponent,
+	repoName string) ([]*NexusComponent, error) {
+	srvUrl := fmt.Sprintf("%s%s%s?repository=%s", s.Host,
+		s.BaseUrl,
+		s.ApiComponentsUrl,
+		repoName)
 
 	body, err := s.SendRequest(srvUrl, "GET", c, nil)
 	if err != nil {
@@ -46,30 +25,49 @@ func (s *NexusServer) GetComponents(
 	}
 
 	var nc NexusComponents
-	if err := easyjson.Unmarshal(body, &nc); err != nil {
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+	if err := json.Unmarshal(body, &nc); err != nil {
 		return nil, err
 	}
 	ncs = append(ncs, nc.Items...)
 
-	// Send log message every 500 new components
-	if len(ncs) <= 10 || len(ncs)%500 == 0 {
-		log.Debugf("Analyzing repo '%s' at server '%s', please wait... Processed %d assets.",
-			repoName,
-			s.Host,
-			len(ncs))
+	if nc.ContinuationToken != "" {
+		srvUrl = fmt.Sprintf("%s%s%s?repository=%s", s.Host,
+			s.BaseUrl,
+			s.ApiComponentsUrl,
+			repoName)
+
+		for {
+			select {
+			case <-ctx.Done():
+				return nil, fmt.Errorf("GetComponents: canceling processing repo '%s' because of upstream error",
+					repoName)
+			default:
+				body, err := s.SendRequest(srvUrl, "GET", c, nil)
+				if err != nil {
+					return nil, err
+				}
+
+				if err := json.Unmarshal(body, &nc); err != nil {
+					return nil, err
+				}
+				ncs = append(ncs, nc.Items...)
+
+				// Send log message every 500 new components
+				if len(ncs) <= 10 || len(ncs)%500 == 0 {
+					log.Debugf("Analyzing repo '%s' at server '%s', please wait... Processed %d assets.",
+						repoName,
+						s.Host,
+						len(ncs))
+				}
+
+				if nc.ContinuationToken == "" {
+					break
+				}
+			}
+		}
 	}
-
-	// if len(ncs) > 100 {
-	//	return ncs, nil
-	// }
-
-	// If it's last page - return results
-	if nc.ContinuationToken == "" {
-		return ncs, nil
-	}
-
-	// Iterating over all API pages
-	return s.GetComponents(ctx, c, ncs, repoName, nc.ContinuationToken)
+	return ncs, nil
 }
 
 // UploadComponents is used to upload nexus artifacts following by 'nec' list
