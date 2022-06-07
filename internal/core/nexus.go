@@ -14,7 +14,8 @@ import (
 
 func (s *NexusServer) GetComponents(ctx context.Context, c *http.Client, ncs []*NexusComponent,
 	repoName string) ([]*NexusComponent, error) {
-	srvUrl := fmt.Sprintf("%s%s%s?repository=%s", s.Host,
+	srvUrl := fmt.Sprintf("%s%s%s?repository=%s",
+		s.Host,
 		s.BaseUrl,
 		s.ApiComponentsUrl,
 		repoName)
@@ -32,11 +33,6 @@ func (s *NexusServer) GetComponents(ctx context.Context, c *http.Client, ncs []*
 	ncs = append(ncs, nc.Items...)
 
 	if nc.ContinuationToken != "" {
-		srvUrl = fmt.Sprintf("%s%s%s?repository=%s", s.Host,
-			s.BaseUrl,
-			s.ApiComponentsUrl,
-			repoName)
-
 	Outer:
 		for {
 			select {
@@ -44,6 +40,12 @@ func (s *NexusServer) GetComponents(ctx context.Context, c *http.Client, ncs []*
 				return nil, fmt.Errorf("GetComponents: canceling processing repo '%s' because of upstream error",
 					repoName)
 			default:
+				srvUrl = fmt.Sprintf("%s%s%s?repository=%s&continuationToken=%s",
+					s.Host,
+					s.BaseUrl,
+					s.ApiComponentsUrl,
+					repoName,
+					nc.ContinuationToken)
 				body, err := s.SendRequest(srvUrl, "GET", c, nil)
 				if err != nil {
 					return nil, err
