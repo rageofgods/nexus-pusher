@@ -12,6 +12,7 @@ import (
 	"nexus-pusher/internal/server"
 	"nexus-pusher/pkg/http_clients"
 	"nexus-pusher/pkg/utils"
+	"strconv"
 	"time"
 )
 
@@ -244,7 +245,11 @@ func (p *pushClient) pollComparedResults(body []byte, dstRepo string, dstServer 
 
 			// Update metric for errors count if any
 			if len(msg.Response) > 0 {
-				p.metrics.SyncErrorsCountByLabels(dstServer, dstRepo, msg.ID.String()).Set(float64(len(msg.Response)))
+				p.metrics.SyncErrorsCountByLabels(
+					dstServer,
+					dstRepo,
+					msg.ID.String(),
+					strconv.FormatInt(time.Now().Unix(), 10)).Set(float64(len(msg.Response)))
 			}
 
 			// log all response errors
