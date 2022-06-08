@@ -49,7 +49,7 @@ func (sc *SyncConfig) UnLock() {
 	sc.IsProcessing = false
 }
 
-func (sc *SyncConfig) IsLock() bool {
+func (sc *SyncConfig) IsLocked() bool {
 	return sc.IsProcessing
 }
 

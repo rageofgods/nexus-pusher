@@ -135,7 +135,7 @@ func (nc client) RunNexusPusher() {
 
 	wg := &sync.WaitGroup{}
 	for _, v := range nc.config.SyncConfigs {
-		if v.IsLock() {
+		if v.IsLocked() {
 			log.Warnf("Synchronization still in proggess for source repo '%s' at server '%s' and destination "+
 				"repo '%s' at srver '%s'. Skipping current scheduled sync. Will try again at next iteration.",
 				v.SrcServerConfig.RepoName,
