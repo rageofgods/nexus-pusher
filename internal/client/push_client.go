@@ -249,7 +249,7 @@ func (p *pushClient) pollComparedResults(body []byte, dstRepo string, dstServer 
 					dstServer,
 					dstRepo,
 					msg.ID.String(),
-					strconv.FormatInt(time.Now().Unix(), 10)).Set(float64(len(msg.Response)))
+					strconv.FormatInt(int64(len(msg.Response)), 10)).Set(float64(time.Now().Unix()))
 			}
 
 			// log all response errors
