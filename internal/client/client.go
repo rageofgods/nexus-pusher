@@ -135,6 +135,15 @@ func (nc client) RunNexusPusher() {
 
 	wg := &sync.WaitGroup{}
 	for _, v := range nc.config.SyncConfigs {
+		if v.IsLock() {
+			log.Warnf("Synchronization still in proggess for source repo '%s' at server '%s' and destination "+
+				"repo '%s' at srver '%s'. Skipping current scheduled sync. Will try again at next iteration.",
+				v.SrcServerConfig.RepoName,
+				v.SrcServerConfig.Server,
+				v.DstServerConfig.RepoName,
+				v.DstServerConfig.Server)
+			continue
+		}
 		wg.Add(1)
 		go func(c *config.Client, syncConfig *config.SyncConfig) {
 			nc.doSyncConfigs(c, syncConfig)
@@ -351,6 +360,10 @@ func doCheckRepoTypes(sc *config.SyncConfig) error {
 }
 
 func (nc client) doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
+	// Mark current syncConfig as processing and schedule unmark
+	sc.Lock()
+	defer sc.UnLock()
+
 	// Define two groups of resources to compare remote repos
 	s1 := core.NewNexusServer(sc.SrcServerConfig.User, sc.SrcServerConfig.Pass,
 		sc.SrcServerConfig.Server, config.URIBase, config.URIComponents)

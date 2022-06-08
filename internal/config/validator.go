@@ -127,7 +127,7 @@ func (c *NexusConfig) validateArtifactsSource(syncConfig *SyncConfig, index int)
 	case "":
 		return &utils.ContextError{
 			Context: "validateArtifactsSource",
-			Err:     fmt.Errorf("syncconfig required 'format' variable is missing in %s", syncConfig),
+			Err:     fmt.Errorf("syncconfig required 'format' variable is missing in %v", syncConfig),
 		}
 	case MAVEN2.String():
 		if syncConfig.ArtifactsSource == "" {

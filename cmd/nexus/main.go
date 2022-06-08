@@ -39,9 +39,9 @@ func main() {
 	}
 
 	// Schedule periodic config file re-read
-	if err := cfg.ScheduleLoadConfig(args.ConfigPath, 30); err != nil {
-		log.Printf("error: %v", err)
-	}
+	// if err := cfg.ScheduleLoadConfig(args.ConfigPath, 30); err != nil {
+	//	log.Printf("error: %v", err)
+	// }
 
 	log.WithFields(log.Fields{"version": Version, "build": Build}).Info("Starting application...")
 

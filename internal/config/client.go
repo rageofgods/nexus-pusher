@@ -38,6 +38,19 @@ type SyncConfig struct {
 	ArtifactsSource string          `yaml:"artifactsSource"`
 	SrcServerConfig SrcServerConfig `yaml:"srcServerConfig"`
 	DstServerConfig DstServerConfig `yaml:"dstServerConfig"`
+	IsProcessing    bool
+}
+
+func (sc *SyncConfig) Lock() {
+	sc.IsProcessing = true
+}
+
+func (sc *SyncConfig) UnLock() {
+	sc.IsProcessing = false
+}
+
+func (sc *SyncConfig) IsLock() bool {
+	return sc.IsProcessing
 }
 
 // SrcServerConfig is defines source server which will be compared to destination
