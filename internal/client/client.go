@@ -61,7 +61,7 @@ func compareComponents(src []*core.NexusComponent, dst []*core.NexusComponent) [
 	return nc
 }
 
-func doCompareComponents(
+func (nc client) doCompareComponents(
 	s1 *core.NexusServer,
 	c1 *http.Client,
 	r1 string,
@@ -107,6 +107,11 @@ func doCompareComponents(
 				"with destination repository '%s' at server '%s' because of error: %v", r1, s1.Host, r2, s2.Host, err),
 		}
 	}
+
+	// Update metric for total source repo assets count
+	nc.metrics.LastSrcAssetsCountByLabels(s1.Host, r1).Set(float64(len(src)))
+	// Update metric for total destination repo assets count
+	nc.metrics.LastDstAssetsCountByLabels(s2.Host, r2).Set(float64(len(dst)))
 
 	return compareComponents(src, dst), nil
 }
@@ -379,11 +384,19 @@ func (nc client) doSyncConfigs(cc *config.Client, sc *config.SyncConfig) {
 	}
 
 	// Get repo diff
-	cmpDiff, err := doCompareComponents(s1, c1, sc.SrcServerConfig.RepoName, s2, c2, sc.DstServerConfig.RepoName)
+	cmpDiff, err := nc.doCompareComponents(s1, c1, sc.SrcServerConfig.RepoName, s2, c2, sc.DstServerConfig.RepoName)
 	if err != nil {
 		log.Errorf("%v", err)
 		return
 	}
+
+	// Update metric for last sync diff count
+	nc.metrics.LastSyncDiffByLabels(
+		sc.SrcServerConfig.Server,
+		sc.SrcServerConfig.RepoName,
+		sc.DstServerConfig.Server,
+		sc.DstServerConfig.RepoName,
+	).Set(float64(len(cmpDiff)))
 
 	// If we got some differences in two repos
 	if len(cmpDiff) != 0 {

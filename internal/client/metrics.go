@@ -22,7 +22,10 @@ type staticMetrics struct {
 }
 
 type syncConfigMetrics struct {
-	lastErrorsCount *prometheus.GaugeVec
+	lastSyncTime           *prometheus.GaugeVec
+	lastSrcRepoAssetsCount *prometheus.GaugeVec
+	lastDstRepoAssetsCount *prometheus.GaugeVec
+	lastSyncDiffCount      *prometheus.GaugeVec
 }
 
 func NewMetrics(registry *prometheus.Registry) *nexusClientMetrics {
@@ -45,12 +48,30 @@ func NewMetrics(registry *prometheus.Registry) *nexusClientMetrics {
 			}, []string{"version", "build"}),
 		},
 		&syncConfigMetrics{
-			lastErrorsCount: promauto.With(registry).NewGaugeVec(prometheus.GaugeOpts{
+			lastSyncTime: promauto.With(registry).NewGaugeVec(prometheus.GaugeOpts{
 				Namespace: clientName,
 				Subsystem: "last",
-				Name:      "sync_errors_total",
-				Help:      "Represents errors count for sync config",
+				Name:      "sync_info_seconds",
+				Help:      "Represents time in unix format of last successful sync operation",
 			}, []string{labelDestinationServer, labelDestinationRepo, labelId, labelErrorsCount}),
+			lastSrcRepoAssetsCount: promauto.With(registry).NewGaugeVec(prometheus.GaugeOpts{
+				Namespace: clientName,
+				Subsystem: "last",
+				Name:      "src_assets_total",
+				Help:      "Represents total count of source repository assets found at last sync iteration",
+			}, []string{labelSourceServer, labelSourceRepo}),
+			lastDstRepoAssetsCount: promauto.With(registry).NewGaugeVec(prometheus.GaugeOpts{
+				Namespace: clientName,
+				Subsystem: "last",
+				Name:      "dst_assets_total",
+				Help:      "Represents total count of destination repository assets found at last sync iteration",
+			}, []string{labelDestinationServer, labelDestinationRepo}),
+			lastSyncDiffCount: promauto.With(registry).NewGaugeVec(prometheus.GaugeOpts{
+				Namespace: clientName,
+				Subsystem: "last",
+				Name:      "sync_diff_total",
+				Help:      "Represents total count of sync differences between src and dst repos",
+			}, []string{labelSourceServer, labelSourceRepo, labelDestinationServer, labelDestinationRepo}),
 		},
 	}
 }
@@ -60,16 +81,57 @@ func (ncm nexusClientMetrics) ClientInfo() *prometheus.GaugeVec {
 	return ncm.staticMetrics.clientInfo
 }
 
-func (ncm nexusClientMetrics) SyncErrorsCountByLabels(server string, repo string,
-	id string, errorsCount string) prometheus.Gauge {
-	g, err := ncm.dynamicMetrics.lastErrorsCount.GetMetricWith(prometheus.Labels{
+func (ncm nexusClientMetrics) LastSyncTimeByLabels(server, repo, id, errorsCount string) prometheus.Gauge {
+	g, err := ncm.dynamicMetrics.lastSyncTime.GetMetricWith(prometheus.Labels{
 		labelDestinationServer: server,
 		labelDestinationRepo:   repo,
 		labelId:                id,
 		labelErrorsCount:       errorsCount,
 	})
 	if err != nil {
-		log.Errorf("unable to set dynamic metric for destination repo %s: %v", repo, err)
+		log.Errorf("LastSyncTimeByLabels: unable to set dynamic metric for destination repo %s: %v",
+			repo, err)
+		return nil
+	}
+	return g
+}
+
+func (ncm nexusClientMetrics) LastSrcAssetsCountByLabels(server, repo string) prometheus.Gauge {
+	g, err := ncm.dynamicMetrics.lastSrcRepoAssetsCount.GetMetricWith(prometheus.Labels{
+		labelSourceServer: server,
+		labelSourceRepo:   repo,
+	})
+	if err != nil {
+		log.Errorf("LastSrcAssetsCountByLabels: unable to set dynamic metric for destination repo %s: %v",
+			repo, err)
+		return nil
+	}
+	return g
+}
+
+func (ncm nexusClientMetrics) LastDstAssetsCountByLabels(server, repo string) prometheus.Gauge {
+	g, err := ncm.dynamicMetrics.lastDstRepoAssetsCount.GetMetricWith(prometheus.Labels{
+		labelDestinationServer: server,
+		labelDestinationRepo:   repo,
+	})
+	if err != nil {
+		log.Errorf("LastDstAssetsCountByLabels: unable to set dynamic metric for destination repo %s: %v",
+			repo, err)
+		return nil
+	}
+	return g
+}
+
+func (ncm nexusClientMetrics) LastSyncDiffByLabels(srcServer, srcRepo, dstServer, dstRepo string) prometheus.Gauge {
+	g, err := ncm.dynamicMetrics.lastSyncDiffCount.GetMetricWith(prometheus.Labels{
+		labelSourceServer:      srcServer,
+		labelSourceRepo:        srcRepo,
+		labelDestinationServer: dstServer,
+		labelDestinationRepo:   dstRepo,
+	})
+	if err != nil {
+		log.Errorf("LastSyncDiffByLabels: unable to set dynamic metric for destination repo %s: %v",
+			dstRepo, err)
 		return nil
 	}
 	return g
@@ -78,6 +140,8 @@ func (ncm nexusClientMetrics) SyncErrorsCountByLabels(server string, repo string
 const (
 	labelDestinationServer = "destination_server"
 	labelDestinationRepo   = "destination_repo"
+	labelSourceServer      = "source_server"
+	labelSourceRepo        = "source_repo"
 	labelId                = "id"
 	labelErrorsCount       = "errors"
 )

@@ -243,9 +243,9 @@ func (p *pushClient) pollComparedResults(body []byte, dstRepo string, dstServer 
 			).Infof("Polling complete for destinantion repo '%s' at server '%s'",
 				dstRepo, dstServer)
 
-			// Update metric for errors count if any
+			// Update metric for last successfully sync time
 			if len(msg.Response) > 0 {
-				p.metrics.SyncErrorsCountByLabels(
+				p.metrics.LastSyncTimeByLabels(
 					dstServer,
 					dstRepo,
 					msg.ID.String(),
