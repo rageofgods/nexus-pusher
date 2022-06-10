@@ -11,6 +11,7 @@ import (
 	"nexus-pusher/pkg/logger"
 	"nexus-pusher/pkg/metrics"
 	"os"
+	"strconv"
 )
 
 // App version
@@ -84,7 +85,11 @@ func main() {
 		clientMetrics := client.NewMetrics(r.Registry())
 
 		// Export client version and build info
-		clientMetrics.ClientInfo().WithLabelValues(version.Version, version.Build).Set(1)
+		clientMetrics.ClientInfo().WithLabelValues(
+			version.Version,
+			version.Build,
+			strconv.Itoa(cfg.Client.Daemon.SyncEveryMinutes),
+		).Set(1)
 
 		// Create new nexus-pusher client
 		c := client.NewClient(version, cfg.Client, clientMetrics)
