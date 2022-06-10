@@ -44,8 +44,8 @@ func NewMetrics(registry *prometheus.Registry) *nexusClientMetrics {
 			clientInfo: promauto.With(registry).NewGaugeVec(prometheus.GaugeOpts{
 				Namespace: clientName,
 				Name:      "client_info",
-				Help:      "Represents nexus-pusher client version build number and sync time in seconds",
-			}, []string{labelVersion, labelBuild, labelSyncTimeSeconds}),
+				Help:      "Represents nexus-pusher client version build number and re-sync time in minutes",
+			}, []string{labelVersion, labelBuild, labelSyncTimeMinutes}),
 		},
 		&syncConfigMetrics{
 			lastSyncTime: promauto.With(registry).NewGaugeVec(prometheus.GaugeOpts{
@@ -146,5 +146,5 @@ const (
 	labelErrorsCount       = "errors"
 	labelVersion           = "version"
 	labelBuild             = "build"
-	labelSyncTimeSeconds   = "sync_time_seconds"
+	labelSyncTimeMinutes   = "sync_time_minutes"
 )
