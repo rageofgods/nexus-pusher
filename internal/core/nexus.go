@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"nexus-pusher/internal/config"
 	"nexus-pusher/pkg/utils"
+	"path/filepath"
+	"strings"
 )
 
 func (s *NexusServer) GetComponents(ctx context.Context, c *http.Client, repoName string) ([]*NexusComponent, error) {
@@ -50,6 +52,9 @@ Outer:
 				return nil, err
 			}
 
+			// Filter assets for hash artifacts
+			filterHashAssets(&nc)
+
 			continuationToken = nc.ContinuationToken
 			ncs = append(ncs, nc.Items...)
 
@@ -71,6 +76,58 @@ Outer:
 		}
 	}
 	return ncs, nil
+}
+
+// filterHashAssets filter out assets for hash type artifacts
+func filterHashAssets(nc *NexusComponents) {
+	for i := 0; i < len(nc.Items); i++ {
+		for x := 0; x < len(nc.Items[i].Assets); x++ {
+			switch nc.Items[i].Assets[x].Format {
+			case config.MAVEN2.String():
+				mavenFilteredExtensions := map[string]struct{}{
+					"sha1":   {},
+					"md5":    {},
+					"sha256": {},
+					"sha512": {},
+				}
+				// Get file extension from path and
+				// remove leading dot from it
+				fileExtension := filepath.Ext(nc.Items[i].Assets[x].Path)[1:]
+				// Check file extension to match filter list and
+				// remove slice asset following current index
+				if _, ok := mavenFilteredExtensions[fileExtension]; ok {
+					log.Debugf("Maven2: filtering '%s' asset from comparison "+
+						"by extension '%s' list", nc.Items[i].Assets[x].Path, fileExtension)
+
+					nc.Items[i].Assets = append(nc.Items[i].Assets[:x], nc.Items[i].Assets[x+1:]...)
+					// If an asset was filtered - get back to one index position
+					x--
+				}
+			case config.NUGET.String():
+				// Remove '+...' postfix from component version and asset path
+				// to be able to compare assets with the same names\versions
+				// Because nexus will add '+sha.' postfix for some assets
+				// Following its own API upload rules
+				splitAssetVersion := strings.Split(nc.Items[i].Version, "+")
+				if len(splitAssetVersion) == 2 {
+					log.Debugf("Nuget: removing '%s' suffix from asset version: '%s'",
+						splitAssetVersion[1], nc.Items[i].Version)
+
+					nc.Items[i].Version = splitAssetVersion[0]
+				}
+
+				splitAssetPath := strings.Split(filepath.Base(nc.Items[i].Assets[x].Path), "+")
+				if len(splitAssetPath) == 2 {
+					log.Debugf("Nuget: removing '%s' suffix from asset path: '%s'",
+						splitAssetPath[1], nc.Items[i].Assets[x].Path)
+
+					nc.Items[i].Assets[x].Path = fmt.Sprintf("%s/%s",
+						filepath.Dir(nc.Items[i].Assets[x].Path), splitAssetPath[0],
+					)
+				}
+			}
+		}
+	}
 }
 
 // UploadComponents is used to upload nexus artifacts following by 'nec' list

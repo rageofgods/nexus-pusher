@@ -63,9 +63,6 @@ func (n Nuget) PrepareAssetToUpload(fileReader io.Reader) (string, io.Reader) {
 }
 
 func (n Nuget) assetDownloadURL() (string, error) {
-	// Remove '+...' version part from download url
-	version := strings.Split(n.Version, "+")[0]
-
 	// Check base server download url version
 	baseDownloadUrl, err := n.checkVersion()
 	if err != nil {
@@ -78,7 +75,7 @@ func (n Nuget) assetDownloadURL() (string, error) {
 		return fmt.Sprintf("%s/package/%s/%s",
 			removeLastSlash(baseDownloadUrl),
 			strings.ToLower(n.Name),
-			strings.ToLower(version),
+			strings.ToLower(n.Version),
 		), nil
 	}
 
@@ -86,9 +83,9 @@ func (n Nuget) assetDownloadURL() (string, error) {
 	return fmt.Sprintf("%s/%s/%s/%s.%s.nupkg",
 		removeLastSlash(baseDownloadUrl),
 		strings.ToLower(n.Name),
-		strings.ToLower(version),
+		strings.ToLower(n.Version),
 		strings.ToLower(n.Name),
-		strings.ToLower(version),
+		strings.ToLower(n.Version),
 	), nil
 }
 

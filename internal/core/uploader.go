@@ -17,7 +17,7 @@ func (s *NexusServer) uploadComponent(format config.ComponentType,
 	switch format.Lower() {
 	case config.MAVEN2:
 		maven2 := NewMaven2(component.ArtifactsSource, component)
-		maven2.filterExtensions()
+
 		if len(maven2.Component.Assets) == 0 {
 			return &utils.ContextError{
 				Context: "uploadComponent",

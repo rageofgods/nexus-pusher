@@ -21,31 +21,6 @@ func NewMaven2(server string, component *NexusExportComponent) *Maven2 {
 	}
 }
 
-// filterExtensions will remove hash assets from upload list
-// because nexus server will create them dynamically upon uploading
-func (m *Maven2) filterExtensions() {
-	// Define extensions to filter
-	mavenFilteredExtensions := map[string]struct{}{
-		"sha1":   {},
-		"md5":    {},
-		"sha256": {},
-		"sha512": {},
-	}
-
-	// Allocate memory for assets (max - current assets count)
-	assets := make([]*NexusExportComponentAsset, 0, len(m.Component.Assets))
-
-	for _, asset := range m.Component.Assets {
-		fileExtension := FileExtensionFromFile(asset.FileName)
-		// If asset file extension not in exceptions list add it to assets slice
-		if _, ok := mavenFilteredExtensions[fileExtension]; !ok {
-			assets = append(assets, asset)
-		}
-	}
-	// Overwrite initial assets slice with filtered one
-	m.Component.Assets = assets
-}
-
 func (m Maven2) DownloadComponent() ([]*http.Response, error) {
 	// Allocate slice for responses following assets count
 	responses := make([]*http.Response, 0, len(m.Component.Assets))
