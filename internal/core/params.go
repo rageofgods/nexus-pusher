@@ -1,6 +1,7 @@
 package core
 
 import (
+	"strings"
 	"time"
 )
 
@@ -57,6 +58,18 @@ type (
 		LastModified time.Time `json:"lastModified"`
 	}
 )
+
+// AssetPathWithoutTrailingZeroes will remove trailing zeroes from component
+// path. It's used to workaround nexus behavior with multiple assets
+// with same version but different trailing zero count.
+func (nca NexusComponentAsset) AssetPathWithoutTrailingZeroes() string {
+	resultPath := nca.Path
+	suffix := ".0"
+	for strings.HasSuffix(resultPath, suffix) {
+		resultPath = strings.TrimSuffix(resultPath, suffix)
+	}
+	return resultPath
+}
 
 type UploadResult struct {
 	ComponentPath string

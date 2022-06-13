@@ -39,7 +39,7 @@ func compareComponents(src []*core.NexusComponent, dst []*core.NexusComponent) [
 	dstNca := make(map[string]struct{}, len(dst))
 	for _, v := range dst {
 		for _, vv := range v.Assets {
-			dstNca[strings.ToLower(vv.Path)] = struct{}{}
+			dstNca[strings.ToLower(vv.AssetPathWithoutTrailingZeroes())] = struct{}{}
 		}
 	}
 
@@ -48,7 +48,7 @@ func compareComponents(src []*core.NexusComponent, dst []*core.NexusComponent) [
 	for i, v := range src {
 		var nca []*core.NexusComponentAsset
 		for ii, vv := range v.Assets {
-			if _, ok := dstNca[strings.ToLower(vv.Path)]; !ok {
+			if _, ok := dstNca[strings.ToLower(vv.AssetPathWithoutTrailingZeroes())]; !ok {
 				nca = append(nca, v.Assets[ii])
 			}
 		}
